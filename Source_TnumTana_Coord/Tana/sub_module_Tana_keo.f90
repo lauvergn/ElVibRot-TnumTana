@@ -139,10 +139,10 @@ MODULE mod_Tana_keo
 
       ndim = size(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana(:,1))
       nullify(P_euler)
-      CALL alloc_array(P_euler,(/ndim/),"P_euler",routine_name)
+      CALL alloc_array(P_euler,[ndim],"P_euler",routine_name)
 
       nullify(scalar_PiPj)
-      CALL alloc_array(scalar_PiPj,(/ndim,ndim/),'scalar_PiPj',routine_name)
+      CALL alloc_array(scalar_PiPj,[ndim,ndim],'scalar_PiPj',routine_name)
       scalar_PiPj(:,:) = .false.
 
 
@@ -500,10 +500,10 @@ MODULE mod_Tana_keo
 
       ndim = size(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana(:,1))
       nullify(P_euler)
-      CALL alloc_array(P_euler,(/ndim/),"P_euler",routine_name)
+      CALL alloc_array(P_euler,[ndim],"P_euler",routine_name)
 
       nullify(scalar_PiPj)
-      CALL alloc_array(scalar_PiPj,(/ndim,ndim/),'scalar_PiPj',routine_name)
+      CALL alloc_array(scalar_PiPj,[ndim,ndim],'scalar_PiPj',routine_name)
       scalar_PiPj(:,:) = .false.
 
 
@@ -735,7 +735,7 @@ MODULE mod_Tana_keo
          if(F_system%tab_BFTransfo(i)%frame) nsub_syst = nsub_syst+1
        end do
        nvec = F_system%nb_vect-nsub_syst+1
-       CALL alloc_array(F_system%listVFr,(/nvec/),'F_system%listVFr',routine_name)
+       CALL alloc_array(F_system%listVFr,[nvec],'F_system%listVFr',routine_name)
        ivF = 1
        F_system%listVFr(ivF) = i_var
        i_var = i_var+1
@@ -776,7 +776,7 @@ MODULE mod_Tana_keo
        nvec = F_system%nb_vect-nsub_syst+1
        n_size = size(F_system%tab_num_Frame)
        do i = 1, nvec
-         CALL alloc_array(P_Euler(F_system%listVFr(i))%Tab_num_Frame,(/n_size/),&
+         CALL alloc_array(P_Euler(F_system%listVFr(i))%Tab_num_Frame,[n_size],&
                                  'F_system%listVFr(i))%Tab_num_Frame',routine_name)
          do j = 1, n_size
             P_Euler(F_system%listVFr(i))%Tab_num_Frame(j) = F_system%Tab_num_Frame(j)
@@ -867,7 +867,7 @@ MODULE mod_Tana_keo
      ! if(F_system%nb_vect > 0) then
      !   if(F_system%tab_BFTransfo(1)%frame)  nb_var = nb_var + 1
      ! end if
-     ! if(compare_tab(F_system%euler, (/.false., .false., .false./))) then
+     ! if(compare_tab(F_system%euler, [.false., .false., .false.])) then
      if( F_system%nb_vect >1) then
        if(F_system%tab_BFTransfo(1)%frame) then
          do i=2, F_system%nb_vect
@@ -1019,7 +1019,7 @@ MODULE mod_Tana_keo
           if(F_system%euler(i)) nb_var = nb_var + 1
         end do
 
-        CALL alloc_array(F_system%M_mass,(/nvec, nvec/),'F_system%M_mass',routine_name)
+        CALL alloc_array(F_system%M_mass,[nvec, nvec],'F_system%M_mass',routine_name)
 
        do  i = 1, nvec
          i_BF = F_system%listVFr(i)

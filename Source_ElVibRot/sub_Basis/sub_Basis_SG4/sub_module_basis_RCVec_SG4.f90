@@ -82,7 +82,7 @@ IMPLICIT NONE
   END IF
 
 
-  CALL alloc_NParray(Rvec%V,(/nvec/),'Rvec%V','alloc_TypeRVec')
+  CALL alloc_NParray(Rvec%V,[nvec],'Rvec%V','alloc_TypeRVec')
 
 END SUBROUTINE alloc_TypeRVec
 SUBROUTINE dealloc_TypeRVec(Rvec)
@@ -259,7 +259,7 @@ IMPLICIT NONE
     STOP
   END IF
 
-  CALL alloc_NParray(vec%V,(/nvec/),'vec%V','alloc_TypeCVec')
+  CALL alloc_NParray(vec%V,[nvec],'vec%V','alloc_TypeCVec')
 
 END SUBROUTINE alloc_TypeCVec
 SUBROUTINE dealloc_TypeCVec(vec)

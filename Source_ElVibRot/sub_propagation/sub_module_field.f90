@@ -53,7 +53,7 @@
 
           integer :: nb_pola = 0
           real (kind=Rkind), pointer :: dnE(:,:) => null() ! derivative of the field
-          logical :: pola_xyz(3) = (/ .FALSE., .FALSE.,.FALSE. /)
+          logical :: pola_xyz(3) = [.FALSE., .FALSE.,.FALSE.]
 
           integer :: nb_pulse = 0
           real (kind=Rkind) :: w(3,max_pulse),E0(3,max_pulse)
@@ -351,10 +351,10 @@
 
       IF (.NOT. para_field%allo_grid) THEN
         para_field%allo_grid = .TRUE.
-        CALL alloc_array(para_field%grid_T,(/npt/),                     &
-                        "para_field%grid_T","init_field_grid",(/0/))
-        CALL alloc_array(para_field%grid_E,(/npt,3/),                   &
-                        "para_field%grid_E","init_field_grid",(/0,1/))
+        CALL alloc_array(para_field%grid_T,[npt],                     &
+                        "para_field%grid_T","init_field_grid",[0])
+        CALL alloc_array(para_field%grid_E,[npt,3],                   &
+                        "para_field%grid_E","init_field_grid",[0,1])
         para_field%grid_E(:,:) = ZERO
         para_field%grid_T(:)   = ZERO
       END IF

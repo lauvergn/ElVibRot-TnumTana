@@ -218,7 +218,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     write(out_unitp,*) psi_line
 
     IF (ana_psi%Coherence > 0) THEN
-      CALL alloc_NParray(Mij,(/ 2, psi%nb_bi*psi%nb_be, psi%nb_bi*psi%nb_be/),'Mij',name_sub)
+      CALL alloc_NParray(Mij,[2, psi%nb_bi*psi%nb_be, psi%nb_bi*psi%nb_be],'Mij',name_sub)
 
       CALL sub_Rhoi_Rhoj_Over_Rho(psi,Mij,ana_psi)
 
@@ -249,7 +249,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     DE     = convRWU_TO_R_WITH_WritingUnit(RWU_DE)
 
     IF (ana_psi%AvQ) THEN
-      CALL alloc_NParray(moy_Qba,(/2*Psi%BasisnD%ndim/),"moy_Qba",name_sub)
+      CALL alloc_NParray(moy_Qba,[2*Psi%BasisnD%ndim],"moy_Qba",name_sub)
       CALL sub_Qmoy(psi,moy_Qba,ana_psi)
 
       IF (ana_psi%num_psi < 10000 .AND. Dominant_Channel(2) < 10000) THEN
@@ -1137,7 +1137,7 @@ END SUBROUTINE sub_analyze_psi
             END IF
 
             CALL alloc_NParray(rho1D,                                   &
-                 (/psi%BasisnD%nDindG%nDsize(i_basis_act1),psi%nb_bi,psi%nb_be/), &
+                 [psi%BasisnD%nDindG%nDsize(i_basis_act1),psi%nb_bi,psi%nb_be], &
                               'rho1D',name_sub)
             rho1D(:,:,:) = ZERO
 
@@ -1242,9 +1242,9 @@ END SUBROUTINE sub_analyze_psi
             END IF
 
             CALL alloc_NParray(rho2D,                                   &
-                            (/psi%BasisnD%nDindG%nDsize(i_basis_act1),  &
+                            [psi%BasisnD%nDindG%nDsize(i_basis_act1),  &
                               psi%BasisnD%nDindG%nDsize(j_basis_act1),  &
-                              psi%nb_bi,psi%nb_be/),'rho2D',name_sub)
+                              psi%nb_bi,psi%nb_be],'rho2D',name_sub)
             rho2D(:,:,:,:) = ZERO
 
             DO i_qa=1,psi%nb_qa
@@ -1459,7 +1459,7 @@ END SUBROUTINE sub_analyze_psi
       IF (psi%Basis2n%nb_basis == 0) THEN
         max_herm = psi%nb_be-1
       ELSE
-        CALL alloc_NParray(nDval,(/psi%Basis2n%nb_basis/),'nDval',name_sub)
+        CALL alloc_NParray(nDval,[psi%Basis2n%nb_basis],'nDval',name_sub)
         max_herm = 0
         DO i=1,psi%Basis2n%nb_basis
           IF (psi%Basis2n%tab_Pbasis(i)%Pbasis%nb > max_herm)           &
@@ -1468,8 +1468,8 @@ END SUBROUTINE sub_analyze_psi
         max_herm = max_herm - 1
       END IF
 
-      CALL alloc_NParray(weight1D,(/psi%Basis2n%nb_basis+1,max_herm/),    &
-                        "weight1D",name_sub,(/1,0/))
+      CALL alloc_NParray(weight1D,[psi%Basis2n%nb_basis+1,max_herm],    &
+                        "weight1D",name_sub,[1,0])
 
       IF (psi%nb_bi > 1 .OR. psi%nb_be > 1) THEN
         weight1D(:,:) = ZERO
@@ -1723,7 +1723,7 @@ END SUBROUTINE sub_analyze_psi
     ELSE
       max_dim = maxval(psi%BasisnD%nDindB%nDsize(1:psi%BasisnD%nDindB%ndim))
     END IF
-    CALL alloc_NParray(weight1Dact,(/psi%BasisnD%nDindB%ndim,max_dim/), &
+    CALL alloc_NParray(weight1Dact,[psi%BasisnD%nDindB%ndim,max_dim], &
                       "weight1Dact",name_sub)
 
     !---- RD analysis (for contrac_analysis=t) -------------------------
@@ -1871,7 +1871,7 @@ END SUBROUTINE sub_analyze_psi
 
       !write(out_unitp,*) 'max_RedDensity
       IF (.NOT. allocated(ana_psi%max_RedDensity)) THEN
-        CALL alloc_NParray(ana_psi%max_RedDensity,(/psi%BasisnD%nDindB%ndim/), &
+        CALL alloc_NParray(ana_psi%max_RedDensity,[psi%BasisnD%nDindB%ndim], &
                           "ana_psi%max_RedDensity",name_sub)
       END IF
       DO iq=1,psi%BasisnD%nDindB%ndim
@@ -2917,7 +2917,7 @@ END SUBROUTINE Channel_weight_SG4_basis
 
       IF (print_DM) THEN
         max_print = min(50,psi%nb_tot)
-        CALL alloc_NParray(weight,(/psi%nb_tot/),"weight",name_sub)
+        CALL alloc_NParray(weight,[psi%nb_tot],"weight",name_sub)
         weight(:) = real(conjg(psi%CvecB)*psi%CvecB,kind=Rkind)
 !       write(out_unitp,*) 'T weight_tot',T,weight(1:max_print)
         write(out_unitp,'(a,f12.1,1x,a,50(1x,f8.6))')                           &
@@ -2925,13 +2925,13 @@ END SUBROUTINE Channel_weight_SG4_basis
         CALL dealloc_NParray(weight,"weight",name_sub)
       END IF
       IF (psi%nb_baie /= psi%nb_tot) THEN
-        CALL alloc_NParray(DM ,(/psi%nb_tot,psi%nb_tot/),"DM" ,name_sub)
-        CALL alloc_NParray(DM2,(/psi%nb_tot,psi%nb_tot/),"DM2",name_sub)
+        CALL alloc_NParray(DM ,[psi%nb_tot,psi%nb_tot],"DM" ,name_sub)
+        CALL alloc_NParray(DM2,[psi%nb_tot,psi%nb_tot],"DM2",name_sub)
 
         DM(:,:) = CZERO
         DM(:,:) = matmul(                                             &
-                conjg(reshape(psi%CvecB,(/psi%nb_tot,1/)) ),          &
-                      reshape(psi%CvecB,(/1,psi%nb_tot/))  )
+                conjg(reshape(psi%CvecB,[psi%nb_tot,1]) ),          &
+                      reshape(psi%CvecB,[1,psi%nb_tot])  )
 
         DM2 = matmul(DM,DM)
 
@@ -2948,12 +2948,12 @@ END SUBROUTINE Channel_weight_SG4_basis
 
       IF (psi%nb_baie == psi%nb_tot .AND. psi%nb_bi*psi%nb_be > 1) THEN
         nb_ba = psi%nb_ba
-        CALL alloc_NParray(DM_v1 ,(/nb_ba,nb_ba/),"DM_v1",name_sub)
-        CALL alloc_NParray(DM2_v1,(/nb_ba,nb_ba/),"DM2_v1",name_sub)
+        CALL alloc_NParray(DM_v1 ,[nb_ba,nb_ba],"DM_v1",name_sub)
+        CALL alloc_NParray(DM2_v1,[nb_ba,nb_ba],"DM2_v1",name_sub)
 
         DM_v1(:,:) = matmul(                                            &
-                conjg(reshape(psi%CvecB,(/nb_ba,1/)) ),                 &
-                      reshape(psi%CvecB,(/1,nb_ba/))  )
+                conjg(reshape(psi%CvecB,[nb_ba,1]) ),                 &
+                      reshape(psi%CvecB,[1,nb_ba])  )
 !       DM_v1(:,:) = DM(1:psi%nb_ba,1:psi%nb_ba)
         DM2_v1 = matmul(DM_v1,DM_v1)
         tr  = CZERO
@@ -3019,10 +3019,10 @@ END SUBROUTINE Channel_weight_SG4_basis
 
 
       nb_bie = psi%nb_bi*psi%nb_be
-      CALL alloc_NParray(w_ei,(/nb_bie/),"w_ei",name_sub)
-      CALL alloc_NParray(Ek_ei,(/nb_bie/),"Ek_ei",name_sub)
-      CALL alloc_NParray(Ck_ei,(/nb_bie/),"Ck_ei",name_sub)
-      CALL alloc_NParray(Sk_ei,(/nb_bie/),"Sk_ei",name_sub)
+      CALL alloc_NParray(w_ei,[nb_bie],"w_ei",name_sub)
+      CALL alloc_NParray(Ek_ei,[nb_bie],"Ek_ei",name_sub)
+      CALL alloc_NParray(Ck_ei,[nb_bie],"Ck_ei",name_sub)
+      CALL alloc_NParray(Sk_ei,[nb_bie],"Sk_ei",name_sub)
 
       DO ib=1,psi%nb_ba
         k = int(ib/2)

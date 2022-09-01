@@ -278,11 +278,11 @@ CONTAINS
 
       CALL basis2TObasis1(basis_temp,basis_POGridRep)
 
-      CALL alloc_NParray(matX_basis,(/ basis_temp%nb,basis_temp%nb /), &
+      CALL alloc_NParray(matX_basis,[basis_temp%nb,basis_temp%nb], &
                         "matX_basis",name_sub)
-      CALL alloc_NParray(RvpX,(/ basis_temp%nb,basis_temp%nb /),       &
+      CALL alloc_NParray(RvpX,[basis_temp%nb,basis_temp%nb],       &
                         "RvpX",name_sub)
-      CALL alloc_NParray(RdiagX,(/ basis_temp%nb /),"RdiagX",name_sub)
+      CALL alloc_NParray(RdiagX,[basis_temp%nb],"RdiagX",name_sub)
 
       !---------------------------------------------------------------
       ! make the matrix of Q
@@ -306,7 +306,7 @@ CONTAINS
 !       IF (allocated(basis_temp%Rvec))                             &
 !               CALL dealloc_array(basis_temp%Rvec,'Rvec',name_sub)
 !       CALL alloc_array(basis_temp%Rvec,                            &
-!                    (/ basis_temp%nb,basis_temp%nb /),'Rvec',name_sub)
+!                    [basis_temp%nb,basis_temp%nb],'Rvec',name_sub)
 !       basis_temp%Rvec = RvpX
 !       CALL sub_contraction_basis(basis_temp,.TRUE.)
 !       write(out_unitp,*) 'POGridRep basis on the grid'
@@ -354,7 +354,7 @@ CONTAINS
       IF (allocated(basis_temp%Rvec)) THEN
 
         CALL alloc_NParray(basis_POGridRep%Rvec,                       &
-                        (/ basis_POGridRep%nb,basis_POGridRep%nb /), &
+                        [basis_POGridRep%nb,basis_POGridRep%nb], &
                         "basis_POGridRep%Rvec",name_sub)
         basis_POGridRep%Rvec = basis_temp%Rvec
         !CALL Write_Mat(basis_temp%Rvec,out_unitp,5) ; stop
@@ -386,7 +386,7 @@ CONTAINS
         IF (allocated(basis_POGridRep%Rvec))  THEN
           CALL dealloc_NParray(basis_POGridRep%Rvec,"basis_POGridRep%Rvec",name_sub)
         END IF
-        CALL alloc_NParray(basis_POGridRep%Rvec,(/ nq,nq /),              &
+        CALL alloc_NParray(basis_POGridRep%Rvec,[nq,nq],              &
                         "basis_POGridRep%Rvec",name_sub)
         basis_POGridRep%Rvec = RvpX
         CALL sub_contraction_basis(basis_POGridRep,.TRUE.)
@@ -494,11 +494,11 @@ CONTAINS
 
          CALL basis2TObasis1(basis_temp,basis_POGridRep)
 
-         CALL alloc_NParray(matX_basis,(/ basis_temp%nb,basis_temp%nb /), &
+         CALL alloc_NParray(matX_basis,[basis_temp%nb,basis_temp%nb], &
                                                  "matX_basis",name_sub)
-         CALL alloc_NParray(RvpX,(/ basis_temp%nb,basis_temp%nb /),       &
+         CALL alloc_NParray(RvpX,[basis_temp%nb,basis_temp%nb],       &
                                                         "RvpX",name_sub)
-         CALL alloc_NParray(RdiagX,(/ basis_temp%nb /),"RdiagX",name_sub)
+         CALL alloc_NParray(RdiagX,[basis_temp%nb],"RdiagX",name_sub)
 
          !---------------------------------------------------------------
          ! make the matrix of Q
@@ -521,7 +521,7 @@ CONTAINS
 !           IF (allocated(basis_temp%Rvec))                             &
 !                   CALL dealloc_NParray(basis_temp%Rvec,'Rvec',name_sub)
 !           CALL alloc_NParray(basis_temp%Rvec,                            &
-!                      (/ basis_temp%nb,basis_temp%nb /),'Rvec',name_sub)
+!                      [basis_temp%nb,basis_temp%nb],'Rvec',name_sub)
 !           basis_temp%Rvec = RvpX
 !           CALL sub_contraction_basis(basis_temp,.TRUE.)
 !           write(out_unitp,*) 'POGridRep basis on the grid'
@@ -585,7 +585,7 @@ CONTAINS
          ! Remark: If Rvec is not allocated, we are using a primitive basis
          IF (allocated(basis_temp%Rvec)) THEN
            CALL alloc_NParray(basis_POGridRep%Rvec,                       &
-                           (/ basis_POGridRep%nb,basis_POGridRep%nb /), &
+                           [basis_POGridRep%nb,basis_POGridRep%nb], &
                                         "basis_POGridRep%Rvec",name_sub)
            basis_POGridRep%Rvec = basis_temp%Rvec
            !CALL Write_Mat(basis_temp%Rvec,out_unitp,5) ; stop
@@ -635,7 +635,7 @@ GOTO 99
              CALL dealloc_NParray(basis_POGridRep%Rvec,"basis_POGridRep%Rvec",name_sub)
            END IF
            nq = get_nq_FROM_basis(basis_POGridRep)
-           CALL alloc_NParray(basis_POGridRep%Rvec,(/ nq,nq /),           &
+           CALL alloc_NParray(basis_POGridRep%Rvec,[nq,nq],           &
                            "basis_POGridRep%Rvec",name_sub)
            basis_POGridRep%Rvec = RvpX
            CALL sub_contraction_basis(basis_POGridRep,.TRUE.)
@@ -765,15 +765,15 @@ GOTO 99
 
 !     - contraction -----------------------------------
       nq = get_nq_FROM_basis(base)
-      CALL alloc_NParray(d0bc, (/ nq,base%nbc /),"d0bc",name_sub)
-      CALL alloc_NParray(Wsuzy,(/ nq /),"Wsuzy",name_sub)
-      CALL alloc_NParray(d1bc, (/ nq,base%nbc,base%ndim /),"d1bc",name_sub)
-      CALL alloc_NParray(d2bc, (/ nq,base%nbc,base%ndim,base%ndim /),"d2bc",name_sub)
+      CALL alloc_NParray(d0bc, [nq,base%nbc],"d0bc",name_sub)
+      CALL alloc_NParray(Wsuzy,[nq],"Wsuzy",name_sub)
+      CALL alloc_NParray(d1bc, [nq,base%nbc,base%ndim],"d1bc",name_sub)
+      CALL alloc_NParray(d2bc, [nq,base%nbc,base%ndim,base%ndim],"d2bc",name_sub)
 
       IF (allocated(base%Rvec))  THEN
         CALL dealloc_NParray(base%Rvec,"base%Rvec",name_sub)
       END IF
-      CALL alloc_NParray(base%Rvec,(/ base%nb,base%nb /),"base%Rvec",name_sub)
+      CALL alloc_NParray(base%Rvec,[base%nb,base%nb],"base%Rvec",name_sub)
       base%Rvec(:,:) = ZERO
       nb0 = base%nb
 
@@ -830,7 +830,7 @@ GOTO 99
       END DO
 !      -------------------------------------------------
 
-      CALL alloc_NParray(d0b,(/ nq,base%nb /),"d0b",name_sub)
+      CALL alloc_NParray(d0b,[nq,base%nb],"d0b",name_sub)
       d0b(:,:) = base%dnRGB%d0
 
 !     - transfert to base% ----------------------------
@@ -918,7 +918,7 @@ GOTO 99
         STOP 'ortho_basis in complex: not yet!'
       ELSE
         nq = get_nq_FROM_basis(basis_temp)
-        CALL alloc_NParray(tbasiswrho,(/basis_temp%nb,nq/),"tbasiswrho",name_sub)
+        CALL alloc_NParray(tbasiswrho,[basis_temp%nb,nq],"tbasiswrho",name_sub)
 
         DO i=1,basis_temp%nb
           tbasiswrho(i,:) = basis_temp%dnRGB%d0(:,i) * basis_temp%wrho(:)
@@ -955,7 +955,7 @@ GOTO 99
             CALL dealloc_NParray(basis_temp%Rvec,'basis_temp%Rvec',name_sub)
           END IF
           CALL alloc_NParray(basis_temp%Rvec,                             &
-                                      (/ basis_temp%nb,basis_temp%nb /),&
+                                      [basis_temp%nb,basis_temp%nb],&
                           'basis_temp%Rvec',name_sub)
           basis_temp%nbc = basis_temp%nb
           basis_temp%Rvec = Rvp
@@ -1088,7 +1088,7 @@ GOTO 99
       ELSE
 
         nq = get_nq_FROM_basis(basis_temp)
-        CALL alloc_NParray(tbasiswrhox,(/basis_temp%nb,nq/),"tbasiswrhox",name_sub)
+        CALL alloc_NParray(tbasiswrhox,[basis_temp%nb,nq],"tbasiswrhox",name_sub)
 
         DO i=1,basis_temp%nb
           tbasiswrhox(i,:) = basis_temp%dnRGB%d0(:,i) *                 &
@@ -1147,7 +1147,7 @@ GOTO 99
         STOP
       ELSE
         nq = get_nq_FROM_basis(basis_temp)
-        CALL alloc_NParray(tbasiswrhox,(/basis_temp%nb,nq/),"tbasiswrhox",name_sub)
+        CALL alloc_NParray(tbasiswrhox,[basis_temp%nb,nq],"tbasiswrhox",name_sub)
 
         DO i=1,basis_temp%nb
           tbasiswrhox(i,:) = basis_temp%dnRGB%d0(:,i) *                 &
@@ -1209,7 +1209,7 @@ GOTO 99
       R0 = ONE/real(basis_temp%ndim,kind=Rkind)
 
       nq = get_nq_FROM_basis(basis_temp)
-      CALL alloc_NParray(tbasiswrhox,(/basis_temp%nb,nq/),"tbasiswrhox",name_sub)
+      CALL alloc_NParray(tbasiswrhox,[basis_temp%nb,nq],"tbasiswrhox",name_sub)
 
 
       DO i=1,basis_temp%ndim
@@ -1439,9 +1439,9 @@ STOP
 
       CALL Weight_OF_grid(basis_temp%w,basis_temp%dnRGB%d0,basis_temp%nb,nq)
 
-!      CALL alloc_NParray(A,  (/basis_temp%nb**2,nq/),"A",  name_sub)
-!      CALL alloc_NParray(AtA,(/nq,nq/),              "AtA",name_sub)
-!      CALL alloc_NParray(AtB,(/nq/),                 "AtB",name_sub)
+!      CALL alloc_NParray(A,  [basis_temp%nb**2,nq],"A",  name_sub)
+!      CALL alloc_NParray(AtA,[nq,nq],              "AtA",name_sub)
+!      CALL alloc_NParray(AtB,[nq],                 "AtB",name_sub)
 !
 !
 !
@@ -1520,10 +1520,10 @@ STOP
       END IF
 
       !write(out_unitp,*) 'nq',nq ; flush(out_unitp)
-      CALL alloc_NParray(A, (/ basis_temp%nb*(basis_temp%nb+1)/2,nq /), &
+      CALL alloc_NParray(A, [basis_temp%nb*(basis_temp%nb+1)/2,nq], &
                         "A",  name_sub)
-      CALL alloc_NParray(AtA,(/nq,nq/),"AtA",name_sub)
-      CALL alloc_NParray(AtB,(/nq/),   "AtB",name_sub)
+      CALL alloc_NParray(AtA,[nq,nq],"AtA",name_sub)
+      CALL alloc_NParray(AtB,[nq],   "AtB",name_sub)
 
       ! matrices of the linear (rectangular) system A.W=B
       ij = 0
@@ -2076,7 +2076,7 @@ STOP
       END IF
       err_cuba = .FALSE.
 
-      CALL alloc_NParray(basiswrho,(/ nq,basis_cuba%nb /),                &
+      CALL alloc_NParray(basiswrho,[nq,basis_cuba%nb],                &
                         "basiswrho",name_sub)
 
       ! basiswrho
@@ -2218,8 +2218,8 @@ STOP
         IF (NR < ONETENTH**5) RETURN
         C  = x(1,1) / NR
         S  = sqrt(ONE-C*C)
-        MatRot(1,1:2) = (/  C, S /)
-        MatRot(2,1:2) = (/ -S, C /)
+        MatRot(1,1:2) = [ C, S]
+        MatRot(2,1:2) = [-S, C]
 
         DO i=1,nqc
           x(:,i) = matmul(MatRot,x(:,i))
@@ -2277,7 +2277,7 @@ STOP
       DO k=1,1000
         CALL random_number(xi)
         xi = TWO*xi-ONE
-        !S=minval( (/ QB(i)-x0(i,iq),x0(i,iq)-QA(i),SQ(i) /) )
+        !S=minval( [QB(i)-x0(i,iq),x0(i,iq)-QA(i),SQ(i)] )
         S=SQ(i)
         x(i,iq) = x0(i,iq) + xi*S
         IF (x(i,iq) <= QB(i) .AND. x(i,iq) >= QA(i)) EXIT

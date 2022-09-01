@@ -77,15 +77,15 @@
          STOP
        END IF
 
-       CALL alloc_array(QTOXanaTransfo%Z,(/QTOXanaTransfo%nat/),        &
+       CALL alloc_array(QTOXanaTransfo%Z,[QTOXanaTransfo%nat],        &
                        "QTOXanaTransfo%Z",name_sub)
        QTOXanaTransfo%Z(:) = 0
 
-       CALL alloc_array(QTOXanaTransfo%symbole,(/QTOXanaTransfo%nat/),  &
+       CALL alloc_array(QTOXanaTransfo%symbole,[QTOXanaTransfo%nat],  &
                        "QTOXanaTransfo%symbole",name_sub)
        QTOXanaTransfo%symbole(:) = ""
 
-       CALL alloc_array(QTOXanaTransfo%masses,(/QTOXanaTransfo%ncart/), &
+       CALL alloc_array(QTOXanaTransfo%masses,[QTOXanaTransfo%ncart], &
                        "QTOXanaTransfo%masses",name_sub)
        QTOXanaTransfo%masses(:) = ZERO
 
@@ -167,7 +167,7 @@
           CALL alloc_QTOXanaTransfo(QTOXanaTransfo)
 
           nullify(name_at)
-          CALL alloc_array(name_at,(/QTOXanaTransfo%nat0/),"name_at",name_sub)
+          CALL alloc_array(name_at,[QTOXanaTransfo%nat0],"name_at",name_sub)
           read(in_unitp,*,IOSTAT=err_io) (name_at(i),i=1,QTOXanaTransfo%nat0)
           IF (err_io /= 0) THEN
             write(out_unitp,*) ' ERROR in ',name_sub

@@ -305,12 +305,12 @@ CONTAINS
       spectral_save = para_Op%spectral
       para_Op%spectral = .FALSE.
 !     - init and allocation of OpWP --
-      CALL alloc_NParray(OpWP,(/nb_WP/),"OpWP",name_sub)
+      CALL alloc_NParray(OpWP,[nb_WP],"OpWP",name_sub)
 
       IF (para_Op%cplx) THEN
-        CALL alloc_NParray(CMatOp,(/nb_WP,nb_WP/),'CmatOp',name_sub)
+        CALL alloc_NParray(CMatOp,[nb_WP,nb_WP],'CmatOp',name_sub)
       ELSE
-        CALL alloc_NParray(RMatOp,(/nb_WP,nb_WP/),'RmatOp',name_sub)
+        CALL alloc_NParray(RMatOp,[nb_WP,nb_WP],'RmatOp',name_sub)
       END IF
       DO i=1,nb_WP
         IF(keep_MPI) CALL copy_psi2TOpsi1(OpWP(i),WP(i),alloc=.FALSE.)
@@ -336,10 +336,10 @@ CONTAINS
         IF (para_Op%cplx) THEN
           CALL sub_hermitic_cplxH(CMatOp,nb_WP,non_hermitic,para_Op%sym_Hamil)
           IF (.NOT. associated(para_Op%Cdiag)) THEN
-            CALL alloc_array(para_Op%Cdiag,(/nb_WP/),"para_Op%Cdiag",name_sub)
+            CALL alloc_array(para_Op%Cdiag,[nb_WP],"para_Op%Cdiag",name_sub)
           END IF
           IF (.NOT. associated(para_Op%Cvp)) THEN
-            CALL alloc_array(para_Op%Cvp,(/nb_WP,nb_WP/),"para_Op%Cvp",name_sub)
+            CALL alloc_array(para_Op%Cvp,[nb_WP,nb_WP],"para_Op%Cvp",name_sub)
           END IF
           para_Op%Cvp(:,:) = CZERO
           DO i=1,nb_WP
@@ -349,10 +349,10 @@ CONTAINS
         ELSE
           CALL sub_hermitic_H(RMatOp,nb_WP,non_hermitic,para_Op%sym_Hamil)
           IF (.NOT. associated(para_Op%Rdiag)) THEN
-            CALL alloc_array(para_Op%Rdiag,(/nb_WP/),"para_Op%Rdiag",name_sub)
+            CALL alloc_array(para_Op%Rdiag,[nb_WP],"para_Op%Rdiag",name_sub)
           END IF
           IF (.NOT. associated(para_Op%Rvp)) THEN
-            CALL alloc_array(para_Op%Rvp,(/nb_WP,nb_WP/),"para_Op%Rvp",name_sub)
+            CALL alloc_array(para_Op%Rvp,[nb_WP,nb_WP],"para_Op%Rvp",name_sub)
           END IF
           para_Op%Rvp(:,:) = ZERO
           DO i=1,nb_WP
@@ -397,13 +397,13 @@ CONTAINS
         IF (allocated(para_Op%Cmat))  THEN
           CALL dealloc_NParray(para_Op%Cmat,"para_Op%Cmat",name_sub)
         END IF
-        CALL alloc_NParray(para_Op%Cmat,(/nb_WP,nb_WP/),'para_Op%Cmat',name_sub)
+        CALL alloc_NParray(para_Op%Cmat,[nb_WP,nb_WP],'para_Op%Cmat',name_sub)
         para_Op%Cmat(:,:) = CMatOp(:,:)
       ELSE
         IF (allocated(para_Op%Rmat))  THEN
           CALL dealloc_NParray(para_Op%Rmat,"para_Op%Rmat",name_sub)
         END IF
-        CALL alloc_NParray(para_Op%Rmat,(/nb_WP,nb_WP/),'para_Op%Rmat',name_sub)
+        CALL alloc_NParray(para_Op%Rmat,[nb_WP,nb_WP],'para_Op%Rmat',name_sub)
         para_Op%Rmat(:,:) = RMatOp(:,:)
       END IF
 
@@ -600,7 +600,7 @@ CONTAINS
           IF (allocated(para_Op%Cmat)) THEN
             CALL dealloc_NParray(para_Op%Cmat,"para_Op%Cmat",name_sub)
           END IF
-          CALL alloc_NParray(para_Op%Cmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
+          CALL alloc_NParray(para_Op%Cmat,[para_Op%nb_tot,para_Op%nb_tot],&
                             "para_Op%Cmat",name_sub)
           para_Op%Cmat(:,:) = CZERO
 
@@ -628,7 +628,7 @@ CONTAINS
           IF (allocated(para_Op%Rmat)) THEN
             CALL dealloc_NParray(para_Op%Rmat,"para_Op%Rmat",name_sub)
           END IF
-          CALL alloc_NParray(para_Op%Rmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
+          CALL alloc_NParray(para_Op%Rmat,[para_Op%nb_tot,para_Op%nb_tot],&
                             "para_Op%Rmat",name_sub)
           para_Op%Rmat(:,:) = ZERO
 
@@ -655,9 +655,9 @@ CONTAINS
                               para_Op%para_AllBasis%basis_ext%nb_vp_spec
         IF (para_Op%cplx) THEN
 
-          CALL alloc_NParray(Cmat1,(/para_Op%nb_tot,para_Op%nb_tot/),     &
+          CALL alloc_NParray(Cmat1,[para_Op%nb_tot,para_Op%nb_tot],     &
                             'Cmat1','sub_Spectral_Op')
-          CALL alloc_NParray(Cmat2,(/para_Op%nb_tot,para_Op%nb_tot/),     &
+          CALL alloc_NParray(Cmat2,[para_Op%nb_tot,para_Op%nb_tot],     &
                             'Cmat2','sub_Spectral_Op')
 
           Cmat1(:,:) = matmul(para_Op%Cmat,para_Op%para_AllBasis%basis_ext%Cvp_spec)
@@ -666,7 +666,7 @@ CONTAINS
           Cmat1(:,:) = para_Op%Cmat(:,:)
           para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
           CALL dealloc_NParray(para_Op%Cmat,'para_Op%Cmat',name_sub)
-          CALL alloc_NParray(para_Op%Cmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
+          CALL alloc_NParray(para_Op%Cmat,[para_Op%nb_tot,para_Op%nb_tot],&
                             'para_Op%Cmat',name_sub)
 
           para_Op%Cmat(:,:) =                                           &
@@ -676,9 +676,9 @@ CONTAINS
           CALL dealloc_NParray(Cmat1,'Cmat1',name_sub)
           CALL dealloc_NParray(Cmat2,'Cmat2',name_sub)
         ELSE
-          CALL alloc_NParray(Rmat1,(/para_Op%nb_tot,para_Op%nb_tot/),     &
+          CALL alloc_NParray(Rmat1,[para_Op%nb_tot,para_Op%nb_tot],     &
                             'Rmat1',name_sub)
-          CALL alloc_NParray(Rmat2,(/para_Op%nb_tot,para_Op%nb_tot/),     &
+          CALL alloc_NParray(Rmat2,[para_Op%nb_tot,para_Op%nb_tot],     &
                             'Rmat2',name_sub)
 
           Rmat1(:,:) = matmul(para_Op%Rmat,para_Op%para_AllBasis%basis_ext%Rvp_spec)
@@ -687,7 +687,7 @@ CONTAINS
           Rmat1(:,:) = para_Op%Rmat(:,:)
           para_Op%nb_tot = para_Op%para_AllBasis%basis_ext%nb_vp_spec
           CALL dealloc_NParray(para_Op%Rmat,'para_Op%Rmat',name_sub)
-          CALL alloc_NParray(para_Op%Rmat,(/para_Op%nb_tot,para_Op%nb_tot/),&
+          CALL alloc_NParray(para_Op%Rmat,[para_Op%nb_tot,para_Op%nb_tot],&
                             'para_Op%Rmat',name_sub)
 
           para_Op%Rmat(:,:) =                                           &
@@ -822,13 +822,13 @@ CONTAINS
       END IF
 
       IF (para_Op%cplx) THEN
-        CALL alloc_NParray(mat1Im,(/nb_ba,nb_ba/),'mat1Im',name_sub)
+        CALL alloc_NParray(mat1Im,[nb_ba,nb_ba],'mat1Im',name_sub)
       END IF
 
-      CALL alloc_NParray(mat1,(/nb_ba,nb_ba/),'mat1',name_sub)
+      CALL alloc_NParray(mat1,[nb_ba,nb_ba],'mat1',name_sub)
       IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
-        CALL alloc_NParray(mat2,(/nb_ba,nb_ba/),'mat2',name_sub)
-        CALL alloc_NParray(mat3,(/nb_ba,nb_ba/),'mat3',name_sub)
+        CALL alloc_NParray(mat2,[nb_ba,nb_ba],'mat2',name_sub)
+        CALL alloc_NParray(mat3,[nb_ba,nb_ba],'mat3',name_sub)
       END IF
 
       ! selected the optimal value of kmem, as function of max_mem and mem_tot
@@ -849,8 +849,8 @@ CONTAINS
       IF (mod(para_Op%nb_qa,kmem) /= 0) nb_blocks = nb_blocks + 1
       IF (print_level>0 .OR. debug) write(out_unitp,*) 'number of blocks',nb_blocks
 
-      CALL alloc_NParray(td0b,(/nb_ba,kmem/),'td0b',name_sub)
-      CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+      CALL alloc_NParray(td0b,[nb_ba,kmem],'td0b',name_sub)
+      CALL alloc_NParray(VecQ,[kmem],'VecQ',name_sub)
 
       CALL Init_d0MatOp(d0MatOp,para_Op%param_TypeOp,nb_bie)
 
@@ -1161,11 +1161,11 @@ CONTAINS
       CALL Init_d0MatOp(MatRV,type_Op,0,nb_ba,JRot=JRot,cplx=para_Op%cplx)
 
       IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
-        CALL alloc_NParray(mat2,(/nb_ba,nb_ba/),'mat2',name_sub)
-        CALL alloc_NParray(mat3,(/nb_ba,nb_ba/),'mat3',name_sub)
+        CALL alloc_NParray(mat2,[nb_ba,nb_ba],'mat2',name_sub)
+        CALL alloc_NParray(mat3,[nb_ba,nb_ba],'mat3',name_sub)
       END IF
-      CALL alloc_NParray(VecVib,(/nb_ba,nb_ba/),'VecVib',name_sub)
-      CALL alloc_NParray(EneVib,(/nb_ba/),'EneVib',name_sub)
+      CALL alloc_NParray(VecVib,[nb_ba,nb_ba],'VecVib',name_sub)
+      CALL alloc_NParray(EneVib,[nb_ba],'EneVib',name_sub)
 
 
       ! selected the optimal value of kmem, as function of max_mem and mem_tot
@@ -1185,8 +1185,8 @@ CONTAINS
       IF (mod(para_Op%nb_qa,kmem) /= 0) nb_blocks = nb_blocks + 1
       IF (print_level>0) write(out_unitp,*) 'number of blocks',nb_blocks
 
-      CALL alloc_NParray(td0b,(/nb_ba,kmem/),'td0b',name_sub)
-      CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+      CALL alloc_NParray(td0b,[nb_ba,kmem],'td0b',name_sub)
+      CALL alloc_NParray(VecQ,[kmem],'VecQ',name_sub)
 
       CALL Init_d0MatOp(d0MatOp,type_Op,para_Op%mole%nb_act1,nb_bie,    &
                                              JRot=JRot,cplx=para_Op%cplx)
@@ -1502,11 +1502,11 @@ CONTAINS
       CALL Init_d0MatOp(MatRV,type_Op,0,nb_ba,JRot=JRot,cplx=para_Op%cplx)
 
       IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
-        CALL alloc_NParray(mat2,(/nb_ba,nb_ba/),'mat2',name_sub)
-        CALL alloc_NParray(mat3,(/nb_ba,nb_ba/),'mat3',name_sub)
+        CALL alloc_NParray(mat2,[nb_ba,nb_ba],'mat2',name_sub)
+        CALL alloc_NParray(mat3,[nb_ba,nb_ba],'mat3',name_sub)
       END IF
-      CALL alloc_NParray(VecVib,(/nb_ba,nb_ba/),'VecVib',name_sub)
-      CALL alloc_NParray(EneVib,(/nb_ba/),'EneVib',name_sub)
+      CALL alloc_NParray(VecVib,[nb_ba,nb_ba],'VecVib',name_sub)
+      CALL alloc_NParray(EneVib,[nb_ba],'EneVib',name_sub)
 
 
       ! selected the optimal value of kmem, as function of max_mem and mem_tot
@@ -1525,7 +1525,7 @@ CONTAINS
       IF (mod(para_Op%nb_qa,kmem) /= 0) nb_blocks = nb_blocks + 1
       IF (print_level>0) write(out_unitp,*) 'number of blocks',nb_blocks
 
-      CALL alloc_NParray(td0b,(/nb_ba,kmem/),'td0b',name_sub)
+      CALL alloc_NParray(td0b,[nb_ba,kmem],'td0b',name_sub)
 
       CALL Init_d0MatOp(d0MatOp,type_Op,para_Op%mole%nb_act1,nb_bie,    &
                                              JRot=JRot,cplx=para_Op%cplx)
@@ -1606,7 +1606,7 @@ CONTAINS
           !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)     &
           !$OMP private(ib1,k,VecQ)                                  &
           !$OMP num_threads(MatOp_maxth)
-          CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+          CALL alloc_NParray(VecQ,[kmem],'VecQ',name_sub)
           !$OMP do
           DO ib1=1,para_Op%nb_ba
             IF (mod(ib1,max(1,int(para_Op%nb_ba/10))) == 0 .AND.        &
@@ -1638,7 +1638,7 @@ CONTAINS
           !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)   &
           !$OMP private(ib1,k,VecQ)                                &
           !$OMP num_threads(MatOp_maxth)
-          CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+          CALL alloc_NParray(VecQ,[kmem],'VecQ',name_sub)
           !$OMP do
           DO ib1=1,para_Op%nb_ba
             IF (mod(ib1,max(1,int(para_Op%nb_ba/10))) == 0 .AND.        &
@@ -1980,11 +1980,11 @@ CONTAINS
       CALL Init_d0MatOp(MatRV,type_Op,0,nb_ba,JRot=JRot,cplx=para_Op%cplx)
 
       IF (para_Op%para_AllBasis%basis_ext2n%contrac_ba_ON_HAC) THEN
-        CALL alloc_NParray(mat2,(/nb_ba,nb_ba/),'mat2',name_sub)
-        CALL alloc_NParray(mat3,(/nb_ba,nb_ba/),'mat3',name_sub)
+        CALL alloc_NParray(mat2,[nb_ba,nb_ba],'mat2',name_sub)
+        CALL alloc_NParray(mat3,[nb_ba,nb_ba],'mat3',name_sub)
       END IF
-      CALL alloc_NParray(VecVib,(/nb_ba,nb_ba/),'VecVib',name_sub)
-      CALL alloc_NParray(EneVib,(/nb_ba/),'EneVib',name_sub)
+      CALL alloc_NParray(VecVib,[nb_ba,nb_ba],'VecVib',name_sub)
+      CALL alloc_NParray(EneVib,[nb_ba],'EneVib',name_sub)
 
 
       ! selected the optimal value of kmem, as function of max_mem and mem_tot
@@ -2003,7 +2003,7 @@ CONTAINS
       IF (mod(para_Op%nb_qa,kmem) /= 0) nb_blocks = nb_blocks + 1
       IF (print_level>0) write(out_unitp,*) 'number of blocks',nb_blocks
 
-      CALL alloc_NParray(td0b,(/nb_ba,kmem/),'td0b',name_sub)
+      CALL alloc_NParray(td0b,[nb_ba,kmem],'td0b',name_sub)
 
       CALL Init_d0MatOp(d0MatOp,type_Op,para_Op%mole%nb_act1,nb_bie,    &
                                              JRot=JRot,cplx=para_Op%cplx)
@@ -2090,7 +2090,7 @@ CONTAINS
           !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)        &
           !$OMP private(ib1,k,VecQ)                                     &
           !$OMP num_threads(MatOp_maxth)
-          CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+          CALL alloc_NParray(VecQ,[kmem],'VecQ',name_sub)
           !$OMP do
           DO ib1=1,para_Op%nb_ba
             IF (mod(ib1,max(1,int(para_Op%nb_ba/10))) == 0 .AND.        &
@@ -2122,7 +2122,7 @@ CONTAINS
           !$OMP shared(MatRV,td0b,d0MatOpd0bWrho,out_unitp,kmem)   &
           !$OMP private(ib1,k,VecQ)                                &
           !$OMP num_threads(MatOp_maxth)
-          CALL alloc_NParray(VecQ,(/kmem/),'VecQ',name_sub)
+          CALL alloc_NParray(VecQ,[kmem],'VecQ',name_sub)
           !$OMP do
           DO ib1=1,para_Op%nb_ba
             IF (mod(ib1,max(1,int(para_Op%nb_ba/10))) == 0 .AND.        &
@@ -3569,9 +3569,9 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
 !---- initialization -------------------------------------
       nullify(psi)
-      CALL alloc_array(psi, (/nb_thread/),"psi", name_sub)
+      CALL alloc_array(psi, [nb_thread],"psi", name_sub)
       nullify(Hpsi)
-      CALL alloc_array(Hpsi,(/nb_thread/),"Hpsi",name_sub)
+      CALL alloc_array(Hpsi,[nb_thread],"Hpsi",name_sub)
 
       DO ith=1,nb_thread
         CALL init_psi(psi(ith),para_Op,para_Op%cplx)
@@ -4222,7 +4222,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
    !--------------------------------------------------------------
    !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
-   CALL alloc_NParray(tab_l,(/ BasisnD%para_SGType2%nDind_SmolyakRep%ndim /),'tabl_l',name_sub)
+   CALL alloc_NParray(tab_l,[BasisnD%para_SGType2%nDind_SmolyakRep%ndim],'tabl_l',name_sub)
    ith = 0
    tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
    !--------------------------------------------------------------

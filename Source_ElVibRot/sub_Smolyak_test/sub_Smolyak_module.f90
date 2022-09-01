@@ -1258,7 +1258,7 @@ DO iG=1,size(WPG)
   END IF
 
   allocate(RG(nq1,nq_d1,nq3))
-  RG(:,:,:) = reshape(WPG(iG)%RDP,(/ nq1,nq_d1,nq3 /))
+  RG(:,:,:) = reshape(WPG(iG)%RDP,[nq1,nq_d1,nq3])
 
   DO iq1=1,nq1
   DO iq3=1,nq3
@@ -1268,7 +1268,7 @@ DO iG=1,size(WPG)
   END DO
   END DO
 
-  T2WPG(iG)%RDP = reshape(RG,(/ 1,nqq,1 /))
+  T2WPG(iG)%RDP = reshape(RG,[1,nqq,1])
   deallocate(RG)
 
 END DO
@@ -1319,7 +1319,7 @@ DO iG=1,size(WPG)
   END IF
 
   allocate(RG(nq1,nq_d1,nq3))
-  RG(:,:,:) = reshape(WPG(iG)%RDP,(/ nq1,nq_d1,nq3 /))
+  RG(:,:,:) = reshape(WPG(iG)%RDP,[nq1,nq_d1,nq3])
 
   DO iq1=1,nq1
   DO iq3=1,nq3
@@ -1329,7 +1329,7 @@ DO iG=1,size(WPG)
   END DO
   END DO
 
-  T2WPG(iG)%RDP = reshape(RG,(/ 1,nqq,1 /))
+  T2WPG(iG)%RDP = reshape(RG,[1,nqq,1])
   deallocate(RG)
 
   ! second derivative: iq2_d1
@@ -1353,7 +1353,7 @@ DO iG=1,size(WPG)
   END IF
 
   allocate(RG(nq1,nq_d1,nq3))
-  RG(:,:,:) = reshape(WPG(iG)%RDP,(/ nq1,nq_d1,nq3 /))
+  RG(:,:,:) = reshape(WPG(iG)%RDP,[nq1,nq_d1,nq3])
 
   DO iq1=1,nq1
   DO iq3=1,nq3
@@ -1363,7 +1363,7 @@ DO iG=1,size(WPG)
   END DO
   END DO
 
-  T2WPG(iG)%RDP = reshape(RG,(/ 1,nqq,1 /))
+  T2WPG(iG)%RDP = reshape(RG,[1,nqq,1])
   deallocate(RG)
 
 END DO
@@ -1411,7 +1411,7 @@ DO iG=1,size(WPG)
   END IF
 
   allocate(RG(nq1,nq_d2,nq3))
-  RG(:,:,:) = reshape(WPG(iG)%RDP,(/ nq1,nq_d2,nq3 /))
+  RG(:,:,:) = reshape(WPG(iG)%RDP,[nq1,nq_d2,nq3])
 
   DO iq1=1,nq1
   DO iq3=1,nq3
@@ -1421,7 +1421,7 @@ DO iG=1,size(WPG)
   END DO
   END DO
 
-  T2WPG(iG)%RDP = reshape(RG,(/ 1,nqq,1 /))
+  T2WPG(iG)%RDP = reshape(RG,[1,nqq,1])
   deallocate(RG)
 
 END DO

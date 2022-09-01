@@ -97,7 +97,7 @@
           logical :: l_IntVR      = .FALSE. ! intensity vib+rot
           logical :: l_Tau        = .FALSE. ! life time (s)
 
-          logical :: pola_xyz(3)  = (/.TRUE.,.TRUE.,.TRUE./) ! use some of component of the dipole moment
+          logical :: pola_xyz(3)  = [.TRUE.,.TRUE.,.TRUE.] ! use some of component of the dipole moment
 
           logical :: l_md         = .FALSE.
           logical :: l_md2        = .FALSE.
@@ -106,7 +106,7 @@
 
           logical                    :: Inertia   = .FALSE.
           real (kind=Rkind)          :: Temp      = 298_Rkind           ! temperature (K) (for intensity)
-          real (kind=Rkind)          :: ABCref(3) = (/ZERO,ZERO,ZERO/)  ! rotational constant (au)
+          real (kind=Rkind)          :: ABCref(3) = [ZERO,ZERO,ZERO]  ! rotational constant (au)
           real (kind=Rkind), allocatable :: ABC(:,:)
 
           integer           :: JJmax = 10

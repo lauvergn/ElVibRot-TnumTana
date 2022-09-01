@@ -644,7 +644,7 @@ SUBROUTINE sub_ReadRV(RV,FileName_RV,lformatted,err_sub)
   END IF
 
   IF (error == 0) THEN
-    CALL alloc_NParray(RV,(/ nvec /),'RV',name_sub)
+    CALL alloc_NParray(RV,[nvec],'RV',name_sub)
     IF (lformatted) THEN
       read(nio,*,iostat=err_file) RV
     ELSE

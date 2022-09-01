@@ -211,7 +211,7 @@ CONTAINS
     END IF
 
     IF(.NOT. allocated(tab_WeightChannels) .AND. nb_bi > 0 .AND. nb_be > 0) THEN
-      CALL alloc_NParray(tab_WeightChannels,(/nb_bi,nb_be/),                             &
+      CALL alloc_NParray(tab_WeightChannels,[nb_bi,nb_be],                             &
                         "tab_WeightChannels","Channel_weight")
       tab_WeightChannels(:,:) = ZERO
     END IF
@@ -315,7 +315,7 @@ CONTAINS
       DO i_bi=1,nb_bi
         IF(tab_WeightChannels(i_bi,i_be)>max_w) THEN
           max_w=tab_WeightChannels(i_bi,i_be)
-          Dominant_Channel(:)=(/ i_be,i_bi /)
+          Dominant_Channel(:)=[i_be,i_bi]
         END IF
       END DO
       END DO

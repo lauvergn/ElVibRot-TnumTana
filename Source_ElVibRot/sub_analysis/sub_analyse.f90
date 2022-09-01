@@ -152,7 +152,7 @@ CONTAINS
       IF (para_ana%max_ana > nb_psi_in) para_ana%max_ana = nb_psi_in
 
       IF (para_ana%intensity .AND. para_intensity%l_IntVR) THEN
-        CALL alloc_NParray(para_intensity%ABC,(/3,nb_psi_in /),            &
+        CALL alloc_NParray(para_intensity%ABC,[3,nb_psi_in],            &
                           "para_intensity%ABC",name_sub)
       END IF
 
@@ -270,7 +270,7 @@ CONTAINS
       IF (para_ana%print_psi > 0 .OR. debug) THEN
 
 
-        CALL alloc_NParray(Mat_psi,(/ tab_Psi(1)%nb_tot,para_ana%print_psi /), &
+        CALL alloc_NParray(Mat_psi,[tab_Psi(1)%nb_tot,para_ana%print_psi], &
                         "Mat_psi",name_sub)
         DO i=1,para_ana%print_psi
           Mat_psi(:,i) = tab_Psi(i)%RvecB(:)
@@ -577,10 +577,10 @@ CONTAINS
       write(out_unitp,*) 'eigenvectors on a grid',nb_psi
 
 !     - initisalisation ----------------------------------
-      CALL alloc_NParray(d0b,     (/ nb_ba /),       'd0b','write_psi')
-      CALL alloc_NParray(psid0b_k,(/ nb_ba /),       'psid0b_k','write_psi')
-      CALL alloc_NParray(Qact1,   (/ mole%nb_act1 /),'Qact1','write_psi')
-      CALL alloc_NParray(psi_q,   (/ nb_psi,n_h /),  'psi_q','write_psi')
+      CALL alloc_NParray(d0b,     [nb_ba],       'd0b','write_psi')
+      CALL alloc_NParray(psid0b_k,[nb_ba],       'psid0b_k','write_psi')
+      CALL alloc_NParray(Qact1,   [mole%nb_act1],'Qact1','write_psi')
+      CALL alloc_NParray(psi_q,   [nb_psi,n_h],  'psi_q','write_psi')
 
 
 !      - check the phase of psi(:,i) ----------
@@ -700,8 +700,8 @@ CONTAINS
       write(out_unitp,*) 'eigenvectors on a grid',nb_psi
 
 
-      CALL alloc_NParray(psi_q,(/nb_qa,nb_psi/),'psi_q',name_sub)
-      CALL alloc_NParray(Qact1,(/Tab_Psi(1)%nb_act1/),'Qact1',name_sub)
+      CALL alloc_NParray(psi_q,[nb_qa,nb_psi],'psi_q',name_sub)
+      CALL alloc_NParray(Qact1,[Tab_Psi(1)%nb_act1],'Qact1',name_sub)
 
 
 !-----------------------------------------------------------
@@ -789,7 +789,7 @@ CONTAINS
 
 !-----------------------------------------------------------
 
-      CALL alloc_NParray(psi_q,(/nb_qa,nb_psi/),'psi_q',name_sub)
+      CALL alloc_NParray(psi_q,[nb_qa,nb_psi],'psi_q',name_sub)
 
 
        DO i=1,nb_psi

@@ -394,7 +394,7 @@
 
 
 !        STOP
-         type_v = (/ 15,15,15,15,15,15 /)
+         type_v = [15,15,15,15,15,15]
          read(5,dirprod_typ)
          write(out_unitp,dirprod_typ)
 

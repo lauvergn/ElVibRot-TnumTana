@@ -127,7 +127,7 @@
  41         format(72a)
             read(line,*) name_Z,x,y,z
             para_cart%masses(i) = get_mass_Tnum(const_phys%mendeleev,name=name_Z)
-            para_cart%dnAt(i)%d0(1:3) = (/ x,y,z /)
+            para_cart%dnAt(i)%d0(1:3) = [x,y,z]
             para_cart%dnAt(i)%d0(:) = para_cart%dnAt(i)%d0(:) * conv
             !write(out_unitp,*) para_cart%masses(i),para_cart%dnAt(i)%d0
           END DO

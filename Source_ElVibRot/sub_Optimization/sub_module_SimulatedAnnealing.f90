@@ -283,12 +283,12 @@
       nullify(QAv)
       nullify(xOpt)
 
-      CALL alloc_array(x,   (/ nb_Opt /),'x',   name_sub)
-      CALL alloc_array(x0,  (/ nb_Opt /),'x0',  name_sub)
-      CALL alloc_array(xOpt,(/ nb_Opt /),'xOpt',name_sub)
-      CALL alloc_array(QA,  (/ nb_Opt /),'QA',  name_sub)
-      CALL alloc_array(QB,  (/ nb_Opt /),'QB',  name_sub)
-      CALL alloc_array(QAv, (/ nb_Opt /),'Qav', name_sub)
+      CALL alloc_array(x,   [nb_Opt],'x',   name_sub)
+      CALL alloc_array(x0,  [nb_Opt],'x0',  name_sub)
+      CALL alloc_array(xOpt,[nb_Opt],'xOpt',name_sub)
+      CALL alloc_array(QA,  [nb_Opt],'QA',  name_sub)
+      CALL alloc_array(QB,  [nb_Opt],'QB',  name_sub)
+      CALL alloc_array(QAv, [nb_Opt],'Qav', name_sub)
       ! end allocation
 
       CALL Write_param_SimulatedAnnealing(para_SimulatedAnnealing)
@@ -540,10 +540,10 @@
       nullify(QAv)
       nullify(xOpt)
 
-      CALL alloc_array(x,   (/ nb_Opt /),'x',   name_sub)
-      CALL alloc_array(x0,  (/ nb_Opt /),'x0',  name_sub)
-      CALL alloc_array(xOpt,(/ nb_Opt /),'xOpt',name_sub)
-      CALL alloc_array(QAv, (/ nb_Opt /),'Qav', name_sub)
+      CALL alloc_array(x,   [nb_Opt],'x',   name_sub)
+      CALL alloc_array(x0,  [nb_Opt],'x0',  name_sub)
+      CALL alloc_array(xOpt,[nb_Opt],'xOpt',name_sub)
+      CALL alloc_array(QAv, [nb_Opt],'Qav', name_sub)
       ! end allocation
 
       CALL Write_param_SimulatedAnnealing(para_SimulatedAnnealing)

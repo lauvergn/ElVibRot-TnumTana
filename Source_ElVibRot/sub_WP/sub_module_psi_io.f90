@@ -151,12 +151,12 @@
            para_WP0%nb_WP0 = nb_readWP_file
         END IF
 
-        CALL alloc_NParray(list_readWP,(/para_WP0%nb_WP0/),"list_readWP",name_sub)
+        CALL alloc_NParray(list_readWP,[para_WP0%nb_WP0],"list_readWP",name_sub)
         write(out_unitp,*) 'nb_WP0,nb_readWP_file',para_WP0%nb_WP0,nb_readWP_file
         IF (para_WP0%read_listWP0) THEN
           read(in_unitp,*) list_readWP(1:para_WP0%nb_WP0)
         ELSE
-          list_readWP(:) = (/ (i,i=1,para_WP0%nb_WP0) /)
+          list_readWP(:) = [(i,i=1,para_WP0%nb_WP0)]
         END IF
 
         IF (debug) write(out_unitp,*) 'list_readWP:',list_readWP(1:para_WP0%nb_WP0)
@@ -1366,7 +1366,7 @@ IF (file_WP%formatted) THEN
       STOP
     END IF
 
-!    CALL alloc_NParray(list_nDindBasis1_TO_nDindBasis2,(/nb_tot/),&
+!    CALL alloc_NParray(list_nDindBasis1_TO_nDindBasis2,[nb_tot],&
 !                      "list_nDindBasis1_TO_nDindBasis2",name_sub)
 !    CALL Read_list_nDindBasis1_TO_nDindBasis2(psi(1),             &
 !                    list_nDindBasis1_TO_nDindBasis2,nb_tot,nioWP, &
@@ -1404,7 +1404,7 @@ CALL flush_perso(out_unitp)
 
 ! When nb_tot > 0, the list_nDindBasis1_TO_nDindBasis2(:) has to be read.
 IF (nb_tot > 0) THEN
-  CALL alloc_NParray(list_nDindBasis1_TO_nDindBasis2,(/nb_tot/),&
+  CALL alloc_NParray(list_nDindBasis1_TO_nDindBasis2,[nb_tot],&
                     "list_nDindBasis1_TO_nDindBasis2",name_sub)
   CALL Read_list_nDindBasis1_TO_nDindBasis2(psi(1),             &
                   list_nDindBasis1_TO_nDindBasis2,nb_tot,nioWP, &

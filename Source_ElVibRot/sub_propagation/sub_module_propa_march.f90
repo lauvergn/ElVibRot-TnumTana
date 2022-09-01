@@ -1717,7 +1717,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
            nb_der = min(para_field%max_der,para_propa%para_poly%npoly-1)
 
       nullify(tab_dnE)
-      CALL alloc_array(tab_dnE,(/nb_der,3/),"tab_dnE",name_sub,(/0,1/))
+      CALL alloc_array(tab_dnE,[nb_der,3],"tab_dnE",name_sub,[0,1])
       tab_dnE(:,:) = ZERO
 !-----------------------------------------------------------
 
@@ -5015,8 +5015,8 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       IF (para_field%max_der >= 0)                                      &
            nb_der = min(para_field%max_der,para_propa%para_poly%npoly-1)
 
-      CALL alloc_NParray(tab_dnE,(/nb_der,3/),                            &
-                      "tab_dnE","march_new0_noD_field",(/0,1/))
+      CALL alloc_NParray(tab_dnE,[nb_der,3],                            &
+                      "tab_dnE","march_new0_noD_field",[0,1])
       tab_dnE(:,:) = ZERO
 
       DO k=0,nb_der
@@ -5231,8 +5231,8 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       IF (para_field%max_der >= 0)                                      &
            nb_der = min(para_field%max_der,para_propa%para_poly%npoly-1)
 
-      CALL alloc_NParray(tab_dnE,(/nb_der,3/),                          &
-                      "tab_dnE",name_sub,(/0,1/))
+      CALL alloc_NParray(tab_dnE,[nb_der,3],                          &
+                      "tab_dnE",name_sub,[0,1])
       tab_dnE(:,:) = ZERO
 
       CALL alloc_NParray(work_WP,[para_propa%para_poly%npoly-1],        &

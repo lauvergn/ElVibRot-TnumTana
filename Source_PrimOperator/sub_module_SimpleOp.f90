@@ -242,27 +242,27 @@
       para_TypeOp%nb_term = nb_term
 
 
-      CALL alloc_NParray(para_TypeOp%derive_termQact,(/ 2,nb_term /),   &
+      CALL alloc_NParray(para_TypeOp%derive_termQact,[2,nb_term],   &
                         "para_TypeOp%derive_termQact",name_sub)
 
 
       CALL alloc_NParray(para_TypeOp%derive_term_TO_iterm,              &
-                                                (/ nb_Qact,nb_Qact /),  &
+                                                [nb_Qact,nb_Qact],  &
                         "para_TypeOp%derive_term_TO_iterm",name_sub,    &
-                                                         (/ -3,-3 /) )
+                                                         [-3,-3] )
 
       SELECT CASE (para_TypeOp%Type_Op)
       CASE (0) ! Scalar Operator
         para_TypeOp%derive_term_TO_iterm(:,:) = -1
         para_TypeOp%derive_term_TO_iterm(0,0) = 1
-        para_TypeOp%derive_termQact(:,1)      = (/ 0,0 /)
+        para_TypeOp%derive_termQact(:,1)      = [0,0]
       CASE (1) ! Hamiltonian
         para_TypeOp%derive_term_TO_iterm(:,:) = -1
 
         ! potential + vep
         iterm = 1
         para_TypeOp%derive_term_TO_iterm(0,0) = iterm
-        para_TypeOp%derive_termQact(:,iterm)  = (/ 0,0 /)
+        para_TypeOp%derive_termQact(:,iterm)  = [0,0]
 
         ! f2
         DO i=1,nb_Qact
@@ -270,7 +270,7 @@
           iterm = iterm + 1
           para_TypeOp%derive_term_TO_iterm(i,j) = iterm
           para_TypeOp%derive_term_TO_iterm(j,i) = iterm
-          para_TypeOp%derive_termQact(:,iterm)  = (/ i,j /)
+          para_TypeOp%derive_termQact(:,iterm)  = [i,j]
         END DO
         END DO
         ! f1
@@ -278,7 +278,7 @@
           iterm = iterm + 1
           para_TypeOp%derive_term_TO_iterm(i,0) = iterm
           para_TypeOp%derive_term_TO_iterm(0,i) = iterm
-          para_TypeOp%derive_termQact(:,iterm)  = (/ i,0 /)
+          para_TypeOp%derive_termQact(:,iterm)  = [i,0]
         END DO
 
         IF (para_TypeOp%JRot > 0) THEN
@@ -288,7 +288,7 @@
             iterm = iterm + 1
             para_TypeOp%derive_term_TO_iterm(i,j) = iterm
             para_TypeOp%derive_term_TO_iterm(j,i) = iterm
-            para_TypeOp%derive_termQact(:,iterm)  = (/ i,j /)
+            para_TypeOp%derive_termQact(:,iterm)  = [i,j]
           END DO
           END DO
 
@@ -298,7 +298,7 @@
             iterm = iterm + 1
             para_TypeOp%derive_term_TO_iterm(i,j) = iterm
             para_TypeOp%derive_term_TO_iterm(j,i) = iterm
-            para_TypeOp%derive_termQact(:,iterm)  = (/ i,j /)
+            para_TypeOp%derive_termQact(:,iterm)  = [i,j]
           END DO
           END DO
         END IF
@@ -316,7 +316,7 @@
         ! potential
         iterm = 1
         para_TypeOp%derive_term_TO_iterm(0,0) = iterm
-        para_TypeOp%derive_termQact(:,iterm)  = (/ 0,0 /)
+        para_TypeOp%derive_termQact(:,iterm)  = [0,0]
 
         IF (.NOT. para_TypeOp%direct_KEO) THEN
           ! Gij
@@ -324,7 +324,7 @@
           DO j=1,nb_Qact
             iterm = iterm + 1
             para_TypeOp%derive_term_TO_iterm(j,i) = iterm
-            para_TypeOp%derive_termQact(:,iterm)  = (/ j,i /)
+            para_TypeOp%derive_termQact(:,iterm)  = [j,i]
           END DO
           END DO
 
@@ -334,7 +334,7 @@
             DO j=-3,-1
               iterm = iterm + 1
               para_TypeOp%derive_term_TO_iterm(j,i) = iterm
-              para_TypeOp%derive_termQact(:,iterm)  = (/ j,i /)
+              para_TypeOp%derive_termQact(:,iterm)  = [j,i]
             END DO
             END DO
 
@@ -343,14 +343,14 @@
             DO j=1,nb_Qact
               iterm = iterm + 1
               para_TypeOp%derive_term_TO_iterm(j,i) = iterm
-              para_TypeOp%derive_termQact(:,iterm)  = (/ j,i /)
+              para_TypeOp%derive_termQact(:,iterm)  = [j,i]
             END DO
             END DO
             DO i=1,nb_Qact
             DO j=-3,-1
               iterm = iterm + 1
               para_TypeOp%derive_term_TO_iterm(j,i) = iterm
-              para_TypeOp%derive_termQact(:,iterm)  = (/ j,i /)
+              para_TypeOp%derive_termQact(:,iterm)  = [j,i]
             END DO
             END DO
           END IF
@@ -512,7 +512,7 @@
        i2 = derive_termQact(2,iterm)
        IF (i2 > 0 .AND. i2 <= size(list_QactTOQdyn)) i2 = list_QactTOQdyn(i2)
 
-       derive_termQdyn(:,iterm) = (/ i1,i2 /)
+       derive_termQdyn(:,iterm) = [i1,i2]
 
      END DO
 
@@ -539,11 +539,11 @@
         STOP
       END IF
 
-      CALL alloc_NParray(d0MatOp%ReVal,(/ nb_bie_loc,nb_bie_loc,d0MatOp%nb_term /), &
+      CALL alloc_NParray(d0MatOp%ReVal,[nb_bie_loc,nb_bie_loc,d0MatOp%nb_term], &
                         "d0MatOp%ReVal",name_sub)
 
       IF (d0MatOp%cplx) THEN
-        CALL alloc_NParray(d0MatOp%ImVal,(/ nb_bie_loc,nb_bie_loc /),   &
+        CALL alloc_NParray(d0MatOp%ImVal,[nb_bie_loc,nb_bie_loc],   &
                           "d0MatOp%ImVal",name_sub)
       END IF
 
@@ -857,7 +857,7 @@
 
 
       CALL alloc_array(dnMatOp%tab_dnMatOp,                             &
-                                   (/ nb_bie,nb_bie,dnMatOp%nb_term /), &
+                                   [nb_bie,nb_bie,dnMatOp%nb_term], &
                       "dnMatOp%tab_dnMatOp",name_sub)
 
      DO i3=1,dnMatOp%nb_term
@@ -871,7 +871,7 @@
 
      IF (dnMatOp%cplx) THEN
 
-        CALL alloc_array(dnMatOp%Im_dnMatOp, (/ nb_bie,nb_bie /),   &
+        CALL alloc_array(dnMatOp%Im_dnMatOp, [nb_bie,nb_bie],   &
                         "dnMatOp%Im_dnMatOp",name_sub)
 
         DO i2=1,nb_bie
@@ -1186,7 +1186,7 @@
       IF (present(der)) THEN
         der_loc = der
       ELSE
-        der_loc = (/0,0/) ! H
+        der_loc = [0,0] ! H
       END IF
 
       IF (present(ie)) THEN
@@ -1253,7 +1253,7 @@
       IF (present(der)) THEN
         der_loc = der
       ELSE
-        der_loc = (/0,0/) ! H
+        der_loc = [0,0] ! H
       END IF
 
       IF (present(ie)) THEN
@@ -1320,7 +1320,7 @@
       IF (present(der)) THEN
         der_loc = der
       ELSE
-        der_loc = (/0,0/) ! H
+        der_loc = [0,0] ! H
       END IF
 
       IF (present(ie)) THEN
@@ -1642,7 +1642,7 @@
         DO i3=1,ubound(dnMatOp%tab_dnMatOp,dim=3)
         DO i2=1,ubound(dnMatOp%tab_dnMatOp,dim=2)
         DO i1=1,ubound(dnMatOp%tab_dnMatOp,dim=1)
-          CALL sub_WeightDer_dnS(dnMatOp%tab_dnMatOp(i1,i2,i3),w,(/id1/))
+          CALL sub_WeightDer_dnS(dnMatOp%tab_dnMatOp(i1,i2,i3),w,[id1])
         END DO
         END DO
         END DO
@@ -1650,7 +1650,7 @@
         IF (dnMatOp%cplx) THEN
           DO i2=1,ubound(dnMatOp%Im_dnMatOp,dim=2)
           DO i1=1,ubound(dnMatOp%Im_dnMatOp,dim=1)
-            CALL sub_WeightDer_dnS(dnMatOp%Im_dnMatOp(i1,i2),w,(/id1/))
+            CALL sub_WeightDer_dnS(dnMatOp%Im_dnMatOp(i1,i2),w,[id1])
           END DO
           END DO
         END IF

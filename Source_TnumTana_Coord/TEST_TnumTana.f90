@@ -94,7 +94,7 @@
 !===========================================================
 !===========================================================
 
-      CALL alloc_NParray(Qact,(/ mole%nb_var /),'Qact',name_sub)
+      CALL alloc_NParray(Qact,[mole%nb_var],'Qact',name_sub)
       CALL get_Qact0(Qact,mole%ActiveTransfo)
 
 

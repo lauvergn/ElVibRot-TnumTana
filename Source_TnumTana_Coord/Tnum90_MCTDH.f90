@@ -97,7 +97,7 @@
 !===========================================================
 !===========================================================
 
-      CALL alloc_NParray(Qact,(/ mole%nb_var /),'Qact',name_sub)
+      CALL alloc_NParray(Qact,[mole%nb_var],'Qact',name_sub)
       CALL get_Qact0(Qact,mole%ActiveTransfo)
 
 !-------------------------------------------------
@@ -109,7 +109,7 @@
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
        mole%WriteCC = .FALSE.
-       CALL alloc_NParray(Qxyz,(/ mole%ncart_act /),'Qxyz',name_sub)
+       CALL alloc_NParray(Qxyz,[mole%ncart_act],'Qxyz',name_sub)
 
        write(out_unitp,*) "======================================"
        CALL time_perso('Qact->Qxyz')
@@ -145,11 +145,11 @@
 !     - calculation of f2, f1, vep, rho ----------
 !     --------------------------------------------
 
-       CALL alloc_array(Tdef2,(/ mole%nb_act,mole%nb_act /),'Tdef2',name_sub)
-       CALL alloc_array(Tdef1,(/ mole%nb_act /),            'Tdef1',name_sub)
-       CALL alloc_array(Tcor2,(/ mole%nb_act,3 /),          'Tcor2',name_sub)
-       CALL alloc_array(Tcor1,(/ 3 /),                      'Tcor1',name_sub)
-       CALL alloc_array(Trot, (/ 3,3 /),                    'Trot', name_sub)
+       CALL alloc_array(Tdef2,[mole%nb_act,mole%nb_act],'Tdef2',name_sub)
+       CALL alloc_array(Tdef1,[mole%nb_act],            'Tdef1',name_sub)
+       CALL alloc_array(Tcor2,[mole%nb_act,3],          'Tcor2',name_sub)
+       CALL alloc_array(Tcor1,[3],                      'Tcor1',name_sub)
+       CALL alloc_array(Trot, [3,3],                    'Trot', name_sub)
 
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"

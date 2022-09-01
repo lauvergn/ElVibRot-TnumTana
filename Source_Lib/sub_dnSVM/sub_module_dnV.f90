@@ -107,21 +107,21 @@ MODULE mod_dnV
 
 
         IF (nv > 0) THEN
-          CALL alloc_array(dnVec%d0,(/ nv /),'dnVec%d0','alloc_dnVec')
+          CALL alloc_array(dnVec%d0,[nv],'dnVec%d0','alloc_dnVec')
           dnVec%d0(:) = ZERO
 
           IF (dnVec%nderiv >= 1) THEN
-            CALL alloc_array(dnVec%d1,(/ nv,nd /),'dnVec%d1','alloc_dnVec')
+            CALL alloc_array(dnVec%d1,[nv,nd],'dnVec%d1','alloc_dnVec')
             dnVec%d1(:,:) = ZERO
           END IF
 
           IF (dnVec%nderiv >= 2) THEN
-            CALL alloc_array(dnVec%d2,(/ nv,nd,nd /),'dnVec%d2','alloc_dnVec')
+            CALL alloc_array(dnVec%d2,[nv,nd,nd],'dnVec%d2','alloc_dnVec')
             dnVec%d2(:,:,:) = ZERO
           END IF
 
           IF (dnVec%nderiv >= 3) THEN
-            CALL alloc_array(dnVec%d3,(/ nv,nd,nd,nd /),'dnVec%d3','alloc_dnVec')
+            CALL alloc_array(dnVec%d3,[nv,nd,nd,nd],'dnVec%d3','alloc_dnVec')
             dnVec%d3(:,:,:,:) = ZERO
           END IF
 

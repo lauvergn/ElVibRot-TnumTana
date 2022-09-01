@@ -202,7 +202,7 @@
           write(out_unitp,*) ' The initial hessian is calculated'
           !-------- allocation -----------------------------------------------
           CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_Opt,PrimOp%nb_elec,nderiv=2)
-          CALL alloc_array(para_BFGS%hessian_inv_init,(/ nb_Opt,nb_Opt /),  &
+          CALL alloc_array(para_BFGS%hessian_inv_init,[nb_Opt,nb_Opt],  &
                           'para_BFGS%hessian_inv_init',name_sub)
           !-------- end allocation --------------------------------------------
 

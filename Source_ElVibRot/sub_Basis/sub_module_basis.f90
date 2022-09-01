@@ -682,7 +682,7 @@ MODULE mod_basis
       basis_primi%primitive_done = .TRUE.
 
       CALL dealloc_nDindex(basis_primi%nDindG)
-      CALL init_nDindexPrim(basis_primi%nDindG,1,(/ nq /))
+      CALL init_nDindexPrim(basis_primi%nDindG,1,[nq])
 
       IF (basis_primi%type == 2000) THEN
         CONTINUE ! nD-HO with cubature: already done
@@ -694,7 +694,7 @@ MODULE mod_basis
         CALL dealloc_nDindex(basis_primi%nDindB)
         IF (basis_primi%With_L) THEN
           basis_primi%nDindB%packed = .TRUE.
-          CALL init_nDindexPrim(basis_primi%nDindB,1,(/ basis_primi%nb /))
+          CALL init_nDindexPrim(basis_primi%nDindB,1,[basis_primi%nb])
           basis_primi%nDindB%With_L = .TRUE.
           basis_primi%nDindB%Tab_L(:)    = -1
           basis_primi%nDindB%Tab_Norm(:) = -ONE
@@ -714,9 +714,9 @@ MODULE mod_basis
           CALL init_nDindexPrim(basis_primi%nDindB,ndim=1,               &
                             Type_OF_nDindex=basis_primi%Type_OF_nDindB,  &
                             MaxNorm=basis_primi%Norm_OF_nDindB,          &
-                            nDinit=(/ basis_primi%nDinit_OF_nDindB /),   &
-                            nDsize=(/ basis_primi%nb /),                 &
-                            nDweight=(/ weight /)      )
+                            nDinit=[basis_primi%nDinit_OF_nDindB],   &
+                            nDsize=[basis_primi%nb],                 &
+                            nDweight=[weight]      )
         END IF
       END IF
 
@@ -1004,7 +1004,7 @@ MODULE mod_basis
 !       - read the matrix for the contraction ----------
 !       ------------------ Mat_read --------------------
 !
-        CALL alloc_NParray(Mat_read,(/ nb_b1,nb_bc1 /),"Mat_read",name_sub)
+        CALL alloc_NParray(Mat_read,[nb_b1,nb_bc1],"Mat_read",name_sub)
         CALL Read_Mat(Mat_read,nio,nb_col,err)
         IF (err /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
@@ -1023,7 +1023,7 @@ MODULE mod_basis
         IF (allocated(basis_set%Rvec))  THEN
           CALL dealloc_NParray(basis_set%Rvec,"basis_set%Rvec",name_sub)
         END IF
-        CALL alloc_NParray(basis_set%Rvec,(/ nb_b,nb_bc /),"basis_set%Rvec",name_sub)
+        CALL alloc_NParray(basis_set%Rvec,[nb_b,nb_bc],"basis_set%Rvec",name_sub)
         basis_set%Rvec(:,:) = ZERO
 
         basis_set%Rvec(:,1:nb_bc) = Mat_read(:,1:nb_bc)
@@ -1038,7 +1038,7 @@ MODULE mod_basis
       END IF
       !-------------------------------------------------
       !- first the symmetry because Rvec can be modified
-      CALL alloc_NParray(tab_contract_symab,(/ basis_set%nbc /),          &
+      CALL alloc_NParray(tab_contract_symab,[basis_set%nbc],          &
                         "tab_contract_symab",name_sub)
       !analyze the symmetry of each Rvec(:,i)
       !write(out_unitp,*) 'basis_set%tab_symab',basis_set%tab_symab
@@ -1189,17 +1189,17 @@ MODULE mod_basis
         CALL init_nDindexPrim(basis_set%nDindB,ndim=1,                 &
                             Type_OF_nDindex=basis_set%Type_OF_nDindB,  &
                             MaxNorm=basis_set%Norm_OF_nDindB,          &
-                            nDinit=(/ basis_set%nDinit_OF_nDindB /),   &
-                            nDsize=(/ basis_set%nb /),                 &
-                            nDweight=(/ basis_set%weight_OF_nDindB /) )
+                            nDinit=[basis_set%nDinit_OF_nDindB],   &
+                            nDsize=[basis_set%nb],                 &
+                            nDweight=[basis_set%weight_OF_nDindB] )
         CALL pack_nDindex(basis_set%nDindB)
 
       ELSE
 
-        CALL alloc_NParray(Tab_nDval,(/ 1,basis_set%nbc /),"Tab_nDval",name_sub)
+        CALL alloc_NParray(Tab_nDval,[1,basis_set%nbc],"Tab_nDval",name_sub)
 
         CALL dealloc_nDindex(basis_set%nDindB)
-        CALL alloc_NParray(basis_set%nDindB%Tab_Norm,(/basis_set%nbc/),   &
+        CALL alloc_NParray(basis_set%nDindB%Tab_Norm,[basis_set%nbc],   &
                           "basis_set%nDindB%Tab_Norm",name_sub)
         ! calculation of the Norm of each contracted vector
         DO ibc=1,basis_set%nbc
@@ -1235,10 +1235,10 @@ MODULE mod_basis
                             "basis_set%tab_ndim_index",name_sub)
       END IF
       CALL alloc_NParray(basis_set%tab_ndim_index,                        &
-                                    (/ basis_set%ndim,basis_set%nbc /), &
+                                    [basis_set%ndim,basis_set%nbc], &
                       "basis_set%tab_ndim_index",name_sub)
       basis_set%tab_ndim_index(:,:) = 0
-      basis_set%tab_ndim_index(1,:) = (/ (ibc,ibc=1,basis_set%nbc) /)
+      basis_set%tab_ndim_index(1,:) = [(ibc,ibc=1,basis_set%nbc)]
 
       basis_set%nb  = basis_set%nbc
 
@@ -1325,12 +1325,12 @@ MODULE mod_basis
       END IF
       nq = get_nq_FROM_basis(basis_set)
 
-      CALL alloc_NParray(nDval,(/ basis_set%nDindB%ndim /),'nDval',name_sub)
-      CALL alloc_NParray(bi,   (/ nq /),                   'bi',name_sub)
-      CALL alloc_NParray(cbi,  (/ nq /),                   'cbi',name_sub)
-      CALL alloc_NParray(biF,  (/ basis_set%nb /),         'biF',name_sub)
-      CALL alloc_NParray(cbiF, (/ basis_set%nb /),         'cbiF',name_sub)
-      CALL alloc_NParray(ni,   (/ basis_set%ndim /),       'ni',name_sub)
+      CALL alloc_NParray(nDval,[basis_set%nDindB%ndim],'nDval',name_sub)
+      CALL alloc_NParray(bi,   [nq],                   'bi',name_sub)
+      CALL alloc_NParray(cbi,  [nq],                   'cbi',name_sub)
+      CALL alloc_NParray(biF,  [basis_set%nb],         'biF',name_sub)
+      CALL alloc_NParray(cbiF, [basis_set%nb],         'cbiF',name_sub)
+      CALL alloc_NParray(ni,   [basis_set%ndim],       'ni',name_sub)
 
       IF (debug) THEN
         write(out_unitp,*) ' Unsorted basis set with Norm of nDindB'
@@ -1352,7 +1352,7 @@ MODULE mod_basis
 
             IF (allocated(basis_set%Rvec)) THEN
               nb_uncc = ubound(basis_set%Rvec,dim=1)
-              CALL alloc_NParray(bcci,(/ nb_uncc /),'bcci',name_sub)
+              CALL alloc_NParray(bcci,[nb_uncc],'bcci',name_sub)
 
               bcci(:)              = basis_set%Rvec(:,ib)
               basis_set%Rvec(:,ib) = basis_set%Rvec(:,jb)
@@ -1674,7 +1674,7 @@ MODULE mod_basis
       IF (basis_set%cplx) THEN
          CALL alloc_dnCplxMat(basis_set%dnCBB,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=2)
 
-        CALL alloc_NParray(d0cbwrho,(/ nq,basis_set%nb /),'d0cbwrho',name_sub)
+        CALL alloc_NParray(d0cbwrho,[nq,basis_set%nb],'d0cbwrho',name_sub)
 
         DO iq=1,nq
           wrho = Rec_WrhonD(basis_set,iq)
@@ -1705,7 +1705,7 @@ MODULE mod_basis
       ELSE
         CALL alloc_dnMat(basis_set%dnRBB,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=2)
 
-        CALL alloc_NParray(d0bwrho,(/ nq,basis_set%nb /),'d0bwrho',name_sub)
+        CALL alloc_NParray(d0bwrho,[nq,basis_set%nb],'d0bwrho',name_sub)
 
 
         DO iq=1,nq
@@ -2249,12 +2249,12 @@ MODULE mod_basis
 
         CALL alloc_dnMat(basis_set%dnRGG,nq,nq,nb_var_deriv=basis_set%ndim,nderiv=2)
 
-        CALL alloc_NParray(d0bxd0bT,     (/ nq,nq /),'d0bxd0bT',     name_sub)
+        CALL alloc_NParray(d0bxd0bT,     [nq,nq],'d0bxd0bT',     name_sub)
 
-        CALL alloc_NParray(d0bxd0bT_inv, (/ nq,nq /),'d0bxd0bT_inv', name_sub)
-        CALL alloc_NParray(d0b_pseudoInv,(/ nb,nq /),'d0b_pseudoInv',name_sub)
+        CALL alloc_NParray(d0bxd0bT_inv, [nq,nq],'d0bxd0bT_inv', name_sub)
+        CALL alloc_NParray(d0b_pseudoInv,[nb,nq],'d0b_pseudoInv',name_sub)
 
-        CALL alloc_NParray(Check_bGB,    (/ nq,nb /),'Check_bGB',    name_sub)
+        CALL alloc_NParray(Check_bGB,    [nq,nb],'Check_bGB',    name_sub)
 
         CALL sub_dnGB_TO_dnBG(basis_set)
 
@@ -2279,8 +2279,8 @@ MODULE mod_basis
           END IF
 
           ELSE
-            CALL alloc_NParray(vecP,(/ nq,nq /),'vecP',name_sub)
-            CALL alloc_NParray(valP,(/ nq /),'valP',name_sub)
+            CALL alloc_NParray(vecP,[nq,nq],'vecP',name_sub)
+            CALL alloc_NParray(valP,[nq],'valP',name_sub)
 
             CALL diagonalization(d0bxd0bT,valP,VecP,nq,3,-1,.FALSE.)
 
@@ -2510,7 +2510,7 @@ MODULE mod_basis
   ! first the basis without sortX
   CALL alloc_xw_OF_basis(basis_set)
   CALL alloc_dnb_OF_basis(basis_set)
-  CALL alloc_NParray(RvecB,(/basis_set%nb/),'RvecB',name_sub)
+  CALL alloc_NParray(RvecB,[basis_set%nb],'RvecB',name_sub)
 
   DO ib=1,basis_set%nb
      RvecB = ZERO
@@ -2518,14 +2518,14 @@ MODULE mod_basis
      CALL RecRvecB_TO_RVecG(RvecB,basis_set%dnRGB%d0(:,ib),basis_set%nb,nqo,basis_set)
      DO i=1,basis_set%ndim
        basis_set%dnRGB%d1(:,ib,i) = basis_set%dnRGB%d0(:,ib)
-       CALL DerivOp_TO_RVecG(basis_set%dnRGB%d1(:,ib,i),nqo,basis_set,(/basis_set%iQdyn(i),0/))
+       CALL DerivOp_TO_RVecG(basis_set%dnRGB%d1(:,ib,i),nqo,basis_set,[basis_set%iQdyn(i),0])
      END DO
 
      DO i=1,basis_set%ndim
      DO j=1,basis_set%ndim
        basis_set%dnRGB%d2(:,ib,i,j) = basis_set%dnRGB%d0(:,ib)
        CALL DerivOp_TO_RVecG(basis_set%dnRGB%d2(:,ib,i,j),nqo,basis_set, &
-         (/basis_set%iQdyn(i),basis_set%iQdyn(j)/))
+         [basis_set%iQdyn(i),basis_set%iQdyn(j)])
      END DO
      END DO
 
@@ -2638,7 +2638,7 @@ STOP 'pack and SG2 does not work!!!'
 
        ! first the basis without sortX
        CALL alloc_dnb_OF_basis(basis_loc)
-       CALL alloc_NParray(RvecB,(/basis_loc%nb/),'RvecB',name_sub)
+       CALL alloc_NParray(RvecB,[basis_loc%nb],'RvecB',name_sub)
 
        DO ib=1,basis_loc%nb
          RvecB = ZERO
@@ -2646,14 +2646,14 @@ STOP 'pack and SG2 does not work!!!'
          CALL RecRvecB_TO_RVecG(RvecB,basis_loc%dnRGB%d0(:,ib),basis_set%nb,nqo,basis_set)
          DO i=1,basis_loc%ndim
            basis_loc%dnRGB%d1(:,ib,i) = basis_loc%dnRGB%d0(:,ib)
-           CALL DerivOp_TO_RVecG(basis_loc%dnRGB%d1(:,ib,i),nqo,basis_set,(/basis_set%iQdyn(i),0/))
+           CALL DerivOp_TO_RVecG(basis_loc%dnRGB%d1(:,ib,i),nqo,basis_set,[basis_set%iQdyn(i),0])
          END DO
 
          DO i=1,basis_loc%ndim
          DO j=1,basis_loc%ndim
            basis_loc%dnRGB%d2(:,ib,i,j) = basis_loc%dnRGB%d0(:,ib)
            CALL DerivOp_TO_RVecG(basis_loc%dnRGB%d2(:,ib,i,j),nqo,basis_set, &
-             (/basis_set%iQdyn(i),basis_set%iQdyn(j)/))
+             [basis_set%iQdyn(i),basis_set%iQdyn(j)])
          END DO
          END DO
 
@@ -2663,8 +2663,8 @@ STOP 'pack and SG2 does not work!!!'
 
 
        !then with the new points
-       CALL alloc_NParray(tab_iqXmin,(/ nqo /),'tab_iqXmin',name_sub)
-       tab_iqXmin(:) = (/ (i,i=1,nqo) /)
+       CALL alloc_NParray(tab_iqXmin,[nqo],'tab_iqXmin',name_sub)
+       tab_iqXmin(:) = [(i,i=1,nqo)]
 
        ! first the new number of points
        DO iq=1,nqo
@@ -2753,7 +2753,7 @@ STOP 'pack and SG2 does not work!!!'
        ! first the basis without sortX
        CALL alloc_xw_OF_basis(basis_set)
        CALL alloc_dnb_OF_basis(basis_set)
-       CALL alloc_NParray(RvecB,(/basis_set%nb/),'RvecB',name_sub)
+       CALL alloc_NParray(RvecB,[basis_set%nb],'RvecB',name_sub)
 
        DO ib=1,basis_set%nb
          RvecB = ZERO
@@ -2761,14 +2761,14 @@ STOP 'pack and SG2 does not work!!!'
          CALL RecRvecB_TO_RVecG(RvecB,basis_set%dnRGB%d0(:,ib),basis_set%nb,nqo,basis_set)
          DO i=1,basis_set%ndim
            basis_set%dnRGB%d1(:,ib,i) = basis_set%dnRGB%d0(:,ib)
-           CALL DerivOp_TO_RVecG(basis_set%dnRGB%d1(:,ib,i),nqo,basis_set,(/basis_set%iQdyn(i),0/))
+           CALL DerivOp_TO_RVecG(basis_set%dnRGB%d1(:,ib,i),nqo,basis_set,[basis_set%iQdyn(i),0])
          END DO
 
          DO i=1,basis_set%ndim
          DO j=1,basis_set%ndim
            basis_set%dnRGB%d2(:,ib,i,j) = basis_set%dnRGB%d0(:,ib)
            CALL DerivOp_TO_RVecG(basis_set%dnRGB%d2(:,ib,i,j),nqo,basis_set, &
-             (/basis_set%iQdyn(i),basis_set%iQdyn(j)/))
+             [basis_set%iQdyn(i),basis_set%iQdyn(j)])
          END DO
          END DO
 
@@ -2789,8 +2789,8 @@ STOP 'pack and SG2 does not work!!!'
      IF (sortX_loc) THEN
 write(6,*) 'coucou0 sort' ; flush(6)
 
-       CALL alloc_NParray(tab_iqXmin,(/ nqo /),'tab_iqXmin',name_sub)
-       tab_iqXmin(:) = (/ (i,i=1,nqo) /)
+       CALL alloc_NParray(tab_iqXmin,[nqo],'tab_iqXmin',name_sub)
+       tab_iqXmin(:) = [(i,i=1,nqo)]
 
        ! first the new number of points
        DO iq=1,nqo
@@ -3002,10 +3002,10 @@ END SUBROUTINE pack_basis_old
           END DO
         END DO
       ELSE
-        CALL alloc_NParray(tbasiswrho,(/ basis_temp%nb,nq /),             &
+        CALL alloc_NParray(tbasiswrho,[basis_temp%nb,nq],             &
                           'tbasiswrho',name_sub)
 
-        CALL alloc_NParray(matS,(/ basis_temp%nb,basis_temp%nb /),        &
+        CALL alloc_NParray(matS,[basis_temp%nb,basis_temp%nb],        &
                           'matS',name_sub)
 
 
@@ -4078,7 +4078,7 @@ END SUBROUTINE pack_basis_old
          ndim = ndim + tab_ba(tab_l(i),i)%ndim
        END DO
 
-       CALL alloc_NParray(x,(/ndim/),'x',name_sub)
+       CALL alloc_NParray(x,[ndim],'x',name_sub)
 
        CALL Rec_x_SG4(x,tab_ba,tab_l,nDind_DPG,iq,err_sub)
        IF (err_sub /= 0) THEN
@@ -4158,7 +4158,7 @@ END SUBROUTINE pack_basis_old
   DO ib=1,size(tab_l)
     ndim = tab_ba(tab_l(ib),ib)%ndim
     ndim_tot = ndim_tot + ndim
-    CALL alloc_NParray(x,(/ndim/),'x',name_sub)
+    CALL alloc_NParray(x,[ndim],'x',name_sub)
 
     CALL Rec_x(x,tab_ba(tab_l(ib),ib),tab_iq(ib))
 
@@ -4230,7 +4230,7 @@ END SUBROUTINE pack_basis_old
          ndim = ndim + tab_ba(tab_l(i),i)%ndim
        END DO
 
-       CALL alloc_NParray(x,(/ndim/),'x',name_sub)
+       CALL alloc_NParray(x,[ndim],'x',name_sub)
 
        i0 = 0
        DO ib=1,size(tab_l)
@@ -4581,8 +4581,8 @@ END SUBROUTINE pack_basis_old
              ibi   = nDvalB(i)
              ndimi = BasisnD%tab_Pbasis(i)%Pbasis%ndim
 
-             CALL alloc_NParray(d1bi,(/ ndimi /),      'd1bi','name_sub')
-             CALL alloc_NParray(d2bi,(/ ndimi,ndimi /),'d2bi','name_sub')
+             CALL alloc_NParray(d1bi,[ndimi],      'd1bi','name_sub')
+             CALL alloc_NParray(d2bi,[ndimi,ndimi],'d2bi','name_sub')
 
              CALL Rec_d0d1d2bnD(d0bi,d1bi,d2bi,BasisnD%tab_Pbasis(i)%Pbasis,iqi,ibi)
              ! no derivative
@@ -4652,8 +4652,8 @@ END SUBROUTINE pack_basis_old
              ndimi = BasisnD%tab_basisPrimSG(L,ib)%ndim
              i1    = i0 + ndimi
 
-             CALL alloc_NParray(d1bi,(/ ndimi /),      'd1bi',name_sub)
-             CALL alloc_NParray(d2bi,(/ ndimi,ndimi /),'d2bi',name_sub)
+             CALL alloc_NParray(d1bi,[ndimi],      'd1bi',name_sub)
+             CALL alloc_NParray(d2bi,[ndimi,ndimi],'d2bi',name_sub)
 
              CALL Rec_d0d1d2bnD(d0bi,d1bi,d2bi,BasisnD%tab_basisPrimSG(L,ib),iqi,ibi)
 
@@ -4729,8 +4729,8 @@ END SUBROUTINE pack_basis_old
              ndimi = BasisnD%tab_basisPrimSG(L,i)%ndim
              i1    = i0 + ndimi
 
-             CALL alloc_NParray(d1bi,(/ ndimi /),      'd1bi',name_sub)
-             CALL alloc_NParray(d2bi,(/ ndimi,ndimi /),'d2bi',name_sub)
+             CALL alloc_NParray(d1bi,[ndimi],      'd1bi',name_sub)
+             CALL alloc_NParray(d2bi,[ndimi,ndimi],'d2bi',name_sub)
 
              CALL Rec_d0d1d2bnD(d0bi,d1bi,d2bi,BasisnD%tab_basisPrimSG(L,i),iqi,ibi)
 
@@ -4862,8 +4862,8 @@ END SUBROUTINE pack_basis_old
              ibi   = nDvalB(i)
              ndimi = BasisnD%tab_Pbasis(i)%Pbasis%ndim
              IF (BasisnD%tab_Pbasis(i)%Pbasis%cplx) THEN
-               CALL alloc_NParray(d1cbi,(/ ndimi /),'d1cbi',name_sub)
-               CALL alloc_NParray(d2cbi,(/ ndimi,ndimi /),'d2cbi',name_sub)
+               CALL alloc_NParray(d1cbi,[ndimi],'d1cbi',name_sub)
+               CALL alloc_NParray(d2cbi,[ndimi,ndimi],'d2cbi',name_sub)
 
                CALL Rec_d0d1d2cbnD(d0cbi,d1cbi,d2cbi,BasisnD%tab_Pbasis(i)%Pbasis,iqi,ibi)
                ! no derivative
@@ -4894,8 +4894,8 @@ END SUBROUTINE pack_basis_old
                CALL dealloc_NParray(d1cbi,'d1cbi',name_sub)
                CALL dealloc_NParray(d2cbi,'d2cbi',name_sub)
              ELSE
-               CALL alloc_NParray(d1bi,(/ ndimi /),      'd1bi',name_sub)
-               CALL alloc_NParray(d2bi,(/ ndimi,ndimi /),'d2bi',name_sub)
+               CALL alloc_NParray(d1bi,[ndimi],      'd1bi',name_sub)
+               CALL alloc_NParray(d2bi,[ndimi,ndimi],'d2bi',name_sub)
 
                CALL Rec_d0d1d2bnD(d0bi,d1bi,d2bi,BasisnD%tab_Pbasis(i)%Pbasis,iqi,ibi)
                ! no derivative

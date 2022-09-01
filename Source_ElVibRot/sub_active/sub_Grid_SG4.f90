@@ -92,7 +92,7 @@
 
     IF (.NOT. para_AllOp%tab_Op(iOp)%alloc_Grid) THEN
 
-      CALL alloc_NParray(Grid_cte,(/ para_AllOp%tab_Op(iOp)%nb_term /),&
+      CALL alloc_NParray(Grid_cte,[para_AllOp%tab_Op(iOp)%nb_term],&
                         "Grid_cte",name_sub)
       Grid_cte(:) = .FALSE.
 
@@ -175,7 +175,7 @@
   !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
   ith = 0
   !$ ith = OMP_GET_THREAD_NUM()
-  CALL alloc_NParray(tab_l,(/ BasisnD%nb_basis /),'tab_l',name_sub)
+  CALL alloc_NParray(tab_l,[BasisnD%nb_basis],'tab_l',name_sub)
   tab_l(:) = BasisnD%para_SGType2%nDval_init(:,ith+1)
   !--------------------------------------------------------------
 

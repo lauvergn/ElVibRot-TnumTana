@@ -66,7 +66,7 @@ IF (allocated(TabRDP)) THEN
 
   IF (.NOT. allocated(TabRDP(iG)%RDP)) THEN
     CALL alloc_NParray(TabRDP(iG)%RDP,                                  &
-                                    (/ TabRDP(iG)%n2, TabRDP(iG)%n3 /), &
+                                    [TabRDP(iG)%n2, TabRDP(iG)%n3], &
                       'TabRDP(iG)%RDP','alloc_TabRDP_at_iG')
     TabRDP(iG)%RDP = ZERO
   END IF
@@ -274,7 +274,7 @@ IF (allocated(TabRDP2)) THEN
       TabRDP1(iG)%n3 = TabRDP2(iG)%n3
 
       CALL alloc_NParray(TabRDP1(iG)%RDP,                               &
-                                   (/ TabRDP1(iG)%n2,TabRDP1(iG)%n3 /), &
+                                   [TabRDP1(iG)%n2,TabRDP1(iG)%n3], &
                         'TabRDP1(iG)%RDP','TabRDP2_TO_TabRDP1')
       TabRDP1(iG)%RDP(:,:) = TabRDP2(iG)%RDP(:,:)
     END IF
@@ -332,7 +332,7 @@ DO iG=1,ind_Grid(id)%MaxnD
   BgG(iG)%n3 = nqq
 
   IF (WithAlloc_RDP) THEN
-    CALL alloc_NParray(BgG(iG)%RDP,(/BgG(iG)%n2,BgG(iG)%n3 /),          &
+    CALL alloc_NParray(BgG(iG)%RDP,[BgG(iG)%n2,BgG(iG)%n3],          &
                       'BgG(iG)%RDP','Set_BgG_FOR_id')
     BgG(iG)%RDP(:,:) = ZERO
   END IF
@@ -573,8 +573,8 @@ DO iG=1,size(BgG)
   !$OMP   SHARED(id,nb_mult_GTOB,tab_ba,ind_Basis,ind_Grid,WSG) &
   !$OMP   PRIVATE(ibb,ibbNew,lbb,li,nb,iqq,iqqi,iqqf,b,gwc,iq) &
   !$OMP   NUM_THREADS(BasisTOGrid_maxth)
-   CALL alloc_NParray(gwc,(/max_nq/),'gwc','BgG_TO_BbG')
-   CALL alloc_NParray(b,  (/max_nb/),'b',  'BgG_TO_BbG')
+   CALL alloc_NParray(gwc,[max_nq],'gwc','BgG_TO_BbG')
+   CALL alloc_NParray(b,  [max_nb],'b',  'BgG_TO_BbG')
   !$OMP   DO SCHEDULE(DYNAMIC)
   DO iqq=1,nqq
     iqqi = (iqq-1)*nq
@@ -738,7 +738,7 @@ DO iG=iG1+1,iG2
   !$OMP   SHARED(id,nb_mult_BTOG,tab_ba,ind_Basis,ind_Grid) &
   !$OMP   PRIVATE(ibb,ibbNew,lbb,li,nb,iqq,iqqi,iqqf,b) &
   !$OMP   NUM_THREADS(BasisTOGrid_maxth)
-  CALL alloc_NParray(b,(/ max_nb /),'b','BbG_TO_BgG')
+  CALL alloc_NParray(b,[max_nb],'b','BbG_TO_BgG')
   !$OMP   DO SCHEDULE(DYNAMIC)
   DO iqq=1,nqq
     iqqi = (iqq-1)*nq
@@ -1228,10 +1228,10 @@ DO iG=1,size(WPG)
   END IF
 
   allocate(RGgG(nq1,nq2,nq3))
-  RGgG(:,:,:) = reshape(WPG(iG)%RDP,(/ nq1,nq2,nq3 /))
+  RGgG(:,:,:) = reshape(WPG(iG)%RDP,[nq1,nq2,nq3])
 
 
-  CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
+  CALL alloc_NParray(BGG,[nq2,nq2],"BGG",name_sub)
   CALL Get_MatdnRGG(tab_ba(l2,iqd),BGG,dnba_ind)
 
   BGG = transpose(BGG)
@@ -1245,7 +1245,7 @@ DO iG=1,size(WPG)
   CALL dealloc_NParray(BGG,"BGG",name_sub)
 
 
-  WPG(iG)%RDP = reshape(RGgG,(/ 1,nqq /))
+  WPG(iG)%RDP = reshape(RGgG,[1,nqq])
   deallocate(RGgG)
 
   IF (iq2_d == 0) CYCLE ! second derivative: iq2_d, if needed
@@ -1270,9 +1270,9 @@ DO iG=1,size(WPG)
   END IF
 
   allocate(RGgG(nq1,nq2,nq3))
-  RGgG(:,:,:) = reshape(WPG(iG)%RDP,(/ nq1,nq2,nq3 /))
+  RGgG(:,:,:) = reshape(WPG(iG)%RDP,[nq1,nq2,nq3])
 
-  CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
+  CALL alloc_NParray(BGG,[nq2,nq2],"BGG",name_sub)
   CALL Get_MatdnRGG(tab_ba(l2,iqd),BGG,dnba_ind)
 
   BGG = transpose(BGG)
@@ -1285,7 +1285,7 @@ DO iG=1,size(WPG)
   CALL dealloc_NParray(BGG,"BGG",name_sub)
 
 
-  WPG(iG)%RDP = reshape(RGgG,(/ 1,nqq /))
+  WPG(iG)%RDP = reshape(RGgG,[1,nqq])
   deallocate(RGgG)
 
 END DO

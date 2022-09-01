@@ -85,8 +85,8 @@
 
       nullify(C)
       nullify(W)
-      CALL alloc_array(C,(/NPT2/),"C","TF_autocorr")
-      CALL alloc_array(W,(/NPT2/),"C","TF_autocorr")
+      CALL alloc_array(C,[NPT2],"C","TF_autocorr")
+      CALL alloc_array(W,[NPT2],"C","TF_autocorr")
 
       write(out_unitp,*)  'NPT,NPT2,microWPdeltaT',NPT,NPT2,microDeltaT
       CALL flush_perso(out_unitp)

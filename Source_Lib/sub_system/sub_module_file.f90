@@ -664,7 +664,7 @@ MODULE mod_file
   END  SUBROUTINE flush_perso
 
       !! @description: Join two path1 with path2. Return "path1/path2"
-      !!               If path2 is absolute (starting with /), return path2
+      !!               If path2 is absolute (starting with], return path2
       !! @param: path1 First path
       !! @param: path2 Second path
       character(len=Name_longlen) function join_path(path1, path2)

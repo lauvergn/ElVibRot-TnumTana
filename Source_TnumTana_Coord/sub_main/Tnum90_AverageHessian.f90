@@ -147,7 +147,7 @@
 !===========================================================
 !===========================================================
 
-      CALL alloc_NParray(Qact,(/ mole%nb_var /),'Qact',name_sub)
+      CALL alloc_NParray(Qact,[mole%nb_var],'Qact',name_sub)
       CALL get_Qact0(Qact,mole%ActiveTransfo)
 
 !-------------------------------------------------
@@ -158,10 +158,10 @@
       write(out_unitp,*) "====== average k and hess ============"
       write(out_unitp,*) "======================================"
 
-      CALL alloc_NParray(Qdyn,   (/ mole%nb_var/),'Qdyn',   name_sub)
+      CALL alloc_NParray(Qdyn,   [mole%nb_var],'Qdyn',   name_sub)
 
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,nderivGg)
-      CALL alloc_NParray(k,   (/ mole%nb_act,mole%nb_act /),'k',   name_sub)
+      CALL alloc_NParray(k,   [mole%nb_act,mole%nb_act],'k',   name_sub)
       k(:,:) = ZERO
 
 
@@ -169,7 +169,7 @@
       PrimOp%calc_scalar_Op = .FALSE.
       allocate(Tab_dnMatOp(1))
       CALL Init_Tab_OF_dnMatOp(Tab_dnMatOp,nb_Qact=mole%nb_act,nb_ie=1,nderiv=2)
-      CALL alloc_NParray(hess,(/ mole%nb_act,mole%nb_act /),'hess',name_sub)
+      CALL alloc_NParray(hess,[mole%nb_act,mole%nb_act],'hess',name_sub)
       hess(:,:) = ZERO
 
       DO i=1,nb_average
@@ -220,7 +220,7 @@
         write(out_unitp,*) "======================================"
         write(out_unitp,*) "====== sub_freq_AT_Qact =============="
         write(out_unitp,*) "======================================"
-        CALL alloc_array(freq,(/ mole%nb_act /),"freq",name_sub)
+        CALL alloc_array(freq,[mole%nb_act],"freq",name_sub)
 
 
         CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp)

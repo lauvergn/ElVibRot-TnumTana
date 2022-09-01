@@ -614,9 +614,9 @@
 
         para_ReadOp%E0_Transfo      = convRWU_TO_R_WITH_WorkingUnit(E0_Transfo)
         para_ReadOp%degree_Transfo  = 2
-        CALL alloc_NParray(para_ReadOp%Poly_Transfo,(/ 2 /),            &
-                          'para_ReadOp%Poly_Transfo','read_active',(/ 0 /))
-        para_ReadOp%Poly_Transfo = (/ ZERO,ZERO,ONE /) ! x^2
+        CALL alloc_NParray(para_ReadOp%Poly_Transfo,[2],            &
+                          'para_ReadOp%Poly_Transfo','read_active',[0])
+        para_ReadOp%Poly_Transfo = [ZERO,ZERO,ONE] ! x^2
         write(out_unitp,*) 'para_ReadOp%E0_Transfo',para_ReadOp%E0_Transfo
         !write(out_unitp,*) 'l u bounds',ubound(para_ReadOp%Poly_Transfo),lbound(para_ReadOp%Poly_Transfo)
 

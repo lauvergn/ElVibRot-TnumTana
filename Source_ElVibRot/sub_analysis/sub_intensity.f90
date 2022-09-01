@@ -137,10 +137,10 @@
 
 
       IF (nb_ana > 0) THEN
-        CALL alloc_NParray(Mat_Aif,(/ nb_ana,nb_ana /),'Mat_Aif',name_sub)
+        CALL alloc_NParray(Mat_Aif,[nb_ana,nb_ana],'Mat_Aif',name_sub)
         Mat_Aif(:,:) = ZERO
         IF (para_intensity%l_IntVR .AND. .NOT. allocated(para_intensity%ABC)) THEN
-          CALL alloc_NParray(para_intensity%ABC,(/ 3,nb_ana /),           &
+          CALL alloc_NParray(para_intensity%ABC,[3,nb_ana],           &
                             'para_intensity%ABC',name_sub)
           para_intensity%ABC(:,:) = ZERO
         END IF
@@ -514,7 +514,7 @@
 
 
       IF (nb_ana > 0) THEN
-        CALL alloc_NParray(Mat_Aif,(/ nb_ana,nb_ana /),'Mat_Aif',name_sub)
+        CALL alloc_NParray(Mat_Aif,[nb_ana,nb_ana],'Mat_Aif',name_sub)
         Mat_Aif(:,:) = ZERO
       ELSE
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -642,7 +642,7 @@
       auTOenergy = get_Conv_au_TO_unit('E',WorkingUnit=.TRUE.)
       pas = width / TEN
       n = (emax-emin)/pas
-      CALL alloc_NParray(spectre,(/ n /),"spectre",name_sub)
+      CALL alloc_NParray(spectre,[n],"spectre",name_sub)
       spectre(:) = ZERO
 !-----------------------------------------------------------
 
@@ -1059,7 +1059,7 @@
       pas      = Ewidth / TEN
       n        = (emax-emin)/pas
 
-      CALL alloc_NParray(spectre,(/ n /),"spectre","sub_spectre")
+      CALL alloc_NParray(spectre,[n],"spectre","sub_spectre")
 
       spectre(:) = ZERO
       DO i=1,nb_ana

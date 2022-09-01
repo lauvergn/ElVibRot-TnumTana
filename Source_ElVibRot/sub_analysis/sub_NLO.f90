@@ -94,7 +94,7 @@
 
 
       IF (nb_ana > 0) THEN
-        CALL alloc_NParray(Mat_Aif,(/ nb_ana,nb_ana /),'Mat_Aif',name_sub)
+        CALL alloc_NParray(Mat_Aif,[nb_ana,nb_ana],'Mat_Aif',name_sub)
         Mat_Aif(:,:) = ZERO
       ELSE
         write(out_unitp,*) ' ERROR in ',name_sub

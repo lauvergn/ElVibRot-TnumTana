@@ -183,7 +183,7 @@
 
         CALL alloc_nDindex(nDindex,ndim)
 
-        CALL alloc_NParray(nDindex%nDNum_OF_Lmax,(/ ndim /),'nDindex%nDNum_OF_Lmax',name_sub)
+        CALL alloc_NParray(nDindex%nDNum_OF_Lmax,[ndim],'nDindex%nDNum_OF_Lmax',name_sub)
         IF (present(nDNum_OF_Lmax)) THEN
           nDindex%nDNum_OF_Lmax(:) = nDNum_OF_Lmax
         ELSE
@@ -434,11 +434,11 @@
         ! Then the table of nDval and Norm: Tab_nDval, Tab_Norm
         IF (nDindex%packed) THEN
           CALL alloc_NParray(nDindex%Tab_nDval,                           &
-                                     (/nDindex%ndim,nDindex%Max_nDI/),  &
+                                     [nDindex%ndim,nDindex%Max_nDI],  &
                            "nDindex%Tab_nDval",name_sub)
-          CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),        &
+          CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],        &
                           "nDindex%Tab_Norm",name_sub)
-          CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),         &
+          CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],         &
                             "nDindex%Tab_L",name_sub)
         END IF
 
@@ -550,11 +550,11 @@
         ! Then the table of nDval and Norm: Tab_nDval, Tab_Norm
         IF (nDindex%packed) THEN
           CALL alloc_NParray(nDindex%Tab_nDval,                           &
-                                     (/nDindex%ndim,nDindex%Max_nDI/),  &
+                                     [nDindex%ndim,nDindex%Max_nDI],  &
                           "nDindex%Tab_nDval",name_sub)
-          CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),        &
+          CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],        &
                           "nDindex%Tab_Norm",name_sub)
-          CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),         &
+          CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],         &
                             "nDindex%Tab_L",name_sub)
         END IF
 
@@ -660,11 +660,11 @@
         ! Then the table of nDval: Tab_nDval
         IF (nDindex%packed) THEN
           CALL alloc_NParray(nDindex%Tab_nDval,                         &
-                                     (/nDindex%ndim,nDindex%Max_nDI/),  &
+                                     [nDindex%ndim,nDindex%Max_nDI],  &
                           "nDindex%Tab_nDval",name_sub)
-          CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),      &
+          CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],      &
                           "nDindex%Tab_Norm",name_sub)
-          CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),         &
+          CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],         &
                             "nDindex%Tab_L",name_sub)
           nDindex%Tab_nDval(:,:) = 0
           nDindex%Tab_Norm(:)    = ZERO
@@ -741,17 +741,17 @@
 
 
         CALL alloc_NParray(nDindex%Tab_nDval,                           &
-                                     (/nDindex%ndim,nDindex%Max_nDI/),  &
+                                     [nDindex%ndim,nDindex%Max_nDI],  &
                           "nDindex%Tab_nDval",name_sub)
         nDindex%Tab_nDval(:,:) = Tab_nDval(:,:)
 
-        CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),           &
+        CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],           &
                           "nDindex%Tab_L",name_sub)
 
         IF (allocated(nDindex%Tab_Norm)) THEN
           CALL dealloc_NParray(nDindex%Tab_Norm,"nDindex%Tab_Norm",name_sub)
         END IF
-        CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),        &
+        CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],        &
                           "nDindex%Tab_Norm",name_sub)
 
 
@@ -842,11 +842,11 @@
         nDindex%Max_nDI = nDindex%Tab_DInd(id)%MaxnD
 
         CALL alloc_NParray(nDindex%Tab_nDval,                             &
-                                     (/nDindex%ndim,nDindex%Max_nDI/),    &
+                                     [nDindex%ndim,nDindex%Max_nDI],    &
                         "nDindex%Tab_nDval",name_sub)
-        CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),          &
+        CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],          &
                         "nDindex%Tab_Norm",name_sub)
-        CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),             &
+        CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],             &
                           "nDindex%Tab_L",name_sub)
 
         nDindex%Tab_nDval(:,:) = nDindex%Tab_DInd(id)%tab_ind(:,:)
@@ -937,11 +937,11 @@
         nDindex%Max_nDI = nDindex%Tab_DInd(id)%MaxnD
 
         CALL alloc_NParray(nDindex%Tab_nDval,                             &
-                                     (/nDindex%ndim,nDindex%Max_nDI/),  &
+                                     [nDindex%ndim,nDindex%Max_nDI],  &
                         "nDindex%Tab_nDval",name_sub)
-        CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),          &
+        CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],          &
                         "nDindex%Tab_Norm",name_sub)
-        CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),           &
+        CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],           &
                           "nDindex%Tab_L",name_sub)
 
         nDindex%Tab_nDval(:,:) = nDindex%Tab_DInd(id)%tab_ind(:,:)
@@ -1027,11 +1027,11 @@
 
   IF (nDindex%packed) THEN
     CALL alloc_NParray(nDindex%Tab_nDval,                         &
-                               (/nDindex%ndim,nDindex%Max_nDI/),  &
+                               [nDindex%ndim,nDindex%Max_nDI],  &
                       "nDindex%Tab_nDval",name_sub)
-    CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),      &
+    CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],      &
                       "nDindex%Tab_Norm",name_sub)
-    CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),         &
+    CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],         &
                       "nDindex%Tab_L",name_sub)
   END IF
 
@@ -1137,11 +1137,11 @@ END SUBROUTINE init_nDindex_type5p
 
         IF (nDindex%packed) THEN
           CALL alloc_NParray(nDindex%Tab_nDval,                         &
-                                     (/nDindex%ndim,nDindex%Max_nDI/),  &
+                                     [nDindex%ndim,nDindex%Max_nDI],  &
                             "nDindex%Tab_nDval",name_sub)
-          CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),      &
+          CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],      &
                             "nDindex%Tab_Norm",name_sub)
-          CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),         &
+          CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],         &
                             "nDindex%Tab_L",name_sub)
         END IF
 
@@ -1317,26 +1317,26 @@ END SUBROUTINE init_nDindex_type5p
         IF (allocated(nDindex%nDsize))    THEN
           CALL dealloc_NParray(nDindex%nDsize,"nDindex%nDsize","alloc_nDindex")
         END IF
-        CALL alloc_NParray(nDindex%nDsize,(/ndim/),                       &
+        CALL alloc_NParray(nDindex%nDsize,[ndim],                       &
                           "nDindex%nDsize","alloc_nDindex")
 
         IF (allocated(nDindex%nDweight))  THEN
           CALL dealloc_NParray(nDindex%nDweight,"nDindex%nDweight","alloc_nDindex")
         END IF
-        CALL alloc_NParray(nDindex%nDweight,(/ndim/),                     &
+        CALL alloc_NParray(nDindex%nDweight,[ndim],                     &
                         "nDindex%nDweight","alloc_nDindex")
 
         IF (allocated(nDindex%nDinit))  THEN
           CALL dealloc_NParray(nDindex%nDinit,"nDindex%nDinit","alloc_nDindex")
         END IF
-        CALL alloc_NParray(nDindex%nDinit,(/ndim/),                       &
+        CALL alloc_NParray(nDindex%nDinit,[ndim],                       &
                         "nDindex%nDinit","alloc_nDindex")
 
 
         IF (allocated(nDindex%nDend))     THEN
           CALL dealloc_NParray(nDindex%nDend,"nDindex%nDend","alloc_nDindex")
         END IF
-        CALL alloc_NParray(nDindex%nDend,(/ndim/),                        &
+        CALL alloc_NParray(nDindex%nDend,[ndim],                        &
                         "nDindex%nDend","alloc_nDindex")
 
         nDindex%nDsize(:)       = 0
@@ -1726,16 +1726,16 @@ END SUBROUTINE init_nDindex_type5p
 
         IF (.NOT. allocated(nDindex%Tab_nDval)) THEN
           CALL alloc_NParray(nDindex%Tab_nDval,                           &
-                                      (/nDindex%ndim,nDindex%Max_nDI/), &
+                                      [nDindex%ndim,nDindex%Max_nDI], &
                           "nDindex%Tab_nDval",name_sub)
         END IF
         IF (.NOT. allocated(nDindex%Tab_Norm)) THEN
-          CALL alloc_NParray(nDindex%Tab_Norm,(/nDindex%Max_nDI/),        &
+          CALL alloc_NParray(nDindex%Tab_Norm,[nDindex%Max_nDI],        &
                           "nDindex%Tab_Norm",name_sub)
         END IF
 
         IF (.NOT. allocated(nDindex%Tab_L)) THEN
-          CALL alloc_NParray(nDindex%Tab_L,(/nDindex%Max_nDI/),         &
+          CALL alloc_NParray(nDindex%Tab_L,[nDindex%Max_nDI],         &
                             "nDindex%Tab_L",name_sub)
         END IF
 
@@ -1831,7 +1831,7 @@ END SUBROUTINE init_nDindex_type5p
           STOP
         END IF
 
-        CALL alloc_NParray(nDval,(/ nDindex%ndim /),'nDval',name_sub)
+        CALL alloc_NParray(nDval,[nDindex%ndim],'nDval',name_sub)
 
         DO nDI=1,nDindex%Max_nDI
         DO nDJ=nDI+1,nDindex%Max_nDI
@@ -1935,26 +1935,26 @@ END SUBROUTINE init_nDindex_type5p
 
         IF (allocated(nDindex2%Tab_nDval)) THEN
           CALL alloc_NParray(nDindex1%Tab_nDval,                          &
-                                   (/nDindex1%ndim,nDindex1%Max_nDI/),  &
+                                   [nDindex1%ndim,nDindex1%Max_nDI],  &
                            "nDindex1%Tab_nDval","nDindex2TOnDindex1")
           nDindex1%Tab_nDval = nDindex2%Tab_nDval
         END IF
 
         IF (allocated(nDindex2%Tab_Norm)) THEN
-          CALL alloc_NParray(nDindex1%Tab_Norm,(/nDindex1%Max_nDI/),   &
+          CALL alloc_NParray(nDindex1%Tab_Norm,[nDindex1%Max_nDI],   &
                           "nDindex1%Tab_Norm","nDindex2TOnDindex1")
           nDindex1%Tab_Norm = nDindex2%Tab_Norm
         END IF
 
         IF (allocated(nDindex2%Tab_L)) THEN
-          CALL alloc_NParray(nDindex1%Tab_L,(/nDindex1%Max_nDI/),   &
+          CALL alloc_NParray(nDindex1%Tab_L,[nDindex1%Max_nDI],   &
                           "nDindex1%Tab_L","nDindex2TOnDindex1")
           nDindex1%Tab_L = nDindex2%Tab_L
         END IF
 
 
         IF (associated(nDindex2%Tab_nDNorm)) THEN
-          CALL alloc_array(nDindex1%Tab_nDNorm,(/nDindex1%ndim/),       &
+          CALL alloc_array(nDindex1%Tab_nDNorm,[nDindex1%ndim],       &
                           "nDindex1%Tab_nDNorm","nDindex2TOnDindex1")
           DO i=1,nDindex1%ndim
             CALL alloc_dnSVM(nDindex1%Tab_nDNorm(i),nDindex2%Tab_nDNorm(i)%nb_var_vec)
@@ -1963,7 +1963,7 @@ END SUBROUTINE init_nDindex_type5p
         END IF
 
         IF (associated(nDindex2%Tab_i_TO_L)) THEN
-          CALL alloc_array(nDindex1%Tab_i_TO_L,(/nDindex1%ndim/),       &
+          CALL alloc_array(nDindex1%Tab_i_TO_L,[nDindex1%ndim],       &
                           "nDindex1%Tab_i_TO_L","nDindex2TOnDindex1")
           DO i=1,nDindex1%ndim
             CALL alloc_dnSVM(nDindex1%Tab_i_TO_L(i),nDindex2%Tab_i_TO_L(i)%nb_var_vec)
@@ -2036,7 +2036,7 @@ END SUBROUTINE init_nDindex_type5p
         END IF
 
         IF (associated(nDindex2%Tab_nDNorm)) THEN
-          CALL alloc_array(nDindex1%Tab_nDNorm,(/nDindex1%ndim/),       &
+          CALL alloc_array(nDindex1%Tab_nDNorm,[nDindex1%ndim],       &
                           "nDindex1%Tab_nDNorm","nDindex2TOnDindex1")
           DO i=1,nDindex1%ndim
             CALL alloc_dnSVM(nDindex1%Tab_nDNorm(i),nDindex2%Tab_nDNorm(i)%nb_var_vec)
@@ -2045,7 +2045,7 @@ END SUBROUTINE init_nDindex_type5p
         END IF
 
         IF (associated(nDindex2%Tab_i_TO_L)) THEN
-          CALL alloc_array(nDindex1%Tab_i_TO_L,(/nDindex1%ndim/),       &
+          CALL alloc_array(nDindex1%Tab_i_TO_L,[nDindex1%ndim],       &
                           "nDindex1%Tab_i_TO_L","nDindex2TOnDindex1")
           DO i=1,nDindex1%ndim
             CALL alloc_dnSVM(nDindex1%Tab_i_TO_L(i),nDindex2%Tab_i_TO_L(i)%nb_var_vec)

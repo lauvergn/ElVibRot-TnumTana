@@ -237,8 +237,8 @@
        nb_inact21 = count(list_act_OF_Qdyn(:) == 21)
 
        IF (purify_hess) THEN
-         CALL alloc_NParray(Qinact2n_sym,(/nb_inact21/),'Qinact2n_sym',name_sub)
-         CALL alloc_NParray(Qinact2n_eq,(/nb_inact21,nb_inact21/),'Qinact2n_eq',name_sub)
+         CALL alloc_NParray(Qinact2n_sym,[nb_inact21],'Qinact2n_sym',name_sub)
+         CALL alloc_NParray(Qinact2n_eq,[nb_inact21,nb_inact21],'Qinact2n_eq',name_sub)
 
          read(in_unitp,*,IOSTAT=err_read) name0,Qinact2n_sym(:)
          IF (err_read /= 0) THEN
@@ -353,7 +353,7 @@
           CALL dealloc_array(RPHTransfo%list_act_OF_Qdyn,               &
                              "RPHTransfo%list_act_OF_Qdyn",name_sub)
         END IF
-        CALL alloc_array(RPHTransfo%list_act_OF_Qdyn,(/ nb_var /),      &
+        CALL alloc_array(RPHTransfo%list_act_OF_Qdyn,[nb_var],      &
                         'RPHTransfo%list_act_OF_Qdyn',name_sub)
         RPHTransfo%list_act_OF_Qdyn(:) = list_act_OF_Qdyn(:)
 
@@ -363,14 +363,14 @@
           CALL dealloc_array(RPHTransfo%list_QactTOQdyn,                &
                              "RPHTransfo%list_QactTOQdyn",name_sub)
         END IF
-        CALL alloc_array(RPHTransfo%list_QactTOQdyn,(/ nb_var /),       &
+        CALL alloc_array(RPHTransfo%list_QactTOQdyn,[nb_var],       &
                         'RPHTransfo%list_QactTOQdyn',name_sub)
 
         IF (associated(RPHTransfo%list_QdynTOQact)) THEN
           CALL dealloc_array(RPHTransfo%list_QdynTOQact,                &
                              "RPHTransfo%list_QdynTOQact",name_sub)
         END IF
-        CALL alloc_array(RPHTransfo%list_QdynTOQact,(/ nb_var /),       &
+        CALL alloc_array(RPHTransfo%list_QdynTOQact,[nb_var],       &
                         'RPHTransfo%list_QdynTOQact',name_sub)
 
 
@@ -440,7 +440,7 @@
           CALL dealloc_array(RPHTransfo%Qinact2n_sym,                   &
                             "RPHTransfo%Qinact2n_sym",name_sub)
         END IF
-        CALL alloc_array(RPHTransfo%Qinact2n_sym,(/nb_inact21/),        &
+        CALL alloc_array(RPHTransfo%Qinact2n_sym,[nb_inact21],        &
                         "RPHTransfo%Qinact2n_sym",name_sub)
         RPHTransfo%Qinact2n_sym(:)  = Qinact2n_sym(:)
 
@@ -449,21 +449,21 @@
             CALL dealloc_array(RPHTransfo%Qinact2n_eq,                  &
                               "RPHTransfo%Qinact2n_eq",name_sub)
           END IF
-          CALL alloc_array(RPHTransfo%Qinact2n_eq,(/nb_inact21,nb_inact21/), &
+          CALL alloc_array(RPHTransfo%Qinact2n_eq,[nb_inact21,nb_inact21], &
                           "RPHTransfo%Qinact2n_eq",name_sub)
 
           IF (associated(RPHTransfo%dim_equi)) THEN
             CALL dealloc_array(RPHTransfo%dim_equi,                     &
                               "RPHTransfo%dim_equi",name_sub)
           END IF
-          CALL alloc_array(RPHTransfo%dim_equi,(/nb_inact21/),          &
+          CALL alloc_array(RPHTransfo%dim_equi,[nb_inact21],          &
                           "RPHTransfo%dim_equi",name_sub)
 
           IF (associated(RPHTransfo%tab_equi)) THEN
             CALL dealloc_array(RPHTransfo%tab_equi,                     &
                               "RPHTransfo%tab_equi",name_sub)
           END IF
-          CALL alloc_array(RPHTransfo%tab_equi,(/nb_inact21,nb_inact21/),&
+          CALL alloc_array(RPHTransfo%tab_equi,[nb_inact21,nb_inact21],&
                           "RPHTransfo%tab_equi",name_sub)
           RPHTransfo%Qinact2n_eq(:,:) = Qinact2n_eq(:,:)
 
@@ -484,7 +484,7 @@
             CALL dealloc_array(RPHTransfo%dim_equi,                     &
                               "RPHTransfo%dim_equi",name_sub)
           END IF
-          CALL alloc_array(RPHTransfo%dim_equi,(/nb_inact21/),          &
+          CALL alloc_array(RPHTransfo%dim_equi,[nb_inact21],          &
                           "RPHTransfo%dim_equi",name_sub)
           RPHTransfo%dim_equi(:) = 1
 
@@ -492,7 +492,7 @@
             CALL dealloc_array(RPHTransfo%tab_equi,                     &
                               "RPHTransfo%tab_equi",name_sub)
           END IF
-          CALL alloc_array(RPHTransfo%tab_equi,(/nb_inact21,nb_inact21/),&
+          CALL alloc_array(RPHTransfo%tab_equi,[nb_inact21,nb_inact21],&
                           "RPHTransfo%tab_equi",name_sub)
           RPHTransfo%tab_equi(:,:) = 0
           DO i=1,nb_inact21
@@ -505,7 +505,7 @@
       IF (associated(RPHTransfo%C_ini)) THEN
         CALL dealloc_array(RPHTransfo%C_ini,"RPHTransfo%C_ini",name_sub)
       END IF
-      CALL alloc_array(RPHTransfo%C_ini,(/nb_inact21,nb_inact21/),      &
+      CALL alloc_array(RPHTransfo%C_ini,[nb_inact21,nb_inact21],      &
                      "RPHTransfo%C_ini",name_sub)
       RPHTransfo%C_ini(:,:)  = ZERO
 
@@ -905,26 +905,26 @@
       nb_inact21             = RPHTransfo1%nb_inact21
 
       IF (associated(RPHTransfo1%list_act_OF_Qdyn)) THEN
-        CALL alloc_array(RPHTransfo2%list_act_OF_Qdyn,(/ RPHTransfo2%nb_var /),&
+        CALL alloc_array(RPHTransfo2%list_act_OF_Qdyn,[RPHTransfo2%nb_var],&
                         'RPHTransfo2%list_act_OF_Qdyn',name_sub)
         RPHTransfo2%list_act_OF_Qdyn(:) = RPHTransfo1%list_act_OF_Qdyn(:)
 
       END IF
 
       IF (associated(RPHTransfo1%list_QactTOQdyn))  THEN
-        CALL alloc_array(RPHTransfo2%list_QactTOQdyn,(/ RPHTransfo2%nb_var /),&
+        CALL alloc_array(RPHTransfo2%list_QactTOQdyn,[RPHTransfo2%nb_var],&
                         'RPHTransfo2%list_QactTOQdyn',name_sub)
         RPHTransfo2%list_QactTOQdyn(:) = RPHTransfo1%list_QactTOQdyn(:)
       END IF
 
       IF (associated(RPHTransfo1%list_QdynTOQact))  THEN
-        CALL alloc_array(RPHTransfo2%list_QdynTOQact,(/ RPHTransfo2%nb_var /),&
+        CALL alloc_array(RPHTransfo2%list_QdynTOQact,[RPHTransfo2%nb_var],&
                         'RPHTransfo2%list_QdynTOQact',name_sub)
         RPHTransfo2%list_QdynTOQact(:) = RPHTransfo1%list_QdynTOQact(:)
       END IF
 
       IF (associated(RPHTransfo1%C_ini)) THEN
-        CALL alloc_array(RPHTransfo2%C_ini,(/ nb_inact21,nb_inact21 /), &
+        CALL alloc_array(RPHTransfo2%C_ini,[nb_inact21,nb_inact21], &
                         'RPHTransfo2%C_ini',name_sub)
         RPHTransfo2%C_ini = RPHTransfo1%C_ini
       END IF
@@ -951,22 +951,22 @@
       RPHTransfo2%eq_hess         = RPHTransfo1%eq_hess
 
       IF (associated(RPHTransfo1%Qinact2n_sym)) THEN
-        CALL alloc_array(RPHTransfo2%Qinact2n_sym,(/nb_inact21/),       &
+        CALL alloc_array(RPHTransfo2%Qinact2n_sym,[nb_inact21],       &
                         "RPHTransfo2%Qinact2n_sym",name_sub)
         RPHTransfo2%Qinact2n_sym = RPHTransfo1%Qinact2n_sym
       END IF
       IF (associated(RPHTransfo1%Qinact2n_eq)) THEN
-        CALL alloc_array(RPHTransfo2%Qinact2n_eq,(/nb_inact21,nb_inact21/),&
+        CALL alloc_array(RPHTransfo2%Qinact2n_eq,[nb_inact21,nb_inact21],&
                         "RPHTransfo2%Qinact2n_eq",name_sub)
         RPHTransfo2%Qinact2n_eq = RPHTransfo1%Qinact2n_eq
       END IF
       IF (associated(RPHTransfo1%dim_equi)) THEN
-        CALL alloc_array(RPHTransfo2%dim_equi,(/nb_inact21/),           &
+        CALL alloc_array(RPHTransfo2%dim_equi,[nb_inact21],           &
                         "RPHTransfo2%dim_equi",name_sub)
         RPHTransfo2%dim_equi = RPHTransfo1%dim_equi
       END IF
       IF (associated(RPHTransfo1%tab_equi)) THEN
-        CALL alloc_array(RPHTransfo2%tab_equi,(/nb_inact21,nb_inact21/),&
+        CALL alloc_array(RPHTransfo2%tab_equi,[nb_inact21,nb_inact21],&
                         "RPHTransfo2%tab_equi",name_sub)
         RPHTransfo2%tab_equi = RPHTransfo1%tab_equi
       END IF
@@ -1771,7 +1771,7 @@
       RPHpara_AT_Qact1%nb_inact21  = nb_inact21
       RPHpara_AT_Qact1%nderiv      = nderiv
 
-      CALL alloc_NParray(RPHpara_AT_Qact1%RPHQact1,(/ nb_act1 /),       &
+      CALL alloc_NParray(RPHpara_AT_Qact1%RPHQact1,[nb_act1],       &
                         'RPHpara_AT_Qact1%RPHQact1',name_sub)
       RPHpara_AT_Qact1%RPHQact1(:) = ZERO
 
@@ -2146,16 +2146,16 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
   RPHpara2%Switch_Type = Switch_Type
   RPHpara2%nb_ref      = nb_ref
 
-  CALL alloc_NParray(RPHpara2%QoutRef,(/nb_var,nb_Ref/),                &
+  CALL alloc_NParray(RPHpara2%QoutRef,[nb_var,nb_Ref],                &
                     'RPHpara2%QoutRef',name_sub)
 
-  CALL alloc_NParray(RPHpara2%CinvRef,(/nb_var,nb_var,nb_Ref/),         &
+  CALL alloc_NParray(RPHpara2%CinvRef,[nb_var,nb_var,nb_Ref],         &
                     'RPHpara2%CinvRef',name_sub)
 
-  CALL alloc_NParray(RPHpara2%listNM_act1,(/nb_act1/),                  &
+  CALL alloc_NParray(RPHpara2%listNM_act1,[nb_act1],                  &
                     'RPHpara2%listNM_act1',name_sub)
   RPHpara2%listNM_act1(:) = 0
-  CALL alloc_NParray(RPHpara2%OrderNM_iRef,(/nb_var,nb_Ref/),           &
+  CALL alloc_NParray(RPHpara2%OrderNM_iRef,[nb_var,nb_Ref],           &
                     'RPHpara2%OrderNM_iRef',name_sub)
   RPHpara2%OrderNM_iRef(:,:) = 0
 
@@ -2250,7 +2250,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
     !write(out_unitp,*) 'listNM_selected',listNM_selected
   END DO
 
-  RPHpara2%OrderNM_iRef(:,1) = (/ (i,i=1,nb_var) /) ! because we use the first set to define the other orderings
+  RPHpara2%OrderNM_iRef(:,1) = [(i,i=1,nb_var)] ! because we use the first set to define the other orderings
   DO iref=2,nb_ref
     ! Overlapp matrix between two sets of NM
     MatOver(:,:) = ZERO
@@ -2401,7 +2401,7 @@ END SUBROUTINE Read_RPHpara2
         !---------------------------------------------------------------
         ! allocation
         nullify(dnDist2)
-        CALL alloc_array(dnDist2,(/nb_ref/),"dnDist2",name_sub)
+        CALL alloc_array(dnDist2,[nb_ref],"dnDist2",name_sub)
         CALL alloc_VecOFdnS(dnDist2,nb_act1,nderiv)
 
         CALL alloc_dnS(dnW1,    nb_act1,nderiv)
@@ -2530,15 +2530,15 @@ implicit NONE
     CurviRPH%nb_pts_ForQref   = nb_pts
     CurviRPH%nb_dev_ForQref   = nb_dev
 
-    CALL alloc_NParray(CurviRPH%Qpath_ForQref,(/nb_pts/),               &
+    CALL alloc_NParray(CurviRPH%Qpath_ForQref,[nb_pts],               &
                       'CurviRPH%Qpath_ForQref',name_sub)
     CurviRPH%Qpath_ForQref(:) = ZERO
 
-    CALL alloc_NParray(CurviRPH%Qref,(/ nb_Q21,nb_pts /),               &
+    CALL alloc_NParray(CurviRPH%Qref,[nb_Q21,nb_pts],               &
                       'CurviRPH%Qref',name_sub)
     CurviRPH%Qref(:,:) = ZERO
 
-    CALL alloc_NParray(CurviRPH%CoefQref,(/nb_pts,nb_Q21/),             &
+    CALL alloc_NParray(CurviRPH%CoefQref,[nb_pts,nb_Q21],             &
                       'CurviRPH%CoefQref',name_sub)
     CurviRPH%CoefQref(:,:) = ZERO
 
@@ -2781,10 +2781,10 @@ implicit NONE
     nb_dev = nb_pts
     CALL alloc_CurviRPH(CurviRPH2,nb_Qpath,nb_Q21,nb_pts,nb_dev)
 
-    CALL alloc_NParray(Grad,    (/ nb_Q21,nb_pts /),       'Grad',    name_sub)
-    CALL alloc_NParray(hess,    (/ nb_Q21,nb_Q21,nb_pts /),'hess',    name_sub)
-    CALL alloc_NParray(tab_Grad,(/ nb_pts /),              'tab_Grad',name_sub)
-    CALL alloc_NParray(tab_Hess,(/ nb_pts /),              'tab_Hess',name_sub)
+    CALL alloc_NParray(Grad,    [nb_Q21,nb_pts],       'Grad',    name_sub)
+    CALL alloc_NParray(hess,    [nb_Q21,nb_Q21,nb_pts],'hess',    name_sub)
+    CALL alloc_NParray(tab_Grad,[nb_pts],              'tab_Grad',name_sub)
+    CALL alloc_NParray(tab_Hess,[nb_pts],              'tab_Hess',name_sub)
 
     tab_Grad(:)  = gradient
     tab_Hess(:)  = .TRUE.
@@ -2834,18 +2834,18 @@ implicit NONE
     nb_grad = count(tab_Grad)
     CurviRPH2%nb_pts_ForGrad = nb_grad
     IF (nb_grad > 0) THEN
-      CALL alloc_NParray(CurviRPH2%Grad,(/nb_Q21,nb_grad/),             &
+      CALL alloc_NParray(CurviRPH2%Grad,[nb_Q21,nb_grad],             &
                         'CurviRPH2%Grad',name_sub)
-      CALL alloc_NParray(CurviRPH2%Qpath_ForGrad,(/nb_grad/),           &
+      CALL alloc_NParray(CurviRPH2%Qpath_ForGrad,[nb_grad],           &
                         'CurviRPH2%Qpath_ForGrad',name_sub)
     END IF
 
     nb_Hess = count(tab_Hess)
     CurviRPH2%nb_pts_ForHess = nb_Hess
     IF (nb_Hess > 0) THEN
-      CALL alloc_NParray(CurviRPH2%Hess,(/nb_Q21,nb_Q21,nb_Hess/),      &
+      CALL alloc_NParray(CurviRPH2%Hess,[nb_Q21,nb_Q21,nb_Hess],      &
                         'CurviRPH2%Hess',name_sub)
-      CALL alloc_NParray(CurviRPH2%Qpath_ForHess,(/nb_Hess/),           &
+      CALL alloc_NParray(CurviRPH2%Qpath_ForHess,[nb_Hess],           &
                         'CurviRPH2%Qpath_ForHess',name_sub)
     END IF
 
@@ -2914,9 +2914,9 @@ implicit NONE
 
     !for fQpathQref
     IF (debug) write(out_unitp,*) 'Qref coef computation:'
-    CALL alloc_NParray(fQpath_inv,(/ CurviRPH%nb_pts_ForQref,CurviRPH%nb_dev_ForQref /),&
+    CALL alloc_NParray(fQpath_inv,[CurviRPH%nb_pts_ForQref,CurviRPH%nb_dev_ForQref],&
                       'fQpath_inv',name_sub)
-    CALL alloc_NParray(fQpath,    (/ CurviRPH%nb_dev_ForQref,CurviRPH%nb_pts_ForQref /),&
+    CALL alloc_NParray(fQpath,    [CurviRPH%nb_dev_ForQref,CurviRPH%nb_pts_ForQref],&
                       'fQpath',    name_sub)
     DO i=1,CurviRPH%nb_pts_ForQref
     DO j=1,CurviRPH%nb_dev_ForQref
@@ -2945,14 +2945,14 @@ implicit NONE
     !for fQpathGrad
     IF (CurviRPH%nb_pts_ForGrad > 0) THEN
       CALL alloc_NParray(CurviRPH%CoefGrad,                                &
-                           (/ CurviRPH%nb_dev_ForGrad,CurviRPH%nb_Q21 /), &
+                           [CurviRPH%nb_dev_ForGrad,CurviRPH%nb_Q21], &
                         'CurviRPH%CoefGrad',name_sub)
       IF (debug) write(out_unitp,*) 'Grad coef computation:'
       CALL alloc_NParray(fQpath_inv, &
-                           (/ CurviRPH%nb_pts_ForGrad,CurviRPH%nb_dev_ForGrad /),&
+                           [CurviRPH%nb_pts_ForGrad,CurviRPH%nb_dev_ForGrad],&
                         'fQpath_inv',name_sub)
       CALL alloc_NParray(fQpath,     &
-                           (/ CurviRPH%nb_dev_ForGrad,CurviRPH%nb_pts_ForGrad /),&
+                           [CurviRPH%nb_dev_ForGrad,CurviRPH%nb_pts_ForGrad],&
                         'fQpath',    name_sub)
       DO i=1,CurviRPH%nb_pts_ForGrad
       DO j=1,CurviRPH%nb_dev_ForGrad
@@ -2985,14 +2985,14 @@ implicit NONE
       IF (debug) write(out_unitp,*) 'Hess coef computation:'
 
       CALL alloc_NParray(CurviRPH%CoefHess, &
-                           (/ CurviRPH%nb_dev_ForHess,CurviRPH%nb_Q21,CurviRPH%nb_Q21 /), &
+                           [CurviRPH%nb_dev_ForHess,CurviRPH%nb_Q21,CurviRPH%nb_Q21], &
                         'CurviRPH%CoefHess',name_sub)
 
       CALL alloc_NParray(fQpath_inv,&
-                           (/ CurviRPH%nb_pts_ForHess,CurviRPH%nb_dev_ForHess /),&
+                           [CurviRPH%nb_pts_ForHess,CurviRPH%nb_dev_ForHess],&
                         'fQpath_inv',name_sub)
       CALL alloc_NParray(fQpath,    &
-                           (/ CurviRPH%nb_dev_ForHess,CurviRPH%nb_pts_ForHess /),&
+                           [CurviRPH%nb_dev_ForHess,CurviRPH%nb_pts_ForHess],&
                         'fQpath',    name_sub)
 
       DO i=1,CurviRPH%nb_pts_ForHess
@@ -3083,7 +3083,7 @@ implicit NONE
       STOP ' ERROR get_CurviRPH: nb_dev=0'
     END IF
 
-    CALL alloc_NParray(fQpath,(/ nb_dev /),'fQpath',name_sub)
+    CALL alloc_NParray(fQpath,[nb_dev],'fQpath',name_sub)
     DO j=1,nb_dev
       fQpath(j) = funcQpath(Qpath(1),j)
     END DO
@@ -3110,7 +3110,7 @@ implicit NONE
       STOP ' ERROR get_CurviRPH: nb_dev=0'
     END IF
 
-    CALL alloc_NParray(fQpath,(/ nb_dev /),'fQpath',name_sub)
+    CALL alloc_NParray(fQpath,[nb_dev],'fQpath',name_sub)
     DO j=1,nb_dev
       fQpath(j) = funcQpath(Qpath(1),j)
     END DO
@@ -3137,7 +3137,7 @@ implicit NONE
       STOP ' ERROR get_CurviRPH: nb_dev=0'
     END IF
 
-    CALL alloc_NParray(fQpath,(/ nb_dev /),'fQpath',name_sub)
+    CALL alloc_NParray(fQpath,[nb_dev],'fQpath',name_sub)
     DO j=1,nb_dev
       fQpath(j) = funcQpath(Qpath(1),j)
     END DO
@@ -3185,7 +3185,7 @@ implicit NONE
 
   !for Qref
   ErrQref = ZERO
-  CALL alloc_NParray(fQpath,(/ CurviRPH%nb_dev_ForQref /),  'fQpath',name_sub)
+  CALL alloc_NParray(fQpath,[CurviRPH%nb_dev_ForQref],  'fQpath',name_sub)
   DO i=1,CurviRPH%nb_pts_ForQref
 
     DO j=1,CurviRPH%nb_dev_ForQref
@@ -3210,7 +3210,7 @@ implicit NONE
   !for the gradient
   IF (allocated(CurviRPH%Qpath_ForGrad)) THEN
     ErrGrad = ZERO
-    CALL alloc_NParray(fQpath,(/ CurviRPH%nb_dev_ForGrad /),  'fQpath',name_sub)
+    CALL alloc_NParray(fQpath,[CurviRPH%nb_dev_ForGrad],  'fQpath',name_sub)
 
     DO i=1,CurviRPH%nb_pts_ForGrad
       DO j=1,CurviRPH%nb_dev_ForGrad ! nb_dev_Grad
@@ -3232,7 +3232,7 @@ implicit NONE
   !for the hessian
   IF (allocated(CurviRPH%Qpath_ForHess)) THEN
     ErrHess = ZERO
-    CALL alloc_NParray(fQpath,(/ CurviRPH%nb_dev_ForHess /),  'fQpath',name_sub)
+    CALL alloc_NParray(fQpath,[CurviRPH%nb_dev_ForHess],  'fQpath',name_sub)
 
     DO i=1,CurviRPH%nb_pts_ForHess
 

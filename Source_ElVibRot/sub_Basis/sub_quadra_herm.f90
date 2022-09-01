@@ -170,7 +170,7 @@
 
       IF (paire == 0) THEN
         IF (Print_basis) write(out_unitp,*) '      even Hermite polynomia'
-        base%tab_ndim_index(1,:) = (/ (2*i-1,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i-1,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_0_exp_grille(                           &
                              base%x(1,:),                               &
                              base%dnRGB%d0(:,:),                             &
@@ -179,7 +179,7 @@
                              base%nb,nq,deriv,num,step)
       ELSE IF (paire == 1) THEN
         IF (Print_basis) write(out_unitp,*) '      odd Hermite polynomia'
-        base%tab_ndim_index(1,:) = (/ (2*i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_1_exp_grille(                           &
                              base%x(1,:),                               &
                              base%dnRGB%d0(:,:),                             &
@@ -188,7 +188,7 @@
                              base%nb,nq,deriv,num,step)
       ELSE
         IF (Print_basis) write(out_unitp,*) '      All Hermite polynomia'
-        base%tab_ndim_index(1,:) = (/ (i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(i,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_exp_grille(                             &
                              base%x(1,:),                               &
                              base%dnRGB%d0(:,:),                             &
@@ -374,7 +374,7 @@
 
       IF (paire == 0) THEN
         IF (Print_basis) write(out_unitp,*) '      even Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (2*i-1,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i-1,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_0_exp_grille(                                   &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -383,7 +383,7 @@
                              base%nb,nq,deriv,num,step)
       ELSE IF (paire == 1) THEN
         IF (Print_basis) write(out_unitp,*) '      odd Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (2*i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_1_exp_grille(                                   &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -392,7 +392,7 @@
                              base%nb,nq,deriv,num,step)
       ELSE
         IF (Print_basis) write(out_unitp,*) '      All Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(i,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_exp_grille(                                     &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -660,7 +660,7 @@ end subroutine sub_quadra_hermite_half
                                    write(out_unitp,*) 'HermBox: A,B',A,B
       dx = (B-A)/real(nqo-nq,kind=Rkind)
       base%x(1,nq+1:nqo) =                                              &
-         (/ (A+dx*(real(i,kind=Rkind)-HALF),i=1,nqo-nq) /)
+         [(A+dx*(real(i,kind=Rkind)-HALF),i=1,nqo-nq)]
       base%w(nq+1:nqo) = ZERO
 
 
@@ -691,7 +691,7 @@ end subroutine sub_quadra_hermite_half
       IF (paire == 0) THEN ! even
         IF (base%print_info_OF_basisDP .AND. print_level > -1)                  &
                        write(out_unitp,*) '      even Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (2*i-1,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i-1,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_0_exp_grille(                                   &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -701,7 +701,7 @@ end subroutine sub_quadra_hermite_half
       ELSE IF (paire == 1) THEN ! odd
         IF (base%print_info_OF_basisDP .AND. print_level > -1)                  &
                         write(out_unitp,*) '      odd Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (2*i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_1_exp_grille(                                   &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -711,7 +711,7 @@ end subroutine sub_quadra_hermite_half
       ELSE
         IF (base%print_info_OF_basisDP .AND. print_level > -1)                  &
                         write(out_unitp,*) '      All Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(i,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_exp_grille(                                     &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -777,8 +777,8 @@ end subroutine sub_quadra_hermite_half
       END IF
 
 
-      CALL alloc_NParray(x_loc,(/ nqmax /),"x_loc",name_sub)
-      CALL alloc_NParray(w_loc,(/ nqmax /),"w_loc",name_sub)
+      CALL alloc_NParray(x_loc,[nqmax],"x_loc",name_sub)
+      CALL alloc_NParray(w_loc,[nqmax],"w_loc",name_sub)
       CALL hercom(nqmax,x_loc(:),w_loc(:))
       !write(out_unitp,*) 'old w(:)',w_loc(:)
       !write(out_unitp,*) 'old x(:)',x_loc(:)
@@ -930,9 +930,9 @@ end subroutine sub_quadra_hermite_half
 
       CALL alloc_xw_OF_basis(base)
 
-      CALL alloc_NParray(x_loc,(/ base%nq_max_Nested /),                        &
+      CALL alloc_NParray(x_loc,[base%nq_max_Nested],                        &
                         "x_loc","sub_quadra_HermiteNested2")
-      CALL alloc_NParray(w_loc,(/ base%nq_max_Nested /),                        &
+      CALL alloc_NParray(w_loc,[base%nq_max_Nested],                        &
                         "w_loc","sub_quadra_HermiteNested2")
 
       CALL hercom(base%nq_max_Nested,x_loc(:),w_loc(:))
@@ -970,7 +970,7 @@ end subroutine sub_quadra_hermite_half
 
       IF (paire == 0) THEN
         IF (base%print_info_OF_basisDP) write(out_unitp,*) '      even Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (2*i-1,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i-1,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_0_exp_grille(                                   &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -979,7 +979,7 @@ end subroutine sub_quadra_hermite_half
                              base%nb,nqo,deriv,num,step)
       ELSE IF (paire == 1) THEN
         IF (base%print_info_OF_basisDP) write(out_unitp,*) '      odd Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (2*i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_1_exp_grille(                                   &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -988,7 +988,7 @@ end subroutine sub_quadra_hermite_half
                              base%nb,nqo,deriv,num,step)
       ELSE
         IF (base%print_info_OF_basisDP) write(out_unitp,*) '      All Hermite polynomials'
-        base%tab_ndim_index(1,:) = (/ (i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(i,i=1,base%nb)]
         CALL d0d1d2poly_Hermite_exp_grille(                                     &
                              base%x(1,:),                                       &
                              base%dnRGB%d0(:,:),                                &
@@ -1479,7 +1479,7 @@ end subroutine sub_quadra_hermite_half
       CALL alloc_dnS(dntQ_inv,nb_var_deriv=1,nderiv=3)
 
       IF (.NOT. allocated(base%cte_Transfo) ) THEN
-        CALL alloc_NParray(base%cte_Transfo, (/ 20,1 /),'base%cte_Transfo','transfo_Q_TO_tQ')
+        CALL alloc_NParray(base%cte_Transfo, [20,1],'base%cte_Transfo','transfo_Q_TO_tQ')
       END IF
 
       DO i=1,get_nq_FROM_basis(base)

@@ -253,12 +253,12 @@
         ELSE IF (para_BFGS%read_hessian) THEN
           write(out_unitp,*) ' The initial hessian is read in internal coordinates'
           !-------- allocation -----------------------------------------------
-          CALL alloc_array(para_BFGS%hessian_inv_init,(/ nb_Opt,nb_Opt /),  &
+          CALL alloc_array(para_BFGS%hessian_inv_init,[nb_Opt,nb_Opt],  &
                           'para_BFGS%hessian_inv_init',name_sub)
           IF (allocated(hessian)) THEN
             CALL dealloc_NParray(hessian,'hessian',name_sub)
           END IF
-          CALL alloc_NParray(hessian,(/ nb_Opt,nb_Opt /),'hessian',name_sub)
+          CALL alloc_NParray(hessian,[nb_Opt,nb_Opt],'hessian',name_sub)
           !-------- end allocation --------------------------------------------
 
           !----- Hessian ------------------------------------

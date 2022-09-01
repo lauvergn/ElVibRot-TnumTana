@@ -107,21 +107,21 @@ MODULE mod_ActiveTransfo
 
       ActiveTransfo%nb_var = nb_var
 
-      CALL alloc_array(ActiveTransfo%list_act_OF_Qdyn,(/nb_var/),       &
+      CALL alloc_array(ActiveTransfo%list_act_OF_Qdyn,[nb_var],       &
                       "ActiveTransfo%list_act_OF_Qdyn",name_sub)
       ActiveTransfo%list_act_OF_Qdyn(:) = 0
-      CALL alloc_array(ActiveTransfo%list_QactTOQdyn,(/nb_var/),        &
+      CALL alloc_array(ActiveTransfo%list_QactTOQdyn,[nb_var],        &
                       "ActiveTransfo%list_QactTOQdyn",name_sub)
       ActiveTransfo%list_QactTOQdyn(:) = 0
-      CALL alloc_array(ActiveTransfo%list_QdynTOQact,(/nb_var/),        &
+      CALL alloc_array(ActiveTransfo%list_QdynTOQact,[nb_var],        &
                       "ActiveTransfo%list_QdynTOQact",name_sub)
       ActiveTransfo%list_QdynTOQact(:) = 0
 
-      CALL alloc_array(ActiveTransfo%Qdyn0,(/nb_var/),                  &
+      CALL alloc_array(ActiveTransfo%Qdyn0,[nb_var],                  &
                       "ActiveTransfo%Qdyn0",name_sub)
       ActiveTransfo%Qdyn0(:) = ZERO
 
-      CALL alloc_array(ActiveTransfo%Qact0,(/nb_var/),                  &
+      CALL alloc_array(ActiveTransfo%Qact0,[nb_var],                  &
                       "ActiveTransfo%Qact0",name_sub)
       ActiveTransfo%Qact0(:) = ZERO
 
@@ -288,7 +288,7 @@ MODULE mod_ActiveTransfo
       END IF
 
       nullify(list_Qact)
-      CALL alloc_array(list_Qact,(/nb_Qin/),'list_Qact',name_sub)
+      CALL alloc_array(list_Qact,[nb_Qin],'list_Qact',name_sub)
       list_Qact(:) = 0
 
       DO i=1,nb_Qin

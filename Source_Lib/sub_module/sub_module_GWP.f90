@@ -160,27 +160,27 @@
              GWP%trajectory = .FALSE.
            END IF
 
-           CALL alloc_array(GWP%Qmean,(/ndim/),"GWP%Qmean","alloc_GWP")
+           CALL alloc_array(GWP%Qmean,[ndim],"GWP%Qmean","alloc_GWP")
            GWP%Qmean(:) = ZERO
-           CALL alloc_array(GWP%Pmean,(/ndim/),"GWP%Pmean","alloc_GWP")
+           CALL alloc_array(GWP%Pmean,[ndim],"GWP%Pmean","alloc_GWP")
            GWP%Pmean(:) = ZERO
 
            IF (GWP%cplx .AND. .NOT. GWP%trajectory) THEN
-             CALL alloc_array(GWP%CAmean,(/ndim,ndim/),"GWP%CAmean","alloc_GWP")
+             CALL alloc_array(GWP%CAmean,[ndim,ndim],"GWP%CAmean","alloc_GWP")
              GWP%CAmean(:,:) = CZERO
              IF (GWP%linearization) THEN
-               CALL alloc_array(GWP%CZ,(/ndim,ndim/),"GWP%CZ","alloc_GWP")
+               CALL alloc_array(GWP%CZ,[ndim,ndim],"GWP%CZ","alloc_GWP")
                GWP%CZ(:,:) = CZERO
-               CALL alloc_array(GWP%CPZ,(/ndim,ndim/),"GWP%CPZ","alloc_GWP")
+               CALL alloc_array(GWP%CPZ,[ndim,ndim],"GWP%CPZ","alloc_GWP")
                GWP%CPZ(:,:) = CZERO
              END IF
            ELSE IF (.NOT. GWP%cplx .AND. .NOT. GWP%trajectory) THEN
-             CALL alloc_array(GWP%RAmean,(/ndim,ndim/),"GWP%RAmean","alloc_GWP")
+             CALL alloc_array(GWP%RAmean,[ndim,ndim],"GWP%RAmean","alloc_GWP")
              GWP%RAmean(:,:) = ZERO
              IF (GWP%linearization) THEN
-               CALL alloc_array(GWP%RZ,(/ndim,ndim/),"GWP%RZ","alloc_GWP")
+               CALL alloc_array(GWP%RZ,[ndim,ndim],"GWP%RZ","alloc_GWP")
                GWP%RZ(:,:) = ZERO
-               CALL alloc_array(GWP%RPZ,(/ndim,ndim/),"GWP%RPZ","alloc_GWP")
+               CALL alloc_array(GWP%RPZ,[ndim,ndim],"GWP%RPZ","alloc_GWP")
                GWP%RPZ(:,:) = ZERO
              END IF
            END IF
@@ -369,25 +369,25 @@
 
           param_LHA%pot0  = -huge(ONE)
           param_LHA%d0Ene = ZERO
-          CALL alloc_array(param_LHA%d1Ene,(/ndim/),                    &
+          CALL alloc_array(param_LHA%d1Ene,[ndim],                    &
                           "param_LHA%d1Ene","alloc_LHA")
           param_LHA%d1Ene(:) = ZERO
-          CALL alloc_array(param_LHA%d2Ene,(/ndim,ndim/),               &
+          CALL alloc_array(param_LHA%d2Ene,[ndim,ndim],               &
                           "param_LHA%d2Ene","alloc_LHA")
           param_LHA%d2Ene(:,:) = ZERO
 
-          CALL alloc_array(param_LHA%d0G,(/ndim,ndim/),                 &
+          CALL alloc_array(param_LHA%d0G,[ndim,ndim],                 &
                           "param_LHA%d0G","alloc_LHA")
           param_LHA%d0G(:,:) = ZERO
-          CALL alloc_array(param_LHA%d1G,(/ndim,ndim,ndim/),            &
+          CALL alloc_array(param_LHA%d1G,[ndim,ndim,ndim],            &
                           "param_LHA%d1G","alloc_LHA")
           param_LHA%d1G(:,:,:) = ZERO
-          CALL alloc_array(param_LHA%d2G,(/ndim,ndim,ndim,ndim/),       &
+          CALL alloc_array(param_LHA%d2G,[ndim,ndim,ndim,ndim],       &
                           "param_LHA%d2G","alloc_LHA")
           param_LHA%d2G(:,:,:,:) = ZERO
 
           param_LHA%d0mu(:) = ZERO
-          CALL alloc_array(param_LHA%d1mu,(/3,ndim/),                   &
+          CALL alloc_array(param_LHA%d1mu,[3,ndim],                   &
                           "param_LHA%d1mu","alloc_LHA")
           param_LHA%d1mu(:,:) = ZERO
 

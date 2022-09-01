@@ -110,11 +110,11 @@
                           "RectilinearNM_Transfo%mat_inv",name_sub)
       END IF
 
-      CALL alloc_array(RectilinearNM_Transfo%mat,(/nb_Qin,nb_Qin/),     &
+      CALL alloc_array(RectilinearNM_Transfo%mat,[nb_Qin,nb_Qin],     &
                       "RectilinearNM_Transfo%mat",name_sub)
       RectilinearNM_Transfo%mat(:,:) = ZERO
 
-      CALL alloc_array(RectilinearNM_Transfo%mat_inv,(/nb_Qin,nb_Qin/), &
+      CALL alloc_array(RectilinearNM_Transfo%mat_inv,[nb_Qin,nb_Qin], &
                       "RectilinearNM_Transfo%mat_inv",name_sub)
       RectilinearNM_Transfo%mat_inv(:,:) = ZERO
 
@@ -192,7 +192,7 @@
 
 
 
-        CALL alloc_array(name_at,(/RectilinearNM_Transfo%nat/),"name_at",name_sub)
+        CALL alloc_array(name_at,[RectilinearNM_Transfo%nat],"name_at",name_sub)
 
         read(in_unitp,*,IOSTAT=err_io) (name_at(i),i=1,RectilinearNM_Transfo%nat)
         IF (err_io /= 0) THEN

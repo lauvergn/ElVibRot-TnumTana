@@ -330,11 +330,11 @@
        OpGrid%nb_qa      = nb_qa
        OpGrid%nb_bie     = nb_bie
 
-       CALL alloc_array(OpGrid%derive_termQact,(/2/),                &
+       CALL alloc_array(OpGrid%derive_termQact,[2],                &
                        "OpGrid%derive_termQact",name_sub)
        OpGrid%derive_termQact(:) = derive_termQact(:)
 
-       CALL alloc_array(OpGrid%derive_termQdyn,(/2/),                &
+       CALL alloc_array(OpGrid%derive_termQdyn,[2],                &
                        "OpGrid%derive_termQdyn",name_sub)
        OpGrid%derive_termQdyn(:) = derive_termQdyn(:)
 
@@ -345,7 +345,7 @@
        END IF
 
        info2 = name_sub // ' of ' // trim(info)
-       CALL alloc_array(OpGrid%Mat_cte,(/nb_bie,nb_bie/),            &
+       CALL alloc_array(OpGrid%Mat_cte,[nb_bie,nb_bie],            &
                        "OpGrid%Mat_cte",info2)
        OpGrid%Mat_cte(:,:) = ZERO
        IF (debug) write(out_unitp,*) info2,'Mat_cte(:,:)',size(OpGrid%Mat_cte)
@@ -354,7 +354,7 @@
 
          !IF(.NOT. openmpi .OR. .NOT. SmolyakRep) THEN
          IF(.NOT. Type_FileGrid4) THEN
-           CALL alloc_array(OpGrid%Grid,(/nb_qa,nb_bie,nb_bie/),"OpGrid%Grid",info2)
+           CALL alloc_array(OpGrid%Grid,[nb_qa,nb_bie,nb_bie],"OpGrid%Grid",info2)
            OpGrid%Grid(:,:,:) = ZERO
 
 write(out_unitp,*) info2,size(OpGrid%Grid)

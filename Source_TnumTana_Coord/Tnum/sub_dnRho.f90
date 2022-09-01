@@ -361,7 +361,7 @@ MODULE mod_dnRho
          END IF
          !write(out_unitp,*) 'iQact_transfo,type_act',type_act,iQact_transfo
 
-         CALL sub_dntf(iQact_transfo,dntf,Qact(iQact),(/ (ZERO,i=1,20) /), dnErr )
+         CALL sub_dntf(iQact_transfo,dntf,Qact(iQact),[(ZERO,i=1,20)], dnErr )
          IF (dnErr /= 0) THEN
            write(out_unitp,*) ' ERROR in ',name_sub
            write(out_unitp,*) '   ERROR in the sub_dntf call for the coordinates, iQact:',iQact

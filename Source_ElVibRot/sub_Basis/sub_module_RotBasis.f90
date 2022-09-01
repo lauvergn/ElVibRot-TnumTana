@@ -114,19 +114,19 @@
 
 
       CALL alloc_NParray(RotBasis_Para%tab_iterm_TO_der,                &
-                                         (/ 2,RotBasis_Para%nb_term /), &
-                        "RotBasis_Para%tab_iterm_TO_der",name_sub, (/ 1,0 /))
+                                         [2,RotBasis_Para%nb_term], &
+                        "RotBasis_Para%tab_iterm_TO_der",name_sub, [1,0])
 
       DO J1=-3,0
       DO J2=J1,0
          iterm = RotBasis_Para%tab_der_TO_iterm(J1,J2)
-         RotBasis_Para%tab_iterm_TO_der(:,iterm) = (/ J1,J2 /)
+         RotBasis_Para%tab_iterm_TO_der(:,iterm) = [J1,J2]
       END DO
       END DO
 
       CALL alloc_NParray(RotBasis_Para%tab_RotOp,                       &
- (/ RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot,RotBasis_Para%nb_term /), &
-                        "RotBasis_Para%tab_RotOp",name_sub, (/ 1,1,0 /))
+ [RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot,RotBasis_Para%nb_term], &
+                        "RotBasis_Para%tab_RotOp",name_sub, [1,1,0])
       RotBasis_Para%tab_RotOp(:,:,:) = ZERO
 
 
@@ -187,8 +187,8 @@
 
 
       CALL alloc_NParray(RotBasis_Para%tab_RotOp,                       &
- (/ RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot,RotBasis_Para%nb_term /), &
-                        "RotBasis_Para%tab_RotOp",name_sub, (/ 1,1,0 /))
+ [RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot,RotBasis_Para%nb_term], &
+                        "RotBasis_Para%tab_RotOp",name_sub, [1,1,0])
       RotBasis_Para%tab_RotOp(:,:,:) = ZERO
 
 
@@ -296,11 +296,11 @@
 
 !---------------------------------------------------------------------
       ! -1- First the Wang basis
-      CALL alloc_NParray(PWang,(/ Jrot,RotBasis_Para%nb_Rot /),         &
-                        'PWang',name_sub,(/-Jrot,1 /) )
+      CALL alloc_NParray(PWang,[Jrot,RotBasis_Para%nb_Rot],         &
+                        'PWang',name_sub,[-Jrot,1] )
 
-      CALL alloc_NParray(PWangDag,(/ RotBasis_Para%nb_Rot,Jrot /),      &
-                        'PWangDag',name_sub,(/1,-Jrot /) )
+      CALL alloc_NParray(PWangDag,[RotBasis_Para%nb_Rot,Jrot],      &
+                        'PWangDag',name_sub,[1,-Jrot] )
 
 
       PWangDag(:,:) = ZERO
@@ -334,7 +334,7 @@
         CALL Write_Mat(PWang,out_unitp,5)
       END IF
 
-      !CALL alloc_NParray(test_inv,(/ RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot /),         &
+      !CALL alloc_NParray(test_inv,[RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot],         &
       !                  'test_inv',name_sub)
       !test_inv = matmul(PWang,PWangDag)
       !write(out_unitp,*) 'PWang . PWangDag'
@@ -347,13 +347,13 @@
 
 !---------------------------------------------------------------------
       ! -2- Jx,Jy,Jz in the I JKM > basis
-      CALL alloc_NParray(Ji,(/ Jrot,Jrot,-1 /),'Ji',name_sub,(/-Jrot,-Jrot,-3 /) )
+      CALL alloc_NParray(Ji,[Jrot,Jrot,-1],'Ji',name_sub,[-Jrot,-Jrot,-3] )
 
-      CALL alloc_NParray(Jx,(/ Jrot,Jrot /),'Jx',name_sub,(/-Jrot,-Jrot /) )
+      CALL alloc_NParray(Jx,[Jrot,Jrot],'Jx',name_sub,[-Jrot,-Jrot] )
       Jx(:,:) = ZERO
-      CALL alloc_NParray(Jy,(/ Jrot,Jrot /),'Jy',name_sub,(/-Jrot,-Jrot /) )
+      CALL alloc_NParray(Jy,[Jrot,Jrot],'Jy',name_sub,[-Jrot,-Jrot] )
       Jy(:,:) = ZERO
-      CALL alloc_NParray(Jz,(/ Jrot,Jrot /),'Jz',name_sub,(/-Jrot,-Jrot /) )
+      CALL alloc_NParray(Jz,[Jrot,Jrot],'Jz',name_sub,[-Jrot,-Jrot] )
       Jz(:,:) = ZERO
 
 
@@ -395,7 +395,7 @@
         write(out_unitp,*) 'Im(Jz), SumRe(Jz)',sum(abs(real(Ji(:,:,-3))))
         CALL Write_Mat(aimag(Ji(:,:,-3)),out_unitp,5)
       END IF
-      !CALL alloc_NParray(test_inv,(/ RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot /),         &
+      !CALL alloc_NParray(test_inv,[RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot],         &
       !                  'test_inv',name_sub)
       !test_inv = matmul(Jx,Jx)+matmul(Jy,Jy)+matmul(Jz,Jz)
       !write(out_unitp,*) 'J^2'
@@ -493,11 +493,11 @@
 
 !---------------------------------------------------------------------
       ! -1- First the Wang basis
-      CALL alloc_NParray(PWang,(/ Jrot,RotBasis_Para%nb_Rot /),         &
-                        'PWang',name_sub,(/-Jrot,1 /) )
+      CALL alloc_NParray(PWang,[Jrot,RotBasis_Para%nb_Rot],         &
+                        'PWang',name_sub,[-Jrot,1] )
 
-      CALL alloc_NParray(PWangDag,(/ RotBasis_Para%nb_Rot,Jrot /),      &
-                        'PWangDag',name_sub,(/1,-Jrot /) )
+      CALL alloc_NParray(PWangDag,[RotBasis_Para%nb_Rot,Jrot],      &
+                        'PWangDag',name_sub,[1,-Jrot] )
 
 
       PWangDag(:,:) = CZERO
@@ -531,7 +531,7 @@
         CALL Write_Mat(PWang,out_unitp,5)
       END IF
 
-      !CALL alloc_NParray(test_inv,(/ RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot /),         &
+      !CALL alloc_NParray(test_inv,[RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot],         &
       !                  'test_inv',name_sub)
       !test_inv = matmul(PWang,PWangDag)
       !write(out_unitp,*) 'PWang . PWangDag'
@@ -544,13 +544,13 @@
 
 !---------------------------------------------------------------------
       ! -2- Jx,Jy,Jz in the I JKM > basis
-      CALL alloc_NParray(Ji,(/ Jrot,Jrot,-1 /),'Ji',name_sub,(/-Jrot,-Jrot,-3 /) )
+      CALL alloc_NParray(Ji,[Jrot,Jrot,-1],'Ji',name_sub,[-Jrot,-Jrot,-3] )
 
-      CALL alloc_NParray(Jx,(/ Jrot,Jrot /),'Jx',name_sub,(/-Jrot,-Jrot /) )
+      CALL alloc_NParray(Jx,[Jrot,Jrot],'Jx',name_sub,[-Jrot,-Jrot] )
       Jx(:,:) = CZERO
-      CALL alloc_NParray(Jy,(/ Jrot,Jrot /),'Jy',name_sub,(/-Jrot,-Jrot /) )
+      CALL alloc_NParray(Jy,[Jrot,Jrot],'Jy',name_sub,[-Jrot,-Jrot] )
       Jy(:,:) = CZERO
-      CALL alloc_NParray(Jz,(/ Jrot,Jrot /),'Jz',name_sub,(/-Jrot,-Jrot /) )
+      CALL alloc_NParray(Jz,[Jrot,Jrot],'Jz',name_sub,[-Jrot,-Jrot] )
       Jz(:,:) = CZERO
 
 
@@ -592,7 +592,7 @@
         write(out_unitp,*) 'Im(Jz), SumRe(Jz)',sum(abs(real(Ji(:,:,-3))))
         CALL Write_Mat(aimag(Ji(:,:,-3)),out_unitp,5)
       END IF
-      !CALL alloc_NParray(test_inv,(/ RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot /),         &
+      !CALL alloc_NParray(test_inv,[RotBasis_Para%nb_Rot,RotBasis_Para%nb_Rot],         &
       !                  'test_inv',name_sub)
       !test_inv = matmul(Jx,Jx)+matmul(Jy,Jy)+matmul(Jz,Jz)
       !write(out_unitp,*) 'J^2'

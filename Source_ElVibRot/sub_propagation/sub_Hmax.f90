@@ -160,7 +160,7 @@
         ELSE
           nullify(Grid)
           CALL alloc_array(Grid,                                        &
-                          (/para_H%nb_qa,para_H%nb_bie,para_H%nb_bie/), &
+                          [para_H%nb_qa,para_H%nb_bie,para_H%nb_bie], &
                           'Grid',name_sub)
 
           DO k_term=1,para_H%nb_term
@@ -284,8 +284,8 @@ relax = .TRUE.
           nb_diago = 0
           max_diago = para_propa%para_Davidson%max_it + 1
           nullify(Tab_Psi)
-          CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi",name_sub)
-          CALL alloc_NParray(Ene0,(/max_diago/),"Ene0",name_sub)
+          CALL alloc_array(Tab_Psi,[max_diago],"Tab_Psi",name_sub)
+          CALL alloc_NParray(Ene0,[max_diago],"Ene0",name_sub)
 
 
           para_propa%para_Davidson%Hmin_propa       = .TRUE.
@@ -372,7 +372,7 @@ relax = .TRUE.
         para_propa_loc%para_poly%max_poly     = 20
         para_propa_loc%para_poly%npoly        = 20
 
-        CALL alloc_array(para_propa_loc%para_poly%coef_poly,(/2/),      &
+        CALL alloc_array(para_propa_loc%para_poly%coef_poly,[2],      &
                         "para_propa_loc%para_poly%coef_poly",name_sub)
 
         para_propa_loc%para_poly%poly_tol     = ONETENTH**6

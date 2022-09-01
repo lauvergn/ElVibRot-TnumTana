@@ -159,7 +159,7 @@
  !$OMP private(itab,iG,tab_l,ith,err_sub,PsiRvec,PsiIvec)        &
  !$OMP num_threads(BasisnD%para_SGType2%nb_threads)
 
- CALL alloc_NParray(tab_l ,(/ BasisnD%para_SGType2%nDind_SmolyakRep%ndim /),'tab_l', name_sub)
+ CALL alloc_NParray(tab_l ,[BasisnD%para_SGType2%nDind_SmolyakRep%ndim],'tab_l', name_sub)
 
  !--------------------------------------------------------------
  !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
@@ -455,9 +455,9 @@ END SUBROUTINE march_noD_ONE_DP_SG4
 
   D = BasisnD%nb_basis
 
-  CALL alloc_NParray(tab_l ,(/ D /),'tab_l', name_sub)
-  CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
-  CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
+  CALL alloc_NParray(tab_l ,[D],'tab_l', name_sub)
+  CALL alloc_NParray(tab_nb,[D],'tab_nb',name_sub)
+  CALL alloc_NParray(tab_nq,[D],'tab_nq',name_sub)
 
   CALL copy_psi2TOpsi1(RPsi,Psi,alloc=.FALSE.)
   RPsi%cplx = .FALSE.
@@ -747,9 +747,9 @@ nb_thread = 1
 
   D = BasisnD%nb_basis
 
-  CALL alloc_NParray(tab_l ,(/ D /),'tab_l', name_sub)
-  CALL alloc_NParray(tab_nb,(/ D /),'tab_nb',name_sub)
-  CALL alloc_NParray(tab_nq,(/ D /),'tab_nq',name_sub)
+  CALL alloc_NParray(tab_l ,[D],'tab_l', name_sub)
+  CALL alloc_NParray(tab_nb,[D],'tab_nb',name_sub)
+  CALL alloc_NParray(tab_nq,[D],'tab_nq',name_sub)
 
   CALL copy_psi2TOpsi1(RPsi,Psi,alloc=.FALSE.)
   RPsi%cplx = .FALSE.

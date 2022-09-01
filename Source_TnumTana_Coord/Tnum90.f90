@@ -161,7 +161,7 @@
 !===========================================================
 !===========================================================
 
-      CALL alloc_NParray(Qact,(/ mole%nb_var /),'Qact',name_sub)
+      CALL alloc_NParray(Qact,[mole%nb_var],'Qact',name_sub)
       CALL get_Qact0(Qact,mole%ActiveTransfo)
 
 
@@ -267,11 +267,11 @@
 !     - calculation of f2, f1, vep, rho ----------
 !     --------------------------------------------
       IF (calc_Tnum) THEN
-        CALL alloc_array(Tdef2,(/ mole%nb_act,mole%nb_act /),'Tdef2',name_sub)
-        CALL alloc_array(Tdef1,(/ mole%nb_act /),            'Tdef1',name_sub)
-        CALL alloc_array(Tcor2,(/ mole%nb_act,3 /),          'Tcor2',name_sub)
-        CALL alloc_array(Tcor1,(/ 3 /),                      'Tcor1',name_sub)
-        CALL alloc_array(Trot, (/ 3,3 /),                    'Trot', name_sub)
+        CALL alloc_array(Tdef2,[mole%nb_act,mole%nb_act],'Tdef2',name_sub)
+        CALL alloc_array(Tdef1,[mole%nb_act],            'Tdef1',name_sub)
+        CALL alloc_array(Tcor2,[mole%nb_act,3],          'Tcor2',name_sub)
+        CALL alloc_array(Tcor1,[3],                      'Tcor1',name_sub)
+        CALL alloc_array(Trot, [3,3],                    'Trot', name_sub)
 
         write(out_unitp,*) "======================================"
         write(out_unitp,*) "======================================"
@@ -342,7 +342,7 @@
         write(out_unitp,*) "======================================"
         write(out_unitp,*) "====== sub_freq_AT_Qact =============="
         write(out_unitp,*) "======================================"
-        CALL alloc_array(freq,(/ mole%nb_act /),"freq",name_sub)
+        CALL alloc_array(freq,[mole%nb_act],"freq",name_sub)
 
 
         CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp,print_freq=.TRUE.)
@@ -452,7 +452,7 @@
 
 
         IF (calc_freq) THEN
-          CALL alloc_array(freq,(/ mole%nb_act /),"freq",name_sub)
+          CALL alloc_array(freq,[mole%nb_act],"freq",name_sub)
 
           CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,PrimOp,d0h_opt=dnFcurvi%d2)
 

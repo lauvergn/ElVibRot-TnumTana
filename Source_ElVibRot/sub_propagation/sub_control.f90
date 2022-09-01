@@ -145,11 +145,11 @@ IMPLICIT NONE
       nb_WPba = para_propa%para_control%nb_WPba
       it      = 0
       nullify(tab_WP0)
-      CALL alloc_array(tab_WP0,(/nb_WP/),"tab_WP0","sub_nonOpt_control")
+      CALL alloc_array(tab_WP0,[nb_WP],"tab_WP0","sub_nonOpt_control")
       nullify(tab_WPt)
-      CALL alloc_array(tab_WPt,(/nb_WP/),"tab_WPt","sub_nonOpt_control")
+      CALL alloc_array(tab_WPt,[nb_WP],"tab_WPt","sub_nonOpt_control")
       nullify(tab_WP)
-      CALL alloc_array(tab_WP,(/2*nb_WP/),"tab_WP","sub_nonOpt_control")
+      CALL alloc_array(tab_WP,[2*nb_WP],"tab_WP","sub_nonOpt_control")
 
       DO i=1,nb_WP
         CALL init_psi(tab_WP0(i),para_H,.TRUE.)
@@ -223,7 +223,7 @@ IMPLICIT NONE
       END DO
 
       nullify(Obj)
-      CALL alloc_array(Obj,(/ nb_WP /),"Obj","sub_nonOpt_control")
+      CALL alloc_array(Obj,[nb_WP],"Obj","sub_nonOpt_control")
       Obj(:) = ONETENTH**2
 
       print_cont = para_propa%para_control%post_control
@@ -393,13 +393,13 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       nb_WPba = para_propa%para_control%nb_WPba
 
       nullify(tab_WP0)
-      CALL alloc_array(tab_WP0,    (/  nb_WP/),"tab_WP0",    name_sub)
+      CALL alloc_array(tab_WP0,    [ nb_WP],"tab_WP0",    name_sub)
       nullify(tab_WPt)
-      CALL alloc_array(tab_WPt,    (/  nb_WP/),"tab_WPt",    name_sub)
+      CALL alloc_array(tab_WPt,    [ nb_WP],"tab_WPt",    name_sub)
       nullify(tab_WP)
-      CALL alloc_array(tab_WP,     (/2*nb_WP/),"tab_WP",     name_sub)
+      CALL alloc_array(tab_WP,     [2*nb_WP],"tab_WP",     name_sub)
       nullify(tab_WP_save)
-      CALL alloc_array(tab_WP_save,(/  nb_WP/),"tab_WP_save",name_sub)
+      CALL alloc_array(tab_WP_save,[ nb_WP],"tab_WP_save",name_sub)
 
 
       DO i=1,nb_WP
@@ -487,7 +487,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       END DO
 
       nullify(Obj)
-      CALL alloc_array(Obj,(/ nb_WP /),"Obj",name_sub)
+      CALL alloc_array(Obj,[nb_WP],"Obj",name_sub)
       Obj(:) = ONETENTH**2
 
 !      print_cont = .TRUE.

@@ -129,8 +129,8 @@
       CALL alloc_init_basis(basis_cuba)
 
       nb_var = size(basis_SG%Tabder_Qdyn_TO_Qbasis)
-      CALL alloc_NParray(basis_cuba%Tabder_Qdyn_TO_Qbasis,(/ nb_var-1 /), &
-                      'basis_cuba%Tabder_Qdyn_TO_Qbasis',name_sub,(/ 0 /))
+      CALL alloc_NParray(basis_cuba%Tabder_Qdyn_TO_Qbasis,[nb_var-1], &
+                      'basis_cuba%Tabder_Qdyn_TO_Qbasis',name_sub,[0])
       basis_cuba%Tabder_Qdyn_TO_Qbasis(:) = basis_SG%Tabder_Qdyn_TO_Qbasis(:)
 
       nq = 0
@@ -199,8 +199,8 @@
       ! Calculation of the number and the index of the sum of SG basis-sets
 !                            MaxCoupling=basis_SG%MaxCoupling_OF_nDindB, &
       CALL init_nDindexPrim(nDindL,ndim=basis_SG%nb_basis,              &
-                            nDsize=(/ (Lmax+1,i=1,basis_SG%nb_basis) /),&
-                            nDinit=(/ (0,i=1,basis_SG%nb_basis) /),     &
+                            nDsize=[(Lmax+1,i=1,basis_SG%nb_basis)],&
+                            nDinit=[(0,i=1,basis_SG%nb_basis)],     &
                             type_OF_nDindex=0,                          &
                             MinNorm=real(Lmin,kind=Rkind),              &
                             MaxNorm=real(Lmax,kind=Rkind))
@@ -217,8 +217,8 @@
           write(out_unitp,*) '=====Set-up SG primtive basis sets==============='
         END IF
         CALL alloc_array(basis_SG%tab_basisPrimSG,                      &
-                                          (/ basis_SG%nb_basis,Lmax /), &
-                        'basis_SG%tab_basisPrimSG',name_sub,(/ 1,0 /))
+                                          [basis_SG%nb_basis,Lmax], &
+                        'basis_SG%tab_basisPrimSG',name_sub,[1,0])
 
         DO L=0,Lmax
           IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0)    &
@@ -314,9 +314,9 @@
 
       ! BEGINNING Sparse Grid
       ! Set up the weights and the SG basis-sets
-      CALL alloc_array(basis_SG%tab_PbasisSG,(/ basis_SG%nb_SG /),      &
+      CALL alloc_array(basis_SG%tab_PbasisSG,[basis_SG%nb_SG],      &
                       'basis_SG%tab_PbasisSG',name_sub)
-      CALL alloc_NParray(basis_SG%WeightSG,(/ basis_SG%nb_SG /),          &
+      CALL alloc_NParray(basis_SG%WeightSG,[basis_SG%nb_SG],          &
                       'basis_SG%WeightSG',name_sub)
 
       !para_mem%mem_debug = .TRUE.
@@ -361,7 +361,7 @@
         END IF
 
         CALL alloc_array(basis_SG%tab_PbasisSG(i_SG)%Pbasis%tab_Pbasis,&
-                                              (/ basis_SG%nb_basis /), &
+                                              [basis_SG%nb_basis], &
                         'basis_SG%tab_PbasisSG(i_SG)%Pbasis%tab_Pbasis',name_sub)
 
         DO ib=1,basis_SG%nb_basis
@@ -656,8 +656,8 @@
       END IF
 
       CALL alloc_array(basis_SG%tab_basisPrimSG,                      &
-                                         (/Lmax,basis_SG%nb_basis/),  &
-                      'basis_SG%tab_basisPrimSG',name_sub, (/0,1/) )
+                                         [Lmax,basis_SG%nb_basis],  &
+                      'basis_SG%tab_basisPrimSG',name_sub, [0,1] )
 
 
       DO ib=1,basis_SG%nb_basis
@@ -786,7 +786,7 @@
       basis_SG%para_SGType2%nb_SG = basis_SG%para_SGType2%nDind_SmolyakRep%Max_nDI
 
       ! for the Smolyak Weights ----------------------------------------
-      CALL alloc_NParray(basis_SG%WeightSG,(/basis_SG%nb_SG/),          &
+      CALL alloc_NParray(basis_SG%WeightSG,[basis_SG%nb_SG],          &
                         'basis_SG%WeightSG',name_sub)
       DO i_SG=1,basis_SG%nb_SG
         DeltaL = Lmax - sum(basis_SG%para_SGType2%nDind_SmolyakRep%Tab_nDval(:,i_SG))
@@ -800,7 +800,7 @@
       END DO
 
       IF (debug) THEN
-        CALL alloc_NParray(nDval,(/basis_SG%para_SGType2%nDind_SmolyakRep%ndim/),&
+        CALL alloc_NParray(nDval,[basis_SG%para_SGType2%nDind_SmolyakRep%ndim],&
                           'nDval',name_sub)
         DO i_SG=1,basis_SG%nb_SG
           CALL calc_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,i_SG,nDval)
@@ -819,15 +819,15 @@
       END IF
 
       ! for the number grid points --------------------------------------
-      CALL alloc_NParray(basis_SG%para_SGType2%nDind_DPG,(/ basis_SG%nb_SG /),&
+      CALL alloc_NParray(basis_SG%para_SGType2%nDind_DPG,[basis_SG%nb_SG],&
                         'basis_SG%para_SGType2%nDind_DPG',name_sub)
 
       CALL alloc_NParray(basis_SG%para_SGType2%tab_Sum_nq_OF_SRep,      &
-                         (/ basis_SG%nb_SG /),                          &
+                         [basis_SG%nb_SG],                          &
                         'basis_SG%para_SGType2%tab_Sum_nq_OF_SRep',name_sub)
       basis_SG%para_SGType2%tab_Sum_nq_OF_SRep(:) = 0
 
-      CALL alloc_NParray(basis_SG%para_SGType2%tab_nq_OF_SRep,(/ basis_SG%nb_SG /),&
+      CALL alloc_NParray(basis_SG%para_SGType2%tab_nq_OF_SRep,[basis_SG%nb_SG],&
                         'basis_SG%para_SGType2%tab_nq_OF_SRep',name_sub)
       basis_SG%para_SGType2%tab_nq_OF_SRep(:) = 0
 
@@ -1035,8 +1035,8 @@
       END IF
 
       CALL alloc_array(basis_SG%tab_basisPrimSG,                      &
-                                          (/Lmax,basis_SG%nb_basis/), &
-                      'basis_SG%tab_basisPrimSG',name_sub, (/0,1/) )
+                                          [Lmax,basis_SG%nb_basis], &
+                      'basis_SG%tab_basisPrimSG',name_sub, [0,1] )
 
       DO ib=1,basis_SG%nb_basis
         DO L=0,Lmax
@@ -1268,7 +1268,7 @@
       basis_SG%para_SGType2%nb_SG = basis_SG%para_SGType2%nDind_SmolyakRep%Max_nDI
 
       ! for the Smolyak Weights ----------------------------------------
-      CALL alloc_NParray(basis_SG%WeightSG,(/basis_SG%nb_SG/),          &
+      CALL alloc_NParray(basis_SG%WeightSG,[basis_SG%nb_SG],          &
                         'basis_SG%WeightSG',name_sub)
 
       CALL calc_Weight_OF_SRep(basis_SG%WeightSG,basis_SG%para_SGType2%nDind_SmolyakRep)
@@ -1289,20 +1289,20 @@
       ! for the number grid points --------------------------------------
 
       CALL alloc_NParray(basis_SG%para_SGType2%tab_Sum_nq_OF_SRep,      &
-                         (/ basis_SG%nb_SG /),                          &
+                         [basis_SG%nb_SG],                          &
                         'basis_SG%para_SGType2%tab_Sum_nq_OF_SRep',name_sub)
       basis_SG%para_SGType2%tab_Sum_nq_OF_SRep(:) = 0
 
-      CALL alloc_NParray(basis_SG%para_SGType2%tab_nq_OF_SRep,(/ basis_SG%nb_SG /),&
+      CALL alloc_NParray(basis_SG%para_SGType2%tab_nq_OF_SRep,[basis_SG%nb_SG],&
                         'basis_SG%para_SGType2%tab_nq_OF_SRep',name_sub)
       basis_SG%para_SGType2%tab_nq_OF_SRep(:) = 0
 
       CALL alloc_NParray(basis_SG%para_SGType2%tab_Sum_nb_OF_SRep,      &
-                         (/ basis_SG%nb_SG /),                          &
+                         [basis_SG%nb_SG],                          &
                         'basis_SG%para_SGType2%tab_Sum_nb_OF_SRep',name_sub)
       basis_SG%para_SGType2%tab_Sum_nb_OF_SRep(:) = 0
 
-      CALL alloc_NParray(basis_SG%para_SGType2%tab_nb_OF_SRep,(/ basis_SG%nb_SG /),&
+      CALL alloc_NParray(basis_SG%para_SGType2%tab_nb_OF_SRep,[basis_SG%nb_SG],&
                         'basis_SG%para_SGType2%tab_nb_OF_SRep',name_sub)
       basis_SG%para_SGType2%tab_nb_OF_SRep(:) = 0
 

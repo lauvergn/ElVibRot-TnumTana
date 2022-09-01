@@ -286,13 +286,13 @@
     CALL Set_AllActive(dnQact)
 
     ! 2d: the reference Qact
-    CALL alloc_NParray(QrefQact,(/ nb_act1,nb_ref /),'QrefQact',name_sub)
+    CALL alloc_NParray(QrefQact,[nb_act1,nb_ref],'QrefQact',name_sub)
     QrefQact(:,:) = mole%RPHTransfo%RPHpara2%QoutRef(1:nb_act1,:)
 
     ! 3d: dnSwitch
     sc = TWO ! to be changed, from Read_RPHpara2
     nullify(dnSwitch)
-    CALL alloc_array(dnSwitch,(/nb_ref/),"dnSwitch",name_sub)
+    CALL alloc_array(dnSwitch,[nb_ref],"dnSwitch",name_sub)
     CALL alloc_VecOFdnS(dnSwitch,nb_act1,nderiv)
     CALL Switch_RPH(dnSwitch,dnQact,QrefQact,sc,nderiv)
     !write(out_unitp,*) 'dnSwitch(:)',dnSwitch(:)%d0
@@ -790,7 +790,7 @@
       IF (debug) write(out_unitp,*) 'nb_act1,nb_inact21',nb_act1,nb_inact21
 
       IF (.NOT. associated(RPHTransfo%C_ini)) THEN
-        CALL alloc_array(RPHTransfo%C_ini,(/nb_inact21,nb_inact21/),    &
+        CALL alloc_array(RPHTransfo%C_ini,[nb_inact21,nb_inact21],    &
                           "RPHTransfo%C_ini",name_sub)
         RPHTransfo%C_ini(:,:) = ZERO
       END IF
@@ -888,8 +888,8 @@
         END DO
         deallocate(Tab_dnHess)
       ELSE
-        CALL alloc_NParray(d1g,(/ nb_inact21,nb_act1 /),"d1g",name_sub)
-        CALL alloc_NParray(d2g,(/ nb_inact21,nb_act1,nb_act1 /),"d2g",name_sub)
+        CALL alloc_NParray(d1g,[nb_inact21,nb_act1],"d1g",name_sub)
+        CALL alloc_NParray(d2g,[nb_inact21,nb_act1,nb_act1],"d2g",name_sub)
         CALL d0d1d2_g(d0g,d1g,d2g,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
         IF (debug) CALL Write_Vec(d0g,out_unitp,4,info='d0grad')
         RPHpara_AT_Qact1%dnGrad%d0(:) = d0g
@@ -898,9 +898,9 @@
         CALL dealloc_NParray(d2g,"d2g",name_sub)
 
         !------ The hessian ----------------------------------
-        CALL alloc_NParray(d1hess,(/ nb_inact21,nb_inact21,nb_act1 /),    &
+        CALL alloc_NParray(d1hess,[nb_inact21,nb_inact21,nb_act1],    &
                         "d1hess",name_sub)
-        CALL alloc_NParray(d2hess,(/nb_inact21,nb_inact21,nb_act1,nb_act1/),&
+        CALL alloc_NParray(d2hess,[nb_inact21,nb_inact21,nb_act1,nb_act1],&
                         "d2hess",name_sub)
 
         CALL d0d1d2_h(d0hess,d1hess,d2hess,Qdyn,mole_loc,.FALSE.,.FALSE.,RPHTransfo%step)
@@ -918,12 +918,12 @@
 
       !-----------------------------------------------------------------
       !- the gardient is taken into account for d0Qeq -------------
-      CALL alloc_NParray(d0h,(/nb_inact21,nb_inact21/),"d0h",name_sub)
+      CALL alloc_NParray(d0h,[nb_inact21,nb_inact21],"d0h",name_sub)
       d0h(:,:) = d0hess(:,:)
 
       IF (RPHTransfo%gradTOpot0) THEN
-        CALL alloc_NParray(d0hess_inv,(/nb_inact21,nb_inact21/),"d0hess_inv",name_sub)
-        CALL alloc_NParray(trav1,(/nb_inact21/),"trav1",name_sub)
+        CALL alloc_NParray(d0hess_inv,[nb_inact21,nb_inact21],"d0hess_inv",name_sub)
+        CALL alloc_NParray(trav1,[nb_inact21],"trav1",name_sub)
 
         CALL inv_m1_TO_m2(d0h,d0hess_inv,nb_inact21,0,ZERO) ! not SVD
         trav1(:)     = matmul(d0hess_inv,d0g)
@@ -945,7 +945,7 @@
       !-----------------------------------------------------------------
       !------ The kinetic part -------------------------------
        IF (debug) write(out_unitp,*) 'Qact',Qact
-      CALL alloc_NParray(d0k,(/nb_inact21,nb_inact21/),"d0k",name_sub)
+      CALL alloc_NParray(d0k,[nb_inact21,nb_inact21],"d0k",name_sub)
 
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,0)
 

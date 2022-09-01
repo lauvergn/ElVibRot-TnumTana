@@ -471,7 +471,7 @@
 
    CALL delete_op1d(F_1d)
 
-   CALL alloc_NParray(F_1d%prod_opel,(/ndim/),'F_1d%prod_opel',routine_name)
+   CALL alloc_NParray(F_1d%prod_opel,[ndim],'F_1d%prod_opel',routine_name)
 
  end subroutine allocate_op1d
 
@@ -484,7 +484,7 @@
 
    CALL delete_sum_of_op1d(F_1d)
 
-   CALL alloc_NParray(F_1d%sum_op1d,(/ndim/),'F_1d%sum_op1d',routine_name)
+   CALL alloc_NParray(F_1d%sum_op1d,[ndim],'F_1d%sum_op1d',routine_name)
 
  end subroutine allocate_sum_of_op1d
  subroutine delete_sum_of_op1d(F_1d)

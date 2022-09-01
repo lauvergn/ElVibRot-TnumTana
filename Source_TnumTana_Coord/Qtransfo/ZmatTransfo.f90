@@ -103,7 +103,7 @@
          CALL dealloc_array(ZmatTransfo%ind2_zmat,                      &
                            "ZmatTransfo%ind2_zmat","alloc_ZmatTransfo")
        END IF
-       CALL alloc_array(ZmatTransfo%ind2_zmat,(/5,ZmatTransfo%nat/),    &
+       CALL alloc_array(ZmatTransfo%ind2_zmat,[5,ZmatTransfo%nat],    &
                        "ZmatTransfo%ind2_zmat","alloc_ZmatTransfo")
        ZmatTransfo%ind2_zmat(:,:) = 0
 
@@ -111,7 +111,7 @@
          CALL dealloc_array(ZmatTransfo%ind_zmat,                       &
                            "ZmatTransfo%ind_zmat","alloc_ZmatTransfo")
        END IF
-       CALL alloc_array(ZmatTransfo%ind_zmat,(/5,ZmatTransfo%nat/),     &
+       CALL alloc_array(ZmatTransfo%ind_zmat,[5,ZmatTransfo%nat],     &
                        "ZmatTransfo%ind_zmat","alloc_ZmatTransfo")
        ZmatTransfo%ind_zmat(:,:) = 0
 
@@ -120,7 +120,7 @@
          CALL dealloc_array(ZmatTransfo%Z,                              &
                            "ZmatTransfo%Z","alloc_ZmatTransfo")
        END IF
-       CALL alloc_array(ZmatTransfo%Z,(/ZmatTransfo%nat/),              &
+       CALL alloc_array(ZmatTransfo%Z,[ZmatTransfo%nat],              &
                        "ZmatTransfo%Z","alloc_ZmatTransfo")
        ZmatTransfo%Z(:) = 0
 
@@ -128,7 +128,7 @@
          CALL dealloc_array(ZmatTransfo%masses,                         &
                            "ZmatTransfo%masses","alloc_ZmatTransfo")
        END IF
-       CALL alloc_array(ZmatTransfo%masses,(/ZmatTransfo%ncart/), &
+       CALL alloc_array(ZmatTransfo%masses,[ZmatTransfo%ncart], &
                        "ZmatTransfo%masses","alloc_ZmatTransfo")
        ZmatTransfo%masses(:) = ZERO
 
@@ -136,7 +136,7 @@
          CALL dealloc_array(ZmatTransfo%symbole,                        &
                            "ZmatTransfo%symbole","alloc_ZmatTransfo")
        END IF
-       CALL alloc_array(ZmatTransfo%symbole,(/ZmatTransfo%nat/),  &
+       CALL alloc_array(ZmatTransfo%symbole,[ZmatTransfo%nat],  &
                        "ZmatTransfo%symbole","alloc_ZmatTransfo")
        ZmatTransfo%symbole(:) = ""
 
@@ -673,7 +673,7 @@
             dnEz2%d0(:) = dnEz2%d0(:)/d1
           ELSE
             !--- Z2 axis along z_BF ------
-            dnEz2%d0(:) = (/ ZERO,ZERO,ONE /)
+            dnEz2%d0(:) = [ZERO,ZERO,ONE]
           END IF
 
           !write(out_unitp,*) 'dnEz2',dnEz2%d0
@@ -814,11 +814,11 @@
                 ELSE
                   !--- Z3 axis along z_BF and x3 along x_BF ------
                   IF (case1) THEN
-                    dnEx3%d0(:) = (/  ONE,ZERO,ZERO /)
-                    dnEz3%d0(:) = (/ ZERO,ZERO,ONE /)
+                    dnEx3%d0(:) = [ ONE,ZERO,ZERO]
+                    dnEz3%d0(:) = [ZERO,ZERO,ONE]
                   ELSE
-                    dnEx3%d0(:) = (/  ONE,ZERO, ZERO /)
-                    dnEz3%d0(:) = (/ ZERO,ZERO,-ONE /)
+                    dnEx3%d0(:) = [ ONE,ZERO, ZERO]
+                    dnEz3%d0(:) = [ZERO,ZERO,-ONE]
                   END IF
                 END IF
                 CALL calc_cross_product(dnEz3%d0,nEz3,dnEx3%d0,nEx3,dnEy3%d0,nEy3)

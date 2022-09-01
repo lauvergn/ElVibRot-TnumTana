@@ -164,8 +164,8 @@
 !     1st: calculation of grid points and weight for the 1D-grid
 !         => in tab_basis_loc
 
-      CALL alloc_array(tab_basis_loc,(/ L_SparseGrid,nb_basis /),       &
-                      'tab_basis_loc',name_sub,(/0,1/))
+      CALL alloc_array(tab_basis_loc,[L_SparseGrid,nb_basis],       &
+                      'tab_basis_loc',name_sub,[0,1])
       DO ib=1,nb_basis
       DO L=0,L_SparseGrid
 
@@ -213,7 +213,7 @@
         DO L=0,L_SparseGrid
           nq = nq + get_nq_FROM_basis(tab_basis_loc(L,ib))
         END DO
-        CALL alloc_NParray(x,(/ nq /),"x",name_sub)
+        CALL alloc_NParray(x,[nq],"x",name_sub)
         iqi = 0
         DO L=0,L_SparseGrid
           nqL  = get_nq_FROM_basis(tab_basis_loc(L,ib))
@@ -254,9 +254,9 @@
         SparseBasis%tab_Pbasis(ib)%Pbasis%iQdyn(1) = mole%ActiveTransfo%list_QactTOQdyn(iQ)
         CALL alloc_NParray(                                              &
               SparseBasis%tab_Pbasis(ib)%Pbasis%Tabder_Qdyn_TO_Qbasis, &
-                                                    (/ mole%nb_var /), &
+                                                    [mole%nb_var], &
              'SparseBasis%tab_Pbasis(ib)%Pbasis%Tabder_Qdyn_TO_Qbasis',&
-                                                      name_sub,(/ 0 /))
+                                                      name_sub,[0])
         SparseBasis%tab_Pbasis(ib)%Pbasis%Tabder_Qdyn_TO_Qbasis(:)  = 0
         SparseBasis%tab_Pbasis(ib)%Pbasis%Tabder_Qdyn_TO_Qbasis(iQ) = 1
 
@@ -306,8 +306,8 @@
       END DO
       END DO
 
-      CALL alloc_NParray(tab_iq_loc_TO_iq,(/ L_SparseGrid,nb_basis,nq /), &
-                        "tab_iq_loc_TO_iq",name_sub,(/ 0,1,1 /))
+      CALL alloc_NParray(tab_iq_loc_TO_iq,[L_SparseGrid,nb_basis,nq], &
+                        "tab_iq_loc_TO_iq",name_sub,[0,1,1])
       tab_iq_loc_TO_iq(:,:,:) = 0
       DO ib=1,nb_basis
 !     write(out_unitp,*) 'ib,x ',ib,L,SparseBasis%tab_Pbasis(ib)%Pbasis%x(1,:)
@@ -329,10 +329,10 @@
 !----------------------------------------------------------------------------
 !     4th: the number of direct_product grids: nb_grid
 !     then the index in L for each grid: indL_per_nDgrid
-      CALL alloc_NParray(max_nbL_basis,(/nb_basis/),                      &
+      CALL alloc_NParray(max_nbL_basis,[nb_basis],                      &
                         "max_nbL_basis",name_sub)
-      CALL alloc_NParray(tab_nb_Grid_per_L,(/L_SparseGrid/),              &
-                        "tab_nb_Grid_per_L",name_sub,(/0/))
+      CALL alloc_NParray(tab_nb_Grid_per_L,[L_SparseGrid],              &
+                        "tab_nb_Grid_per_L",name_sub,[0])
 !     max_nbL_basis(:) = SparseBasis%tab_Pbasis(:)%Pbasis%nb -1
 !     where(max_nbL_basis(:) > L_SparseGrid)
 !    *         max_nbL_basis(:) = L_SparseGrid
@@ -344,9 +344,9 @@
       minL = max(0,L_SparseGrid - nb_basis + 1)
       maxL = L_SparseGrid
 
-      CALL alloc_NParray(max_nq,(/nb_basis/),"max_nq",name_sub)
-      CALL alloc_NParray(min_nq,(/nb_basis/),"min_nq",name_sub)
-      CALL alloc_NParray(ind_nq,(/nb_basis/),"ind_nq",name_sub)
+      CALL alloc_NParray(max_nq,[nb_basis],"max_nq",name_sub)
+      CALL alloc_NParray(min_nq,[nb_basis],"min_nq",name_sub)
+      CALL alloc_NParray(ind_nq,[nb_basis],"ind_nq",name_sub)
       max_nq(:) = maxL
       min_nq(:) = 0
       ind_nq(:) = -1
@@ -363,7 +363,7 @@
       max_nq(:) = maxL
       min_nq(:) = 0
       ind_nq(:) = -1
-      CALL alloc_NParray(indL_per_nDgrid,(/nb_basis,nb_grid/),            &
+      CALL alloc_NParray(indL_per_nDgrid,[nb_basis,nb_grid],            &
                       "indL_per_nDgrid",name_sub)
       ig = 0
       DO L=minL,maxL
@@ -385,7 +385,7 @@
 !----------------------------------------------------------------------------
 !     5th: number of grid points: nb_points (with duplicate values)
 !          and the index in q for each grid: indgrid_per_nDgrid
-      CALL alloc_NParray(indgrid_per_nDgrid,(/nb_basis,nb_grid/),         &
+      CALL alloc_NParray(indgrid_per_nDgrid,[nb_basis,nb_grid],         &
                       "indgrid_per_nDgrid",name_sub)
       indgrid_per_nDgrid(:,:)= 0
 
@@ -414,9 +414,9 @@
 !----------------------------------------------------------------------------
 !     6th: multidimentional index points and weight (with duplicate values)
 !         => temporary tables
-      CALL alloc_NParray(list_nDgrid_points,(/ nb_basis,nb_points /),     &
+      CALL alloc_NParray(list_nDgrid_points,[nb_basis,nb_points],     &
                         "list_nDgrid_points",name_sub)
-      CALL alloc_NParray(w,(/ nb_points /),"w",name_sub)
+      CALL alloc_NParray(w,[nb_points],"w",name_sub)
       nb2_points = nb_points
 
 
@@ -428,8 +428,8 @@
 !     write(out_unitp,*) '------------------------------------------------'
 
 
-      CALL alloc_NParray(max_nq,(/ nb_basis /),"max_nq",name_sub)
-      CALL alloc_NParray(ind_nq,(/ nb_basis /),"ind_nq",name_sub)
+      CALL alloc_NParray(max_nq,[nb_basis],"max_nq",name_sub)
+      CALL alloc_NParray(ind_nq,[nb_basis],"ind_nq",name_sub)
       nb_points = 0
       DO ig=1,nb_grid
         max_nq(:) = indgrid_per_nDgrid(:,ig)
@@ -490,17 +490,17 @@
       CALL flush_perso(out_unitp)
 !     -----------------------------------------------------------------------
 !     6b: sort the list_nDgrid_points
-      CALL alloc_NParray(list2_nDgrid_points,(/ nb_basis,nb_points /),    &
+      CALL alloc_NParray(list2_nDgrid_points,[nb_basis,nb_points],    &
                         "list2_nDgrid_points",name_sub)
-      CALL alloc_NParray(w2,(/ nb_points /),"w2",name_sub)
+      CALL alloc_NParray(w2,[nb_points],"w2",name_sub)
       list2_nDgrid_points(:,:) = 0
       w2(:) = ZERO
 
       DO ib=1,nb_basis
 
         nq = get_nq_FROM_basis(SparseBasis%tab_Pbasis(ib)%Pbasis)
-        CALL alloc_NParray(max_nq,(/ nq /),"max_nq",name_sub)
-        CALL alloc_NParray(ind_nq,(/ nq /),"ind_nq",name_sub)
+        CALL alloc_NParray(max_nq,[nq],"max_nq",name_sub)
+        CALL alloc_NParray(ind_nq,[nq],"ind_nq",name_sub)
         ind_nq(:) = 0
         iq = 1
         ind_nq(iq) = 1
@@ -558,7 +558,7 @@
       SparseBasis%ndim = nb_basis
       CALL alloc_xw_OF_basis(SparseBasis)
 
-      CALL alloc_NParray(list2_nDgrid_points,(/SparseBasis%nb_basis,nq/), &
+      CALL alloc_NParray(list2_nDgrid_points,[SparseBasis%nb_basis,nq], &
                       "list2_nDgrid_points",name_sub)
 
       write(out_unitp,*) 'SparseBasis: nq',nq

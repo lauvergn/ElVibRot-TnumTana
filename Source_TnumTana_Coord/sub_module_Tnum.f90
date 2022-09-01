@@ -864,7 +864,7 @@ MODULE mod_Tnum
         write(out_unitp,*) ' nrho    ',nrho
         write(out_unitp,*) ' vep_type',vep_type
         write(out_unitp,*) ' nrho = 20 or 10                       => old way to force the vep to zero.'
-        write(out_unitp,*) ' vep_type is defined (/= -1) and /= 0  => vep is not forced to zero'
+        write(out_unitp,*) ' vep_type is defined [= -1) and /= 0  => vep is not forced to zero'
         write(out_unitp,*) ' You have two possibilities:'
         write(out_unitp,*) '   keep the nrho values (20 or 10)  and change vep_type to 0 or -1'
         write(out_unitp,*) '   keep the vep_type values         and change nrho to 1 or 2'
@@ -943,7 +943,7 @@ MODULE mod_Tnum
           write(out_unitp,*) 'New Coordinate transformations',mole%nb_Qtransfo
           write(out_unitp,*) '================================================='
         ENDIF
-        CALL alloc_array(mole%tab_Qtransfo,(/mole%nb_Qtransfo/),        &
+        CALL alloc_array(mole%tab_Qtransfo,[mole%nb_Qtransfo],        &
                         "mole%tab_Qtransfo",name_sub)
         nb_Qin          = 0
         mole%opt_param  = 0
@@ -1078,10 +1078,10 @@ MODULE mod_Tnum
 
         mole%name_Qdyn        => mole%tab_Qtransfo(nb_Qtransfo)%name_Qout
 
-        CALL alloc_array(mole%nrho_OF_Qact,(/mole%nb_var/),             &
+        CALL alloc_array(mole%nrho_OF_Qact,[mole%nb_var],             &
                         "mole%nrho_OF_Qact",name_sub)
         mole%nrho_OF_Qact(:) = 0
-        CALL alloc_array(mole%nrho_OF_Qdyn,(/mole%nb_var/),             &
+        CALL alloc_array(mole%nrho_OF_Qdyn,[mole%nb_var],             &
                         "mole%nrho_OF_Qdyn",name_sub)
         mole%nrho_OF_Qdyn(:) = 0
 
@@ -1142,7 +1142,7 @@ MODULE mod_Tnum
           write(out_unitp,*) '================================================='
         ENDIF
 
-        CALL alloc_array(mole%tab_Qtransfo,(/mole%nb_Qtransfo/),        &
+        CALL alloc_array(mole%tab_Qtransfo,[mole%nb_Qtransfo],        &
                         "mole%tab_Qtransfo",name_sub)
 
         !===============================================================
@@ -1194,10 +1194,10 @@ MODULE mod_Tnum
 
 
         ! for Qout type, name ....
-        CALL alloc_array(mole%tab_Qtransfo(it)%type_Qout,(/3*(nat+1)/), &
+        CALL alloc_array(mole%tab_Qtransfo(it)%type_Qout,[3*(nat+1)], &
                         "mole%tab_Qtransfo(it)%type_Qout",name_sub)
 
-        CALL alloc_array(mole%tab_Qtransfo(it)%name_Qout,(/3*(nat+1)/), &
+        CALL alloc_array(mole%tab_Qtransfo(it)%name_Qout,[3*(nat+1)], &
                         "mole%tab_Qtransfo(it)%name_Qout",name_sub)
         mole%tab_Qtransfo(it)%type_Qout(:) = 1 ! cartesian type
 
@@ -1336,11 +1336,11 @@ MODULE mod_Tnum
 
         mole%name_Qdyn        => mole%tab_Qtransfo(it)%name_Qout
 
-        CALL alloc_array(mole%nrho_OF_Qact,(/mole%nb_var/),             &
+        CALL alloc_array(mole%nrho_OF_Qact,[mole%nb_var],             &
                         "mole%nrho_OF_Qact",name_sub)
         mole%nrho_OF_Qact(:) = 0
 
-        CALL alloc_array(mole%nrho_OF_Qdyn,(/mole%nb_var/),             &
+        CALL alloc_array(mole%nrho_OF_Qdyn,[mole%nb_var],             &
                         "mole%nrho_OF_Qdyn",name_sub)
         mole%nrho_OF_Qdyn(:) = 0
 
@@ -1380,7 +1380,7 @@ MODULE mod_Tnum
         mole%ActiveTransfo%list_QactTOQdyn(:) = 1
 
         IF (.NOT. associated(mole%name_Qdyn)) THEN
-          CALL alloc_array(mole%name_Qdyn,(/nb_var/),"mole%name_Qdyn",name_sub)
+          CALL alloc_array(mole%name_Qdyn,[nb_var],"mole%name_Qdyn",name_sub)
         END IF
 
         DO i=1,nb_var
@@ -1401,9 +1401,9 @@ MODULE mod_Tnum
 !===== set up: Mtot, Mtot_inv, d0sm =================================
 !=======================================================================
       IF (mole%nb_Qtransfo /= -1) THEN
-        CALL alloc_array(mole%d0sm,(/mole%ncart/),"mole%d0sm",name_sub)
+        CALL alloc_array(mole%d0sm,[mole%ncart],"mole%d0sm",name_sub)
 
-        CALL alloc_array(mole%active_masses,(/mole%ncart/),             &
+        CALL alloc_array(mole%active_masses,[mole%ncart],             &
                         "mole%active_masses",name_sub)
         mole%active_masses(:) = 1
 
@@ -1422,16 +1422,16 @@ MODULE mod_Tnum
         write(out_unitp,*) ' Read Cartesian transformation(s)'
         write(out_unitp,*) '================================================='
 
-        CALL alloc_array(mole%tab_Cart_transfo,(/1/),                   &
+        CALL alloc_array(mole%tab_Cart_transfo,[1],                   &
                         "mole%tab_Cart_transfo",name_sub)
 
         CALL alloc_array(mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm,&
-                                                    (/mole%ncart_act/), &
+                                                    [mole%ncart_act], &
                         "mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm",name_sub)
         mole%tab_Cart_transfo(1)%CartesianTransfo%d0sm = mole%d0sm(1:mole%ncart_act)
 
         CALL alloc_array(mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at,   &
-                                                    (/ mole%nat_act /), &
+                                                    [mole%nat_act], &
                         "mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at",name_sub)
         mole%tab_Cart_transfo(1)%CartesianTransfo%masses_at(:) = mole%masses(1:mole%ncart_act:3)
         mole%tab_Cart_transfo(1)%CartesianTransfo%nat_act      = mole%nat_act
@@ -1662,7 +1662,7 @@ MODULE mod_Tnum
       END IF
 
 
-      CALL alloc_array(mole2%tab_Qtransfo,(/mole2%nb_Qtransfo/),        &
+      CALL alloc_array(mole2%tab_Qtransfo,[mole2%nb_Qtransfo],        &
                       "mole2%tab_Qtransfo",name_sub)
       DO it=1,mole2%nb_Qtransfo
         !write(out_unitp,*) 'it',it ; flush(out_unitp)
@@ -1736,11 +1736,11 @@ MODULE mod_Tnum
       mole2%name_Qact        => mole2%tab_Qtransfo(mole2%nb_Qtransfo)%name_Qin
       mole2%name_Qdyn        => mole2%tab_Qtransfo(mole2%nb_Qtransfo)%name_Qout
 
-      CALL alloc_array(mole2%nrho_OF_Qact,(/mole2%nb_var/),             &
+      CALL alloc_array(mole2%nrho_OF_Qact,[mole2%nb_var],             &
                       "mole2%nrho_OF_Qact",name_sub)
       mole2%nrho_OF_Qact(:)  = mole1%nrho_OF_Qact(:)
 
-      CALL alloc_array(mole2%nrho_OF_Qdyn,(/mole2%nb_var/),             &
+      CALL alloc_array(mole2%nrho_OF_Qdyn,[mole2%nb_var],             &
                       "mole2%nrho_OF_Qdyn",name_sub)
       mole2%nrho_OF_Qdyn(:)  = mole1%nrho_OF_Qdyn(:)
 
@@ -1755,11 +1755,11 @@ MODULE mod_Tnum
       mole2%nb_rigid100      = mole1%nb_rigid100
       mole2%nb_rigid         = mole1%nb_rigid
 
-      CALL alloc_array(mole2%active_masses,(/mole2%ncart/),             &
+      CALL alloc_array(mole2%active_masses,[mole2%ncart],             &
                       "mole2%active_masses",name_sub)
       mole2%active_masses    = mole1%active_masses
 
-      CALL alloc_array(mole2%d0sm,(/mole2%ncart/),                      &
+      CALL alloc_array(mole2%d0sm,[mole2%ncart],                      &
                       "mole2%d0sm",name_sub)
       mole2%d0sm             = mole1%d0sm
       mole2%Mtot             = mole1%Mtot
@@ -1850,7 +1850,7 @@ MODULE mod_Tnum
       END IF
 
 
-      CALL alloc_array(mole1%tab_Qtransfo,(/mole1%nb_Qtransfo/),        &
+      CALL alloc_array(mole1%tab_Qtransfo,[mole1%nb_Qtransfo],        &
                       "mole1%tab_Qtransfo",name_sub)
       DO it=1,mole1%nb_Qtransfo
         !write(out_unitp,*) 'it',it ; flush(out_unitp)
@@ -1924,11 +1924,11 @@ MODULE mod_Tnum
       mole1%name_Qact        => mole1%tab_Qtransfo(mole1%nb_Qtransfo)%name_Qin
       mole1%name_Qdyn        => mole1%tab_Qtransfo(mole1%nb_Qtransfo)%name_Qout
 
-      CALL alloc_array(mole1%nrho_OF_Qact,(/mole1%nb_var/),             &
+      CALL alloc_array(mole1%nrho_OF_Qact,[mole1%nb_var],             &
                       "mole1%nrho_OF_Qact",name_sub)
       mole1%nrho_OF_Qact(:)  = mole2%nrho_OF_Qact(:)
 
-      CALL alloc_array(mole1%nrho_OF_Qdyn,(/mole1%nb_var/),             &
+      CALL alloc_array(mole1%nrho_OF_Qdyn,[mole1%nb_var],             &
                       "mole1%nrho_OF_Qdyn",name_sub)
       mole1%nrho_OF_Qdyn(:)  = mole2%nrho_OF_Qdyn(:)
 
@@ -1943,11 +1943,11 @@ MODULE mod_Tnum
       mole1%nb_rigid100      = mole2%nb_rigid100
       mole1%nb_rigid         = mole2%nb_rigid
 
-      CALL alloc_array(mole1%active_masses,(/mole1%ncart/),             &
+      CALL alloc_array(mole1%active_masses,[mole1%ncart],             &
                       "mole1%active_masses",name_sub)
       mole1%active_masses    = mole2%active_masses
 
-      CALL alloc_array(mole1%d0sm,(/mole1%ncart/),                      &
+      CALL alloc_array(mole1%d0sm,[mole1%ncart],                      &
                       "mole1%d0sm",name_sub)
       mole1%d0sm             = mole2%d0sm
       mole1%Mtot             = mole2%Mtot
@@ -2494,7 +2494,7 @@ MODULE mod_Tnum
       ! modification of the transformation
       IF (debug) write(out_unitp,*) 'mole%RPHTransfo%list_act_OF_Qdyn', &
                                     mole%RPHTransfo%list_act_OF_Qdyn(:)
-      CALL alloc_NParray(list_flex,(/nb_Qin/),"list_flex",name_sub)
+      CALL alloc_NParray(list_flex,[nb_Qin],"list_flex",name_sub)
       list_flex = mole%RPHTransfo%list_act_OF_Qdyn(:)
       WHERE (list_flex == 21)
         list_flex = 20

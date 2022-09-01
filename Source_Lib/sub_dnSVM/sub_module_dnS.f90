@@ -172,15 +172,15 @@ MODULE mod_dnS
         IF (nd > 0) THEN
           dnS%d0           = ZERO
           IF (dnS%nderiv >= 1) THEN
-            CALL alloc_array(dnS%d1,(/ nd /),'dnS%d1','alloc_dnS')
+            CALL alloc_array(dnS%d1,[nd],'dnS%d1','alloc_dnS')
             dnS%d1(:) = ZERO
           END IF
           IF (dnS%nderiv >= 2) THEN
-            CALL alloc_array(dnS%d2,(/ nd,nd /),'dnS%d2','alloc_dnS')
+            CALL alloc_array(dnS%d2,[nd,nd],'dnS%d2','alloc_dnS')
             dnS%d2(:,:) = ZERO
           END IF
           IF (dnS%nderiv >= 3) THEN
-            CALL alloc_array(dnS%d3,(/ nd,nd,nd /),'dnS%d3','alloc_dnS')
+            CALL alloc_array(dnS%d3,[nd,nd,nd],'dnS%d3','alloc_dnS')
             dnS%d3(:,:,:) = ZERO
           END IF
           IF (dnS%nderiv >= 4) THEN

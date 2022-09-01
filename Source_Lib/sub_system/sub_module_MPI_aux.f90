@@ -415,7 +415,7 @@ MODULE mod_MPI_aux
       Integer                                      :: new_dim
 
       IF(.NOT. allocated(matrix)) THEN
-        CALL alloc_NParray(matrix,(/ ndim,ndim /),"increase matrix",name_sub)
+        CALL alloc_NParray(matrix,[ndim,ndim],"increase matrix",name_sub)
       ELSE
         IF(present(ndim0)) THEN
           IF(present(ndim)) THEN
@@ -426,7 +426,7 @@ MODULE mod_MPI_aux
             STOP 'error in the variables for increase matrix size.'
           ENDIF
           
-          CALL alloc_NParray(matrix_temp,(/ ndim,ndim /),"increase matrix",name_sub)
+          CALL alloc_NParray(matrix_temp,[ndim,ndim],"increase matrix",name_sub)
           matrix_temp(1:ndim0,1:ndim0)=matrix(1:ndim0,1:ndim0)
           CALL move_alloc(matrix_temp,matrix) ! matrix_temp is dellocated
         ELSE
@@ -448,7 +448,7 @@ MODULE mod_MPI_aux
       Integer                                      :: new_dim
 
       IF(.NOT. allocated(matrix)) THEN
-        CALL alloc_NParray(matrix,(/ ndim,ndim /),"increase matrix",name_sub)
+        CALL alloc_NParray(matrix,[ndim,ndim],"increase matrix",name_sub)
       ELSE
         IF(present(ndim0)) THEN
           IF(present(ndim)) THEN
@@ -460,7 +460,7 @@ MODULE mod_MPI_aux
             STOP 'error in the variables for increase matrix size.'
           ENDIF
           
-          CALL alloc_NParray(matrix_temp,(/ ndim,ndim /),"increase matrix",name_sub)
+          CALL alloc_NParray(matrix_temp,[ndim,ndim],"increase matrix",name_sub)
           matrix_temp(1:ndim0,1:ndim0)=matrix(1:ndim0,1:ndim0)
           CALL move_alloc(matrix_temp,matrix) ! matrix_temp is dellocated
         ELSE

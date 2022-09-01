@@ -88,7 +88,7 @@ MODULE mod_IntVM
 !        write(out_unitp,*) 'nb_var_vec',IntVec%nb_var_vec
 
         IF (IntVec%nb_var_vec > 0) THEN
-          CALL alloc_array(IntVec%vec,(/ IntVec%nb_var_vec /),          &
+          CALL alloc_array(IntVec%vec,[IntVec%nb_var_vec],          &
                           'IntVec%vec','alloc_IntVec')
           IntVec%vec(:) = 0
 
@@ -121,7 +121,7 @@ MODULE mod_IntVM
 
         IF (IntMat%nb_var_Matl > 0) THEN
           CALL alloc_array(IntMat%mat,                                  &
-                           (/ IntMat%nb_var_Matl,IntMat%nb_var_Matc /), &
+                           [IntMat%nb_var_Matl,IntMat%nb_var_Matc], &
                           'IntMat%mat','alloc_IntMat')
           IntMat%mat(:,:) = 0
         ELSE

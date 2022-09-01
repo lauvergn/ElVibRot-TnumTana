@@ -132,10 +132,10 @@
                           "LinearTransfo%mat_inv",name_sub)
       END IF
 
-      CALL alloc_array(LinearTransfo%mat,(/nb_Qin,nb_Qin/),             &
+      CALL alloc_array(LinearTransfo%mat,[nb_Qin,nb_Qin],             &
                       "LinearTransfo%mat",name_sub)
       LinearTransfo%mat(:,:) = ZERO
-      CALL alloc_array(LinearTransfo%mat_inv,(/nb_Qin,nb_Qin/),         &
+      CALL alloc_array(LinearTransfo%mat_inv,[nb_Qin,nb_Qin],         &
                       "LinearTransfo%mat_inv",name_sub)
       LinearTransfo%mat_inv(:,:) = ZERO
 
@@ -775,7 +775,7 @@
 
         NMTransfo%nb_NM = nb_NM
         IF (.NOT. associated(NMTransfo%d0c)) THEN
-          CALL alloc_array(NMTransfo%d0c,(/nb_NM,nb_NM/),"NMTransfo%d0c",name_sub)
+          CALL alloc_array(NMTransfo%d0c,[nb_NM,nb_NM],"NMTransfo%d0c",name_sub)
           NMTransfo%d0c(:,:) = ZERO
         END IF
 
@@ -790,7 +790,7 @@
 
         IF (debug) THEN
           IF (allocated(mat)) CALL dealloc_NParray(mat,"mat",name_sub)
-          CALL alloc_NParray(mat,(/nb_NM,nb_NM/),"mat",name_sub)
+          CALL alloc_NParray(mat,[nb_NM,nb_NM],"mat",name_sub)
           mat = matmul(transpose(NMTransfo%d0c),NMTransfo%d0c)
           write(out_unitp,*) ' td0c.d0c'
           CALL Write_Mat(mat,out_unitp,nb_col,Rformat='f10.6')
@@ -844,9 +844,9 @@
 
           NMTransfo%nb_NM = nb_NM
           IF (.NOT. associated(NMTransfo%d0h)) THEN
-            CALL alloc_array(NMTransfo%d0h,(/nb_NM,nb_NM/),"NMTransfo%d0h",name_sub)
+            CALL alloc_array(NMTransfo%d0h,[nb_NM,nb_NM],"NMTransfo%d0h",name_sub)
             NMTransfo%d0h(:,:) = ZERO
-            CALL alloc_NParray(mat,(/nb_NM,nb_NM/),"mat",name_sub)
+            CALL alloc_NParray(mat,[nb_NM,nb_NM],"mat",name_sub)
           END IF
 
 
@@ -897,9 +897,9 @@
           END IF
 
           IF (.NOT. associated(NMTransfo%d0k)) THEN
-            CALL alloc_array(NMTransfo%d0k,(/nb_NM,nb_NM/),"NMTransfo%d0k",name_sub)
+            CALL alloc_array(NMTransfo%d0k,[nb_NM,nb_NM],"NMTransfo%d0k",name_sub)
             NMTransfo%d0k(:,:) = ZERO
-            CALL alloc_NParray(mat,(/nb_NM,nb_NM/),"mat",name_sub)
+            CALL alloc_NParray(mat,[nb_NM,nb_NM],"mat",name_sub)
           END IF
 
 
@@ -927,19 +927,19 @@
       IF (NMTransfo%purify_hess) THEN
 
         IF (.NOT. associated(NMTransfo%Qact1_sym)) THEN
-          CALL alloc_array(NMTransfo%Qact1_sym,(/nb_Qin/),              &
+          CALL alloc_array(NMTransfo%Qact1_sym,[nb_Qin],              &
                           "NMTransfo%Qact1_sym",name_sub)
         END IF
         IF (.NOT. associated(NMTransfo%Qact1_eq)) THEN
-          CALL alloc_array(NMTransfo%Qact1_eq,(/nb_Qin,nb_Qin/),        &
+          CALL alloc_array(NMTransfo%Qact1_eq,[nb_Qin,nb_Qin],        &
                           "NMTransfo%Qact1_eq",name_sub)
         END IF
         IF (.NOT. associated(NMTransfo%dim_equi)) THEN
-          CALL alloc_array(NMTransfo%dim_equi,(/nb_Qin/),               &
+          CALL alloc_array(NMTransfo%dim_equi,[nb_Qin],               &
                           "NMTransfo%dim_equi",name_sub)
         END IF
         IF (.NOT. associated(NMTransfo%tab_equi)) THEN
-          CALL alloc_array(NMTransfo%tab_equi,(/nb_Qin,nb_Qin/),        &
+          CALL alloc_array(NMTransfo%tab_equi,[nb_Qin,nb_Qin],        &
                           "NMTransfo%tab_equi",name_sub)
         END IF
 

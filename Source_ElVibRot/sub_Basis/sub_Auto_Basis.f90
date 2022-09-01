@@ -2019,7 +2019,7 @@
       IF (mod(para_H%nb_qa,kmem) /= 0) nb_blocks = nb_blocks + 1
       IF (print_level>0) write(out_unitp,*) 'number of blocks',nb_blocks
 
-      CALL alloc_NParray(td0b,(/nb_ba,kmem/),'td0b',name_sub)
+      CALL alloc_NParray(td0b,[nb_ba,kmem],'td0b',name_sub)
 
       CALL Init_d0MatOp(d0MatOp,para_H%param_TypeOp,nb_bie)
       !--------------------------------------------------------

@@ -264,7 +264,7 @@
   !       - initialization ----------------------------------
           Overlap = cmplx(ZERO,ZERO,kind=Rkind)
 
-          CALL alloc_NParray(wrho,(/ psi1%nb_qa/),"wrho",name_sub)
+          CALL alloc_NParray(wrho,[psi1%nb_qa],"wrho",name_sub)
           DO i_qa=1,psi1%nb_qa
             wrho(i_qa) = Rec_WrhonD(psi1%BasisnD,i_qa)
           END DO
@@ -403,7 +403,7 @@
           !$OMP shared(ndim,psi,Vec) &
           !$OMP private(i,k,PsiRk)
 
-          CALL alloc_NParray(PsiRk,(/ndim/),'PsiRk',name_sub)
+          CALL alloc_NParray(PsiRk,[ndim],'PsiRk',name_sub)
 
           !$OMP do
           DO k=1,size(psi(1)%RvecB)
@@ -432,7 +432,7 @@
           !$OMP shared(ndim,psi,Vec) &
           !$OMP private(i,k,PsiRk)
 
-          CALL alloc_NParray(PsiRk,(/ndim/),'PsiRk',name_sub)
+          CALL alloc_NParray(PsiRk,[ndim],'PsiRk',name_sub)
 
           !$OMP do
           DO k=1,size(psi(1)%RvecG)

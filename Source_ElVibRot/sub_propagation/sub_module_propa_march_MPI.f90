@@ -701,8 +701,8 @@ MODULE mod_march_MPI
     tab_l   => SGType2%nDind_SmolyakRep%Tab_nDval(:,:)
     
     dim=size(tab_l,1)
-    CALL alloc_NParray(tab_nb,(/dim/),'tab_nb',name_sub)
-    CALL alloc_NParray(tab_nq,(/dim/),'tab_nq',name_sub)
+    CALL alloc_NParray(tab_nb,[dim],'tab_nb',name_sub)
+    CALL alloc_NParray(tab_nq,[dim],'tab_nq',name_sub)
 
     !> allocate grid SR, the relevant index record the vector position for each iG
     !> psi%SR_G(psi%SR_G_index(iG):psi%SR_G_index(iG+1)-1) => SRG(iG)
@@ -992,8 +992,8 @@ MODULE mod_march_MPI
     nb0=SGType2%nb0
     
     dim=size(tab_l,1)
-    CALL alloc_NParray(tab_nb,(/dim/),'tab_nb',name_sub)
-    CALL alloc_NParray(tab_nq,(/dim/),'tab_nq',name_sub)
+    CALL alloc_NParray(tab_nb,[dim],'tab_nb',name_sub)
+    CALL alloc_NParray(tab_nq,[dim],'tab_nq',name_sub)
 
     ! send 
     IF(MPI_id/=0) THEN

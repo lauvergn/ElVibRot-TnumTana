@@ -248,7 +248,7 @@ CONTAINS
       conv    = .FALSE.
       exit_Davidson=.FALSE.
 
-      CALL alloc_NParray(vec,(/ndim,ndim/),"vec",name_sub)
+      CALL alloc_NParray(vec,[ndim,ndim],"vec",name_sub)
       IF (MatOp_omp /= 2) THEN
         nb_thread = 1
       ELSE
@@ -334,7 +334,7 @@ CONTAINS
         IF (debug) CALL flush_perso(out_unitp)
 
         CALL dealloc_NParray(vec,"vec",name_sub)
-        CALL alloc_NParray(vec,(/ndim,ndim/),"vec",name_sub)
+        CALL alloc_NParray(vec,[ndim,ndim],"vec",name_sub)
         Ene(:) = ZERO
 
         ! write(out_unitp,*) 'ndim',ndim
@@ -587,7 +587,7 @@ CONTAINS
             IF (allocated(Vec0))  THEN
               CALL dealloc_NParray(Vec0,"Vec0",name_sub)
             END IF
-            CALL alloc_NParray(Vec0,(/ndim0,ndim0/),"Vec0",name_sub)
+            CALL alloc_NParray(Vec0,[ndim0,ndim0],"Vec0",name_sub)
             CALL mat_id(Vec0,ndim0,ndim0)
 
             IF (allocated(H))  THEN
@@ -851,7 +851,7 @@ CONTAINS
  END IF
 
  IF (para_Davidson%project_WP0) THEN
-   CALL alloc_NParray(vec0,(/nb_diago,nb_diago/),"vec0",name_sub)
+   CALL alloc_NParray(vec0,[nb_diago,nb_diago],"vec0",name_sub)
    CALL mat_id(vec0,nb_diago,nb_diago)
 
    write(out_unitp,*) ' copy psi(:) to psi0(:)',para_Davidson%nb_WP0
@@ -1086,7 +1086,7 @@ CONTAINS
 
    CALL allocate_array(H,1,ndim,1,ndim)
 !   IF(allocated(H)) CALL dealloc_NParray(H,"H",name_sub)
-!   CALL alloc_NParray(H,(/ ndim,ndim /),"H",name_sub)
+!   CALL alloc_NParray(H,[ndim,ndim],"H",name_sub)
    H(1:ndim,1:ndim)=H_overlap(1:ndim,1:ndim)
  ELSE
 
@@ -1099,19 +1099,19 @@ CONTAINS
 
  !block 1,1: ndim0*ndim0
  IF (ndim0 > 0) THEN
-   CALL alloc_NParray(H0,(/ ndim0,ndim0 /),"H0",name_sub)
+   CALL alloc_NParray(H0,[ndim0,ndim0],"H0",name_sub)
    H0(:,:) = H(:,:)
 
 
    CALL dealloc_NParray(H,"H",name_sub)
-   CALL alloc_NParray(H,(/ ndim,ndim /),"H",name_sub)
+   CALL alloc_NParray(H,[ndim,ndim],"H",name_sub)
    H(:,:) = ZERO
 
    H(1:ndim0,1:ndim0) = H0(:,:)
 
    CALL dealloc_NParray(H0,"H0",name_sub)
  ELSE
-   CALL alloc_NParray(H,(/ ndim,ndim /),"H",name_sub)
+   CALL alloc_NParray(H,[ndim,ndim],"H",name_sub)
    H(:,:) = ZERO
  END IF
 
@@ -1185,7 +1185,7 @@ IF(openmpi) THEN
   IF (Print_Mat ) CALL Write_Mat(S_overlap(1:ndim,1:ndim),out_unitp,5)
   CALL flush_perso(out_unitp)
 ELSE
- CALL alloc_NParray(S,(/ndim,ndim/),"S",name_sub)
+ CALL alloc_NParray(S,[ndim,ndim],"S",name_sub)
 
  DO j=1,ndim
  DO i=1,ndim
@@ -1792,7 +1792,7 @@ END SUBROUTINE sub_NewVec_Davidson
      nb_diago = count(VecToBeIncluded)
 
      IF(allocated(Vec0)) CALL dealloc_NParray(Vec0,"Vec0",name_sub)
-     CALL alloc_NParray(Vec0,(/ndim,ndim/),"Vec0",name_sub)
+     CALL alloc_NParray(Vec0,[ndim,ndim],"Vec0",name_sub)
      Vec0(:,:) = Vec(:,:)
    END IF
  END IF

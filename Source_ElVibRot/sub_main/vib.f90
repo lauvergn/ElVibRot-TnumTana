@@ -707,8 +707,8 @@
           ENDIF
 
           nullify(Tab_Psi)
-          CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
-          CALL alloc_NParray(Ene0,(/max_diago/),"Ene0","vib")
+          CALL alloc_array(Tab_Psi,[max_diago],"Tab_Psi","vib")
+          CALL alloc_NParray(Ene0,[max_diago],"Ene0","vib")
 
           IF (para_ana%davidson) THEN
 
@@ -760,7 +760,7 @@
           max_diago = para_H%nb_tot
 
           nullify(Tab_Psi)
-          IF(keep_MPI) CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
+          IF(keep_MPI) CALL alloc_array(Tab_Psi,[max_diago],"Tab_Psi","vib")
 
           IF(keep_MPI) THEN
             DO i=1,max_diago
@@ -793,9 +793,9 @@
               CALL sub_diago_H(para_H%Rmat,para_H%Rdiag,para_H%Rvp,       &
                                para_H%nb_tot,para_H%sym_Hamil)
 
-              write(out_unitp,*) 'HMin,HMax (ua)  : ',(/ minval(para_H%Rdiag),maxval(para_H%Rdiag) /)
+              write(out_unitp,*) 'HMin,HMax (ua)  : ',[minval(para_H%Rdiag),maxval(para_H%Rdiag)]
               write(out_unitp,*) 'HMin,HMax (cm-1): ',   &
-                  (/ minval(para_H%Rdiag),maxval(para_H%Rdiag) /)*get_Conv_au_TO_unit('E','cm-1')
+                  [minval(para_H%Rdiag),maxval(para_H%Rdiag)]*get_Conv_au_TO_unit('E','cm-1')
 
               nb_diago = count((para_H%Rdiag(:)-para_H%Rdiag(1))< para_ana%max_ene)
               IF (para_ana%max_ana > 0) nb_diago = min(nb_diago,para_ana%max_ana)
@@ -1844,7 +1844,7 @@ END SUBROUTINE Tune_SG4threads_HPsi
 
 
       ! allocation
-      CALL alloc_NParray(Tab_WP,(/max_diago/),"Tab_WP","sub_Analysis_Only")
+      CALL alloc_NParray(Tab_WP,[max_diago],"Tab_WP","sub_Analysis_Only")
       DO i=1,size(Tab_WP)
         CALL init_psi(Tab_WP(i),para_H,para_WP0%WP0cplx)
       END DO

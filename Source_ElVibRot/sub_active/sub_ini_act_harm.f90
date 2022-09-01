@@ -112,7 +112,7 @@
 
         IF (.NOT. para_AllOp%tab_Op(iOp)%alloc_Grid) THEN
 
-          CALL alloc_NParray(Grid_cte,(/ para_AllOp%tab_Op(iOp)%nb_term /),&
+          CALL alloc_NParray(Grid_cte,[para_AllOp%tab_Op(iOp)%nb_term],&
                             "Grid_cte",name_sub)
           Grid_cte(:) = .FALSE.
 

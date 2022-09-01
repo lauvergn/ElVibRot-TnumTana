@@ -126,8 +126,8 @@ SUBROUTINE test_Opel()
 
 
   integer :: pq(2),JJ(2),LL(2),idf,idq,alfa,err_Op
-  integer :: tab_idq(0:27) = (/ 1,1,2,-3,2,  3,3,3,3,               &
-    5,5,5,  2,2,  3,3,3,3,3,3,3,3,  -3,-3,  -5,-5,-5,  2 /)
+  integer :: tab_idq(0:27) = [1,1,2,-3,2,  3,3,3,3,               &
+    5,5,5,  2,2,  3,3,3,3,3,3,3,3,  -3,-3,  -5,-5,-5,  2]
 
   logical :: first
   character (len = :), allocatable :: FelName
@@ -503,7 +503,7 @@ SUBROUTINE test_Expand_Op1D()
   character (len = :), allocatable :: FelName
   integer :: i,n1,n2,n3,idq
   integer, parameter :: ex = 2
-  integer :: list_exP2(3,8) = reshape((/ 0,0,0,  0,0,ex,  0,ex,0,  ex,0,0,  0,ex,ex,  ex,0,ex,  ex,ex,0,  ex,ex,ex /),(/3,8/))
+  integer :: list_exP2(3,8) = reshape([0,0,0,  0,0,ex,  0,ex,0,  ex,0,0,  0,ex,ex,  ex,0,ex,  ex,ex,0,  ex,ex,ex],[3,8])
 
 !     - working parameters ------------------------------------------
       integer :: err_mem,memory

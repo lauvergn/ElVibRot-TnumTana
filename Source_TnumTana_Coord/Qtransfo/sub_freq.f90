@@ -775,7 +775,7 @@ end subroutine calc_freq_new
       !-----------------------------------------------------------------
       !-----------------------------------------------------------------
       ! analysis the number of block ... => nb_NM
-      CALL alloc_NParray(Ind_Coord_PerBlock,(/ nb_var /),          &
+      CALL alloc_NParray(Ind_Coord_PerBlock,[nb_var],          &
                         "Ind_Coord_PerBlock",name_sub)
 
       Ind_Coord_PerBlock(:) = sym(:)
@@ -794,8 +794,8 @@ end subroutine calc_freq_new
       Ind_Coord_PerBlock(:) = sym(:)
 
       ! then, count the number of coordinates per block
-      CALL alloc_NParray(nb_PerBlock,      (/ nb_Block /),"nb_PerBlock",      name_sub)
-      CALL alloc_NParray(Ind_Coord_AtBlock,(/ nb_Block /),"Ind_Coord_AtBlock",name_sub)
+      CALL alloc_NParray(nb_PerBlock,      [nb_Block],"nb_PerBlock",      name_sub)
+      CALL alloc_NParray(Ind_Coord_AtBlock,[nb_Block],"Ind_Coord_AtBlock",name_sub)
       Ind_Coord_AtBlock(:) = 0
       nb_PerBlock(:)       = 0
 
@@ -843,13 +843,13 @@ end subroutine calc_freq_new
         END IF
 
         !d0k_PerBlock, d0h_PerBlock
-        CALL alloc_NParray(d0k_PerBlock,      (/ nb_NM,nb_NM /),"d0k_PerBlock",      name_sub)
-        CALL alloc_NParray(d0h_PerBlock,      (/ nb_NM,nb_NM /),"d0h_PerBlock",      name_sub)
-        CALL alloc_NParray(d0c_PerBlock,      (/ nb_NM,nb_NM /),"d0c_PerBlock",      name_sub)
-        CALL alloc_NParray(d0c_inv_PerBlock,  (/ nb_NM,nb_NM /),"d0c_inv_PerBlock",  name_sub)
-        CALL alloc_NParray(d0c_ini_PerBlock,  (/ nb_NM,nb_NM /),"d0c_ini_PerBlock",  name_sub)
+        CALL alloc_NParray(d0k_PerBlock,      [nb_NM,nb_NM],"d0k_PerBlock",      name_sub)
+        CALL alloc_NParray(d0h_PerBlock,      [nb_NM,nb_NM],"d0h_PerBlock",      name_sub)
+        CALL alloc_NParray(d0c_PerBlock,      [nb_NM,nb_NM],"d0c_PerBlock",      name_sub)
+        CALL alloc_NParray(d0c_inv_PerBlock,  [nb_NM,nb_NM],"d0c_inv_PerBlock",  name_sub)
+        CALL alloc_NParray(d0c_ini_PerBlock,  [nb_NM,nb_NM],"d0c_ini_PerBlock",  name_sub)
 
-        CALL alloc_NParray(d0eh_PerBlock,     (/ nb_NM /),      "d0eh_PerBlock",     name_sub)
+        CALL alloc_NParray(d0eh_PerBlock,     [nb_NM],      "d0eh_PerBlock",     name_sub)
 
         !d0k => d0k_PerBlock, d0h => d0h_PerBlock
         ib = 0
@@ -1305,9 +1305,9 @@ end subroutine calc_freq_new
       real (kind=Rkind) :: norme
       integer :: err_mem,memory
 
-      CALL alloc_NParray(d0c_inv,(/nb_var,nb_var/),"d0c_inv","calc_freq_width")
-      CALL alloc_NParray(d0c_ini,(/nb_var,nb_var/),"d0c_ini","calc_freq_width")
-      CALL alloc_NParray(d0k_save,(/nb_var,nb_var/),"d0k_save","calc_freq_width")
+      CALL alloc_NParray(d0c_inv,[nb_var,nb_var],"d0c_inv","calc_freq_width")
+      CALL alloc_NParray(d0c_ini,[nb_var,nb_var],"d0c_ini","calc_freq_width")
+      CALL alloc_NParray(d0k_save,[nb_var,nb_var],"d0k_save","calc_freq_width")
       d0c_ini(:,:)  = ZERO
       d0k_save(:,:) = d0k(:,:)
 

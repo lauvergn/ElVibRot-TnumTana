@@ -178,10 +178,10 @@
       read(in_unitp,niveau)
       write(out_unitp,niveau)
 
-      memory = product( (/ mole%nb_var /) )
+      memory = product( [mole%nb_var] )
       allocate(DeltaQsym(mole%nb_var),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"DeltaQsym","main")
-      memory = product( (/ mole%nb_var /) )
+      memory = product( [mole%nb_var] )
       allocate(PQsym(mole%nb_var),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"PQsym","main")
       DeltaQsym(:) = 0.
@@ -210,22 +210,22 @@
 
         ndimA = mole%nb_act+3
 
-        memory = product( (/ ndimA,ndimA /) )
+        memory = product( [ndimA,ndimA] )
         allocate(d0g(ndimA,ndimA),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"d0g","main")
-        memory = product( (/ ndimA,ndimA,mole%nb_act /) )
+        memory = product( [ndimA,ndimA,mole%nb_act] )
         allocate(d1g(ndimA,ndimA,mole%nb_act),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"d1g","main")
-        memory = product( (/ ndimA,ndimA,mole%nb_act,mole%nb_act /) )
+        memory = product( [ndimA,ndimA,mole%nb_act,mole%nb_act] )
         allocate(d2g(ndimA,ndimA,mole%nb_act,mole%nb_act),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"d2g","main")
-        memory = product( (/ ndimA,ndimA /) )
+        memory = product( [ndimA,ndimA] )
         allocate(d0GG(ndimA,ndimA),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"d0GG","main")
-        memory = product( (/ ndimA,ndimA,mole%nb_act /) )
+        memory = product( [ndimA,ndimA,mole%nb_act] )
         allocate(d1GG(ndimA,ndimA,mole%nb_act),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"d1GG","main")
-        memory = product( (/ ndimA,ndimA,mole%nb_act,mole%nb_act /) )
+        memory = product( [ndimA,ndimA,mole%nb_act,mole%nb_act] )
         allocate(d2GG(ndimA,ndimA,mole%nb_act,mole%nb_act),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"d2GG","main")
 
@@ -255,7 +255,7 @@
        CALL alloc_GWP(GWP,ndim=mole%nb_act,                             &
                       cplx=.TRUE.,                                      &
                       linearization=.TRUE.,trajectory=traj)
-       memory = product( (/ mole%nb_act /) )
+       memory = product( [mole%nb_act] )
        allocate(ind_exp(mole%nb_act),stat=err_mem) ! change alloc done
        CALL error_memo_allo(err_mem,memory,"ind_exp","main")
 
@@ -274,19 +274,19 @@
        END IF
        write(out_unitp,*) 'ND,N',ND,N
 
-       memory = product( (/ N /) )
+       memory = product( [N] )
        allocate(Y(N),FU(N),YOUT(N),stat=err_mem) ! change alloc done
        CALL error_memo_allo(err_mem,memory,"Y(N),FU(N),YOUT","main")
-       memory = product( (/ ND /) )
+       memory = product( [ND] )
        allocate(ARG(ND),stat=err_mem) ! change alloc done
        CALL error_memo_allo(err_mem,memory,"ARG","main")
-       memory = product( (/ ND /) )
+       memory = product( [ND] )
        allocate(deltaQ(ND),sigma(ND),stat=err_mem) ! change alloc done
        CALL error_memo_allo(err_mem,memory,"deltaQ(ND),sigma","main")
-       memory = product( (/ ND /) )
+       memory = product( [ND] )
        allocate(VTEMP(ND),stat=err_mem) ! change alloc done
        CALL error_memo_allo(err_mem,memory,"VTEMP","main")
-       memory = product( (/ ND /) )
+       memory = product( [ND] )
        allocate(ZI(ND,ND),ZS(ND,ND),TRAV(ND),INVERSE_INDEX(ND),         &
                                                            stat=err_mem) ! change alloc done
        CALL error_memo_allo(err_mem,memory,"ZI(ND,ND),ZS(ND,ND),TRAV(ND) &
@@ -371,13 +371,13 @@
 
 
          IF (.NOT. GWP%trajectory) THEN
-           memory = product( (/ nd /) )
+           memory = product( [nd] )
            allocate(freq(nd),stat=err_mem) ! change alloc done
            CALL error_memo_allo(err_mem,memory,"freq","main")
-           memory = product( (/ nd,nd /) )
+           memory = product( [nd,nd] )
            allocate(d0c(nd,nd),stat=err_mem) ! change alloc done
            CALL error_memo_allo(err_mem,memory,"d0c","main")
-           memory = product( (/ nd,nd /) )
+           memory = product( [nd,nd] )
            allocate(A(nd,nd),stat=err_mem) ! change alloc done
            CALL error_memo_allo(err_mem,memory,"A","main")
            CALL calc_freq_width(nd,A,d0c,freq,                          &
@@ -815,20 +815,20 @@
 !     Real part of PZP
       ncount = 2*ND
       FU(ncount+1:ncount+ND**2)   =                                     &
-             real(reshape(transpose(PZP(:,:)),(/ ND**2 /) ),kind=Rkind)
+             real(reshape(transpose(PZP(:,:)),[ND**2] ),kind=Rkind)
 !      Imaginary part of PZP
       ncount = ncount + ND**2
       FU(ncount+1:ncount+ND**2)   =                                     &
-             imag(reshape(transpose(PZP(:,:)),(/ ND**2 /) ))
+             imag(reshape(transpose(PZP(:,:)),[ND**2] ))
 
 !     Real part of PZP
       ncount = ncount + ND**2
       FU(ncount+1:ncount+ND**2)   =                                     &
-             real(reshape(transpose(ZP(:,:)),(/ ND**2 /) ),kind=Rkind)
+             real(reshape(transpose(ZP(:,:)),[ND**2] ),kind=Rkind)
 !     Imaginary part of PZP
       ncount = ncount + ND**2
       FU(ncount+1:ncount+ND**2)   =                                     &
-             imag(reshape(transpose(ZP(:,:)),(/ ND**2 /) ))
+             imag(reshape(transpose(ZP(:,:)),[ND**2] ))
 
 !*****CALCUL DE phase POINT : i.tr(HPP.A)+i/2.tr(HPQ)-L
       IF (N == 2*(ND+2*ND**2+1)) THEN
@@ -935,20 +935,20 @@
 !      Real part of PZ
        ncount = ncount + ND
        Y(ncount+1:ncount+ND**2)   =                                     &
-          real(reshape(transpose(GWP%CPZ(:,:)),(/ ND**2 /) ),kind=Rkind)
+          real(reshape(transpose(GWP%CPZ(:,:)),[ND**2] ),kind=Rkind)
 !      Imaginary part of PZ
        ncount = ncount + ND**2
        Y(ncount+1:ncount+ND**2)   =                                     &
-             imag(reshape(transpose(GWP%CPZ(:,:)),(/ ND**2 /) ))
+             imag(reshape(transpose(GWP%CPZ(:,:)),[ND**2] ))
 
 !      Real part of Z
        ncount = ncount + ND**2
        Y(ncount+1:ncount+ND**2)   =                                     &
-           real(reshape(transpose(GWP%CZ(:,:)),(/ ND**2 /) ),kind=Rkind)
+           real(reshape(transpose(GWP%CZ(:,:)),[ND**2] ),kind=Rkind)
 !      Imaginary part of Z
        ncount = ncount + ND**2
        Y(ncount+1:ncount+ND**2)   =                                     &
-             imag(reshape(transpose(GWP%CZ(:,:)),(/ ND**2 /) ))
+             imag(reshape(transpose(GWP%CZ(:,:)),[ND**2] ))
 
        IF (N == 2*(ND+2*ND**2+1)) THEN
 !        phase
@@ -1002,16 +1002,16 @@
 
 !      Real and imaginary parts of PZ
        ncount = ncount + ND
-       Rmat(:,:) = reshape(Y(ncount+1:ncount+ND**2),(/ ND,ND /) )
+       Rmat(:,:) = reshape(Y(ncount+1:ncount+ND**2),[ND,ND] )
        ncount = ncount + ND**2
-       Imat(:,:) = reshape(Y(ncount+1:ncount+ND**2),(/ ND,ND /) )
+       Imat(:,:) = reshape(Y(ncount+1:ncount+ND**2),[ND,ND] )
        GWP%CPZ(:,:) = transpose(cmplx(Rmat,Imat,kind=Rkind))
 
 !      Real and imaginary parts of Z
        ncount = ncount + ND**2
-       Rmat(:,:) = reshape(Y(ncount+1:ncount+ND**2),(/ ND,ND /) )
+       Rmat(:,:) = reshape(Y(ncount+1:ncount+ND**2),[ND,ND] )
        ncount = ncount + ND**2
-       Imat(:,:) = reshape(Y(ncount+1:ncount+ND**2),(/ ND,ND /) )
+       Imat(:,:) = reshape(Y(ncount+1:ncount+ND**2),[ND,ND] )
        GWP%CZ(:,:) = transpose(cmplx(Rmat,Imat,kind=Rkind))
 
 

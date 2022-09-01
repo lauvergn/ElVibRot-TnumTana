@@ -62,7 +62,7 @@
       character (len=*), parameter :: name_sub='Read_GeneTransfo'
 
 
-      CALL alloc_array(GeneTransfo%list_gene,(/nb_Qin/),                &
+      CALL alloc_array(GeneTransfo%list_gene,[nb_Qin],                &
                       "GeneTransfo%list_gene",name_sub)
       GeneTransfo%list_gene(:) = 0
 
@@ -85,7 +85,7 @@
       END IF
 
       CALL alloc_array(GeneTransfo%list_Coord_transfo,                  &
-                                    (/GeneTransfo%nb_Coord_transfo/),   &
+                                    [GeneTransfo%nb_Coord_transfo],   &
                       "GeneTransfo%list_Coord_transfo",name_sub)
       GeneTransfo%list_Coord_transfo(:) = 0
 
@@ -135,14 +135,14 @@
 
       CALL dealloc_GeneTransfo(GeneTransfo)
 
-      CALL alloc_array(GeneTransfo%list_gene,(/nb_Qin/),                &
+      CALL alloc_array(GeneTransfo%list_gene,[nb_Qin],                &
                       "GeneTransfo%list_gene",name_sub)
       GeneTransfo%list_gene(:) = 0
 
       GeneTransfo%nb_Coord_transfo = nb_Coord_transfo
 
       CALL alloc_array(GeneTransfo%list_Coord_transfo,                  &
-                                    (/GeneTransfo%nb_Coord_transfo/),   &
+                                    [GeneTransfo%nb_Coord_transfo],   &
                       "GeneTransfo%list_Coord_transfo",name_sub)
       GeneTransfo%list_Coord_transfo(:) = 0
 

@@ -76,7 +76,7 @@
       END IF
 
       CALL alloc_array(HyperSpheTransfo%list_HyperSphe,                 &
-                                   (/HyperSpheTransfo%nb_HyperSphe/),   &
+                                   [HyperSpheTransfo%nb_HyperSphe],   &
                       "HyperSpheTransfo%list_HyperSphe",name_sub)
       HyperSpheTransfo%list_HyperSphe(:) = 0
 

@@ -221,7 +221,7 @@ CONTAINS
 
 
       IF (.NOT. allocated(mole%opt_Qdyn)) THEN
-        CALL alloc_NParray(mole%opt_Qdyn,(/ mole%nb_var /),'mole%opt_Qdyn',name_sub)
+        CALL alloc_NParray(mole%opt_Qdyn,[mole%nb_var],'mole%opt_Qdyn',name_sub)
       END IF
       mole%opt_Qdyn(:) = 0
       IF (opt) THEN
@@ -422,7 +422,7 @@ CONTAINS
       IF (read_itQtransfo_OF_Qin0 == 0) THEN ! special case for Cartesian coordinates
 
         IF (read_xyz0_with_dummy) THEN
-          CALL alloc_NParray(Qread,(/ mole%tab_Qtransfo(1)%nb_Qout /),'Qread',name_sub)
+          CALL alloc_NParray(Qread,[mole%tab_Qtransfo(1)%nb_Qout],'Qread',name_sub)
           Qread(:) = ZERO
 
           CALL Get_Qread(Qread(1:3*mole%nat0),                        &
@@ -432,7 +432,7 @@ CONTAINS
 
 
         ELSE
-          CALL alloc_NParray(Qread,(/ mole%tab_Qtransfo(1)%nb_Qout /),'Qread',name_sub)
+          CALL alloc_NParray(Qread,[mole%tab_Qtransfo(1)%nb_Qout],'Qread',name_sub)
           Qread(:) = ZERO
 
           CALL Get_Qread(Qread(1:3*mole%nat_act),                     &
@@ -443,7 +443,7 @@ CONTAINS
 
       ELSE
 
-        CALL alloc_NParray(Qread,(/mole%tab_Qtransfo(read_itQtransfo_OF_Qin0)%nb_Qin /),'Qread',name_sub)
+        CALL alloc_NParray(Qread,[mole%tab_Qtransfo(read_itQtransfo_OF_Qin0)%nb_Qin],'Qread',name_sub)
 
         CALL Get_Qread(Qread,                                         &
                 mole%tab_Qtransfo(read_itQtransfo_OF_Qin0)%name_Qin,  &
@@ -536,7 +536,7 @@ CONTAINS
               CALL sub_QactTOdnx(Qact,dnx,mole,0,Gcenter=.FALSE.,Cart_Transfo=.FALSE.)
 
               mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) =     &
-                 reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
+                 reshape(dnx%d0(1:mole%ncart_act),[3,mole%ncart_act/3] )
 
             END DO
 
@@ -546,7 +546,7 @@ CONTAINS
             IF (read_xyz0) THEN
 
               mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) =       &
-                  reshape(Qread(1:mole%ncart_act),(/ 3,mole%ncart_act/3 /) )
+                  reshape(Qread(1:mole%ncart_act),[3,mole%ncart_act/3] )
 
             ELSE
 
@@ -557,7 +557,7 @@ CONTAINS
               !CALL Write_XYZ(dnx%d0,mole)
 
               mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) =     &
-                 reshape(dnx%d0(1:mole%ncart_act),(/ 3,mole%nat_act /) )
+                 reshape(dnx%d0(1:mole%ncart_act),[3,mole%nat_act] )
 
             END IF
 
@@ -668,7 +668,7 @@ CONTAINS
         CALL sub_QactTOdnx(Qact,dnx,mole,nderiv=0,Gcenter=.FALSE.,      &
                                               Cart_Transfo=Cart_transfo)
 
-        CALL alloc_NParray(Qit,(/mole%ncart/),'Qit',name_sub)
+        CALL alloc_NParray(Qit,[mole%ncart],'Qit',name_sub)
         Qit(:) = dnx%d0(1:mole%ncart)
 
         IF (print_Qtransfo_loc .OR. debug) THEN
@@ -704,7 +704,7 @@ CONTAINS
         END IF
 
         ! Here we have to use dnQin, because we want to set-up Qact (with the constraints)
-        CALL alloc_NParray(Qit,(/dnQin%nb_var_vec/),'Qit',name_sub)
+        CALL alloc_NParray(Qit,[dnQin%nb_var_vec],'Qit',name_sub)
         Qit(:) = dnQin%d0(:)
 
         CALL dealloc_dnSVM(dnQin)
@@ -741,7 +741,7 @@ CONTAINS
         END DO
 
         ! Here we have to use dnQin, because dnQout is transferred in dnQin and then it is deallocated.
-        CALL alloc_NParray(Qit,(/dnQin%nb_var_vec/),'Qit',name_sub)
+        CALL alloc_NParray(Qit,[dnQin%nb_var_vec],'Qit',name_sub)
         Qit(:) = dnQin%d0(:)
 
 
@@ -903,11 +903,11 @@ CONTAINS
 
         DO iref=1,mole%tab_Cart_transfo(1)%CartesianTransfo%nb_RefGeometry
 
-          Qxyz(1:mole%ncart_act) = reshape(mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref), shape=(/ mole%ncart_act /))
+          Qxyz(1:mole%ncart_act) = reshape(mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref), shape=[mole%ncart_act])
 
           CALL sub_QxyzTOexeyez(Qxyz,mole%tab_Cart_transfo(1)%CartesianTransfo%TransVect(:,iref),mole)
 
-          mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) = reshape(Qxyz(1:mole%ncart_act), shape=(/ 3,mole%nat_act /))
+          mole%tab_Cart_transfo(1)%CartesianTransfo%Qxyz(:,:,iref) = reshape(Qxyz(1:mole%ncart_act), shape=[3,mole%nat_act])
 
           DO iat=1,mole%tab_Cart_transfo(1)%CartesianTransfo%nat_act
             mole%tab_Cart_transfo(1)%CartesianTransfo%MWQxyz(:,iat,iref) = &
@@ -1003,9 +1003,9 @@ CONTAINS
 
           CALL calc_cross_product(ez,nz,ex,nx,ey,ny)
         ELSE
-          ex(:) = (/ONE,ZERO,ZERO/)
-          ey(:) = (/ZERO,ONE,ZERO/)
-          ez(:) = (/ZERO,ZERO,ONE/)
+          ex(:) = [ONE,ZERO,ZERO]
+          ey(:) = [ZERO,ONE,ZERO]
+          ez(:) = [ZERO,ZERO,ONE]
         END IF
 
       CASE ('bunch','bunch_poly')
@@ -1154,9 +1154,9 @@ CONTAINS
 
           CALL calc_cross_product(ez,nz,ex,nx,ey,ny)
         ELSE
-          ex(:) = (/ONE,ZERO,ZERO/)
-          ey(:) = (/ZERO,ONE,ZERO/)
-          ez(:) = (/ZERO,ZERO,ONE/)
+          ex(:) = [ONE,ZERO,ZERO]
+          ey(:) = [ZERO,ONE,ZERO]
+          ez(:) = [ZERO,ZERO,ONE]
         END IF
 
       CASE ('bunch','bunch_poly')

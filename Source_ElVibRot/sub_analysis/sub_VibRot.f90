@@ -159,9 +159,9 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      CALL alloc_NParray(H_VR,  (/ nb_bVR,nb_bVR /),'H_VR',  name_sub)
-      CALL alloc_NParray(Vec_VR,(/ nb_bVR,nb_bVR /),'Vec_VR',name_sub)
-      CALL alloc_NParray(Ene_VR,(/ nb_bVR /),       'Ene_VR',name_sub)
+      CALL alloc_NParray(H_VR,  [nb_bVR,nb_bVR],'H_VR',  name_sub)
+      CALL alloc_NParray(Vec_VR,[nb_bVR,nb_bVR],'Vec_VR',name_sub)
+      CALL alloc_NParray(Ene_VR,[nb_bVR],       'Ene_VR',name_sub)
 
       H_VR(:,:) = ZERO
 

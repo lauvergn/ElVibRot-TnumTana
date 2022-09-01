@@ -105,11 +105,11 @@
 
       L_TO_n_para%Lmax           = Lmax
 
-      CALL alloc_NParray(L_TO_n_para%tab_L_TO_n,(/Lmax/),               &
-                        "L_TO_n_para%tab_L_TO_n",name_sub,(/0/) )
+      CALL alloc_NParray(L_TO_n_para%tab_L_TO_n,[Lmax],               &
+                        "L_TO_n_para%tab_L_TO_n",name_sub,[0] )
 
-      CALL alloc_NParray(L_TO_n_para%skip_deltaL,(/Lmax/),               &
-                        "L_TO_n_para%skip_deltaL",name_sub,(/0/) )
+      CALL alloc_NParray(L_TO_n_para%skip_deltaL,[Lmax],               &
+                        "L_TO_n_para%skip_deltaL",name_sub,[0] )
 
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -300,8 +300,8 @@
       END IF
 
       L_TO_n_para%Lmax = Lmax
-      CALL alloc_NParray(L_TO_n_para%tab_L_TO_n,(/Lmax/),               &
-                        "L_TO_n_para%tab_L_TO_n",name_sub,(/0/) )
+      CALL alloc_NParray(L_TO_n_para%tab_L_TO_n,[Lmax],               &
+                        "L_TO_n_para%tab_L_TO_n",name_sub,[0] )
     END IF
 
       SELECT CASE (L_TO_n_para%L_TO_n_type)
@@ -356,8 +356,8 @@
 
       ! set skip_deltaL(:)
       !write(out_unitp,*) 'init skip_deltaL'
-      CALL alloc_NParray(L_TO_n_para%skip_deltaL,(/Lmax/),                      &
-                        "L_TO_n_para%skip_deltaL",name_sub,(/0/) )
+      CALL alloc_NParray(L_TO_n_para%skip_deltaL,[Lmax],                      &
+                        "L_TO_n_para%skip_deltaL",name_sub,[0] )
       L_TO_n_para%skip_deltaL(:) = .FALSE.
       DO L=1,Lmax ! start at L=1, because L-1 is used
         L_TO_n_para%skip_deltaL(L)= (L_TO_n_para%tab_L_TO_n(L) == L_TO_n_para%tab_L_TO_n(L-1))
@@ -542,7 +542,7 @@
     END IF
 
     IF (.NOT. allocated(L_TO_n_para%tab_n_TO_L)) THEN
-      CALL alloc_NParray(L_TO_n_para%tab_n_TO_L,(/nmax/),'tab_n_TO_L',name_sub,(/nmin/))
+      CALL alloc_NParray(L_TO_n_para%tab_n_TO_L,[nmax],'tab_n_TO_L',name_sub,[nmin])
 
       DO L=L_TO_n_para%Lmax,0,-1
         nn = get_n_FROM_Basis_L_TO_n(L_TO_n_para,L)

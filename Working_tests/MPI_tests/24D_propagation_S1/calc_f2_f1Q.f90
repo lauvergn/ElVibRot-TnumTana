@@ -66,13 +66,13 @@
       integer           :: i
 
       integer, parameter :: ndim=24
-      real (kind=Rkind), parameter :: w(ndim) = (/                   &
+      real (kind=Rkind), parameter :: w(ndim) = [                  &
         0.09357_Rkind, 0.0740_Rkind, 0.1273_Rkind, 0.1568_Rkind,     &
         0.0400_Rkind, 0.0589_Rkind, 0.0778_Rkind, 0.0968_Rkind,      &
         0.1157_Rkind, 0.1347_Rkind, 0.1536_Rkind, 0.1726_Rkind,      &
         0.1915_Rkind, 0.2105_Rkind, 0.2294_Rkind, 0.2484_Rkind,      &
         0.2673_Rkind, 0.2863_Rkind, 0.3052_Rkind, 0.3242_Rkind,      &
-        0.3431_Rkind, 0.3621_Rkind, 0.3810_Rkind, 0.4000_Rkind /)
+        0.3431_Rkind, 0.3621_Rkind, 0.3810_Rkind, 0.4000_Rkind]
 
       real (kind=Rkind) :: eVTOau
 !-------------------------------------------------------------------------

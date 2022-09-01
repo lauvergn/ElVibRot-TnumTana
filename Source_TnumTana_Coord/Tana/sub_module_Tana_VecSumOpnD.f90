@@ -240,7 +240,7 @@
 
    CALL dealloc_NParray(F_vec%vec_sum,'F_vec%vec_sum',routine_name)
 
-   CALL alloc_NParray(F_vec%vec_sum,(/ndim/),'F_vec%vec_sum',routine_name)
+   CALL alloc_NParray(F_vec%vec_sum,[ndim],'F_vec%vec_sum',routine_name)
 
  end subroutine allocate_vec_sum_opnd
 

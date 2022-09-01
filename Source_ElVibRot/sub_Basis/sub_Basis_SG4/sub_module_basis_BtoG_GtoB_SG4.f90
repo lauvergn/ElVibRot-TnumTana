@@ -257,7 +257,7 @@ END IF
 !write(out_unitp,*) 'Alloc Smolyak Rep'
 
 allocate(SRep%SmolyakRep(nDind_SmolyakRep%Max_nDI))
-CALL alloc_NParray(tab_n,(/ nDind_SmolyakRep%ndim /),'tab_n','alloc2_SmolyakRep')
+CALL alloc_NParray(tab_n,[nDind_SmolyakRep%ndim],'tab_n','alloc2_SmolyakRep')
 
 IF (allocated(nDind_SmolyakRep%Tab_nDval)) THEN
 
@@ -271,7 +271,7 @@ IF (allocated(nDind_SmolyakRep%Tab_nDval)) THEN
     CALL alloc_TypeRVec(SRep%SmolyakRep(iG),nvec=product(tab_n)*SRep%nb0)
   END DO
 ELSE
-  CALL alloc_NParray(tab_l,(/ nDind_SmolyakRep%ndim /),'tab_l','alloc2_SmolyakRep')
+  CALL alloc_NParray(tab_l,[nDind_SmolyakRep%ndim],'tab_l','alloc2_SmolyakRep')
 
   CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l,err_sub)
   IF (err_sub /= 0) STOP 'init_nDval_OF_nDindex'
@@ -395,7 +395,7 @@ END IF
 !write(out_unitp,*) 'Alloc Smolyak Rep'
 
 allocate(SRep%SmolyakRep(nDind_SmolyakRep%Max_nDI))
-CALL alloc_NParray(tab_n,(/ nDind_SmolyakRep%ndim /),'tab_n','alloc2_SmolyakRepC')
+CALL alloc_NParray(tab_n,[nDind_SmolyakRep%ndim],'tab_n','alloc2_SmolyakRepC')
 
 IF (allocated(nDind_SmolyakRep%Tab_nDval)) THEN
 
@@ -409,7 +409,7 @@ IF (allocated(nDind_SmolyakRep%Tab_nDval)) THEN
     CALL alloc_TypeCVec(SRep%SmolyakRep(iG),nvec=product(tab_n)*SRep%nb0)
   END DO
 ELSE
-  CALL alloc_NParray(tab_l,(/ nDind_SmolyakRep%ndim /),'tab_l','alloc2_SmolyakRepC')
+  CALL alloc_NParray(tab_l,[nDind_SmolyakRep%ndim],'tab_l','alloc2_SmolyakRepC')
 
   CALL init_nDval_OF_nDindex(nDind_SmolyakRep,tab_l,err_sub)
   IF (err_sub /= 0) STOP 'init_nDval_OF_nDindex'
@@ -756,7 +756,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   ENDIF
 
   IF(.NOT. openmpi) THEN
-    CALL alloc_NParray(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,(/Max_Srep/), &
+    CALL alloc_NParray(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB,[Max_Srep], &
                       'basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB',name_sub)
     basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB(:) = 0
   ELSE
@@ -765,7 +765,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   ENDIF
 
   IF (.NOT. allocated(basis_SG%para_SGType2%nDind_SmolyakRep%Tab_nDval) ) THEN
-    CALL alloc_NParray(tab_l, (/basis_SG%nDindB%ndim/),'tab_l',name_sub)
+    CALL alloc_NParray(tab_l, [basis_SG%nDindB%ndim],'tab_l',name_sub)
     CALL init_nDval_OF_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,tab_l)
     CALL dealloc_NParray(tab_l,'tab_l',name_sub)
   END IF
@@ -790,9 +790,9 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   !$OMP private(LL,k,l,ib,iib,err_sub,d1,d2)                    &
   !$OMP num_threads(nb_thread)
 
-  CALL alloc_NParray(tab_l, (/basis_SG%nDindB%ndim/),'tab_l',name_sub)
-  CALL alloc_NParray(tab_ib,(/basis_SG%nDindB%ndim/),'tab_ib',name_sub)
-  CALL alloc_NParray(tab_nb,(/basis_SG%nDindB%ndim/),'tab_nb',name_sub)
+  CALL alloc_NParray(tab_l, [basis_SG%nDindB%ndim],'tab_l',name_sub)
+  CALL alloc_NParray(tab_ib,[basis_SG%nDindB%ndim],'tab_ib',name_sub)
+  CALL alloc_NParray(tab_nb,[basis_SG%nDindB%ndim],'tab_nb',name_sub)
 
   !--------------------------------------------------------------
   !-- For the initialization of tab_l(:) and the use of ADD_ONE_TO_nDindex in the parallel loop
@@ -1127,7 +1127,7 @@ integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0,Max_nDI_ib0
     CALL dealloc_NParray(tabR_iG,'tabR_iG','tabPackedBasis_TO_tabR_AT_iG')
   END IF
 
-CALL alloc_NParray(tabR_iG,(/ SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0 /), &
+CALL alloc_NParray(tabR_iG,[SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0], &
                     'tabR_iG','tabPackedBasis_TO_tabR_AT_iG')
 
 nb_AT_iG = SGType2%tab_nb_OF_SRep(iG)
@@ -1210,7 +1210,7 @@ IF (allocated(tabR_iG)) THEN
   CALL dealloc_NParray(tabR_iG,'tabR_iG',name_sub)
 END IF
 
-CALL alloc_NParray(tabR_iG,(/ SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0 /),&
+CALL alloc_NParray(tabR_iG,[SGType2%tab_nb_OF_SRep(iG)*SGType2%nb0],&
                   'tabR_iG',name_sub)
 
 tabR_iG(:)  = ZERO
@@ -1308,7 +1308,7 @@ IF (allocated(tabR1)) CALL dealloc_NParray(tabR1,'tabR1','SmolyakRep2_TO_tabR1')
 nb_BG = Size_SmolyakRep(SRep2)
 
 nb = nb_BG/SRep2%nb0
-CALL alloc_NParray(tab,(/ nb,SRep2%nb0 /),                              &
+CALL alloc_NParray(tab,[nb,SRep2%nb0],                              &
                   'tab','SmolyakRep2_TO_tabR1')
 
 IF (nb_BG > 0) THEN
@@ -1317,15 +1317,15 @@ IF (nb_BG > 0) THEN
   DO iG=lbound(SRep2%SmolyakRep,dim=1),ubound(SRep2%SmolyakRep,dim=1)
     nb_AT_iG = size(SRep2%SmolyakRep(iG)%V) / SRep2%nb0
 
-    V = reshape(SRep2%SmolyakRep(iG)%V,shape=(/ nb_AT_iG,SRep2%nb0 /) )
+    V = reshape(SRep2%SmolyakRep(iG)%V,shape=[nb_AT_iG,SRep2%nb0] )
 
     tab(itabR+1:itabR+nb_AT_iG,:) = V(:,:)
 
     itabR = itabR + nb_AT_iG
 
   END DO
-  CALL alloc_NParray(tabR1,(/nb_BG/),'tabR1','SmolyakRep2_TO_tabR1')
-  tabR1(:) = reshape(tab,shape=(/ nb_BG /) )
+  CALL alloc_NParray(tabR1,[nb_BG],'tabR1','SmolyakRep2_TO_tabR1')
+  tabR1(:) = reshape(tab,shape=[nb_BG] )
 
   CALL dealloc_NParray(tab,'tab','SmolyakRep2_TO_tabR1bis')
   deallocate(V)
@@ -1355,7 +1355,7 @@ IF (nb_BG /= size(tabR1)) THEN
 END IF
 
 nb = nb_BG/SRep2%nb0
-CALL alloc_NParray(tab,(/ nb,SRep2%nb0 /),                              &
+CALL alloc_NParray(tab,[nb,SRep2%nb0],                              &
                   'tab','SmolyakRep2_TO_tabR1bis')
 
 IF (nb_BG > 0) THEN
@@ -1364,14 +1364,14 @@ IF (nb_BG > 0) THEN
   DO iG=lbound(SRep2%SmolyakRep,dim=1),ubound(SRep2%SmolyakRep,dim=1)
     nb_AT_iG = size(SRep2%SmolyakRep(iG)%V) / SRep2%nb0
 
-    V = reshape(SRep2%SmolyakRep(iG)%V,shape=(/ nb_AT_iG,SRep2%nb0 /) )
+    V = reshape(SRep2%SmolyakRep(iG)%V,shape=[nb_AT_iG,SRep2%nb0] )
 
     tab(itabR+1:itabR+nb_AT_iG,:) = V(:,:)
 
     itabR = itabR + nb_AT_iG
 
   END DO
-  tabR1 = reshape(tab,shape=(/ nb_BG /) )
+  tabR1 = reshape(tab,shape=[nb_BG] )
 
   CALL dealloc_NParray(tab,'tab','SmolyakRep2_TO_tabR1bis')
   deallocate(V)
@@ -1429,7 +1429,7 @@ IF (nb_BG > 0) THEN
 
   nb = nb_BG/SRep1%nb0
 
-  tab = reshape(tabR2,shape=(/ nb,SRep1%nb0 /) )
+  tab = reshape(tabR2,shape=[nb,SRep1%nb0] )
 
   itabR = 0
   DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
@@ -1474,7 +1474,7 @@ IF (nb_BG > 0) THEN
 
   nb = nb_BG/SRep1%nb0
 
-  tab = reshape(tabR2,shape=(/ nb,SRep1%nb0 /) )
+  tab = reshape(tabR2,shape=[nb,SRep1%nb0] )
 
   itabR = 0
   DO iG=lbound(SRep1%SmolyakRep,dim=1),ubound(SRep1%SmolyakRep,dim=1)
@@ -1546,7 +1546,7 @@ IF (size(tabR2) > 0) THEN
   nR    = SGType2%tab_nq_OF_SRep(iG)
 
   IF (allocated(tabR1)) CALL dealloc_NParray(tabR1,'tabR1','tabR2grid_TO_tabR1_AT_iG')
-  CALL alloc_NParray(tabR1,(/ nR /),'tabR1','tabR2grid_TO_tabR1_AT_iG')
+  CALL alloc_NParray(tabR1,[nR],'tabR1','tabR2grid_TO_tabR1_AT_iG')
 
 
   tabR1(:) = tabR2(itabR-nR+1:itabR)
@@ -1603,7 +1603,7 @@ IF (size(tabR1) > 0) THEN
   nR    = SGType2%tab_nq_OF_SRep(iG)
 
   IF (.NOT. allocated(tabR2)) THEN
-    CALL alloc_NParray(tabR2,(/ SGType2%tab_nq_OF_SRep(SGType2%nb_SG) /),&
+    CALL alloc_NParray(tabR2,[SGType2%tab_nq_OF_SRep(SGType2%nb_SG)],&
                       'tabR2','tabR1_AT_iG_TO_tabR2grid')
   END IF
 
@@ -2420,11 +2420,11 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
  IF (present(nb0)) nb0_loc = nb0
 
  nnb = product(tab_nb)
- CALL alloc_NParray(RB,(/ nnb,nb0_loc /),'RB',name_sub)
- RB(:,:)  = reshape(R,shape=(/ nnb,nb0_loc /))
+ CALL alloc_NParray(RB,[nnb,nb0_loc],'RB',name_sub)
+ RB(:,:)  = reshape(R,shape=[nnb,nb0_loc])
 
  nnq = product(tab_nq)
- CALL alloc_NParray(RG,(/ nnq,nb0_loc /),'RG',name_sub)
+ CALL alloc_NParray(RG,[nnq,nb0_loc],'RG',name_sub)
  RG(:,:)  = ZERO
 
  CALL dealloc_NParray(R,'R',name_sub)
@@ -2436,8 +2436,8 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
   nb2 = 1
   nq2 = 1
 
-  CALL alloc_NParray(RTempG,(/ nnq,nq2,nnb /),'RTempG',name_sub)
-  RTempG(:,:,:) = reshape(RB(:,ib0),shape=(/ nnq,nq2,nnb /))
+  CALL alloc_NParray(RTempG,[nnq,nq2,nnb],'RTempG',name_sub)
+  RTempG(:,:,:) = reshape(RB(:,ib0),shape=[nnq,nq2,nnb])
 
 
   ! B order : b1 * b2 * b3 * ... bD
@@ -2448,11 +2448,11 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
     nq2 = tab_nq(i)
     nnb = nnb / nb2
 
-    CALL alloc_NParray(RTempB,(/ nnq,nb2,nnb /),'RTempB',name_sub)
-    RTempB(:,:,:) = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
+    CALL alloc_NParray(RTempB,[nnq,nb2,nnb],'RTempB',name_sub)
+    RTempB(:,:,:) = reshape(RTempG,shape=[nnq,nb2,nnb])
 
     CALL dealloc_NParray(RTempG,'RTempG',name_sub)
-    CALL alloc_NParray(RTempG,(/ nnq,nq2,nnb /),'RTempG',name_sub)
+    CALL alloc_NParray(RTempG,[nnq,nq2,nnb],'RTempG',name_sub)
 
     DO ib=1,nnb
     DO iq=1,nnq
@@ -2475,14 +2475,14 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 
   END DO
 
-  RG(:,ib0) = reshape(RTempG, shape=(/ nnq /) )
+  RG(:,ib0) = reshape(RTempG, shape=[nnq] )
   CALL dealloc_NParray(RTempG,'RTempG',name_sub)
 
  END DO
 
   nnq = product(tab_nq)
-  CALL alloc_NParray(R,(/ nnq*nb0_loc /),'R',name_sub)
-  R(:) = reshape(RG, shape=(/ nnq*nb0_loc /) )
+  CALL alloc_NParray(R,[nnq*nb0_loc],'R',name_sub)
+  R(:) = reshape(RG, shape=[nnq*nb0_loc] )
 
   CALL dealloc_NParray(RB,'RB',name_sub)
   CALL dealloc_NParray(RG,'RG',name_sub)
@@ -2516,11 +2516,11 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
  IF (present(nb0)) nb0_loc = nb0
 
  nnq = product(tab_nq)
- CALL alloc_NParray(RG,(/ nnq,nb0_loc /),'RG',name_sub)
- RG(:,:)  = reshape(R,shape=(/ nnq,nb0_loc /))
+ CALL alloc_NParray(RG,[nnq,nb0_loc],'RG',name_sub)
+ RG(:,:)  = reshape(R,shape=[nnq,nb0_loc])
  CALL dealloc_NParray(R,'R',name_sub)
  nnb = product(tab_nb)
- CALL alloc_NParray(RB,(/ nnb,nb0_loc /),'RB',name_sub)
+ CALL alloc_NParray(RB,[nnb,nb0_loc],'RB',name_sub)
  RB(:,:) = ZERO
 
  DO ib0=1,nb0_loc
@@ -2529,8 +2529,8 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
   nb2 = 1
   nq2 = 1
 
-  CALL alloc_NParray(RTempB,(/ 1,1,nnq /),'RTempB',name_sub)
-  RTempB(:,:,:) = reshape(RG(:,ib0),shape=(/ 1,1,nnq /))
+  CALL alloc_NParray(RTempB,[1,1,nnq],'RTempB',name_sub)
+  RTempB(:,:,:) = reshape(RG(:,ib0),shape=[1,1,nnq])
 
 ! B order : b1 * b2 * b3 * ... bD
 ! G order : g1 * g2 * g3 * ... gD
@@ -2540,11 +2540,11 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
     nq2 = tab_nq(i)
     nnq = nnq / nq2
 
-    CALL alloc_NParray(RTempG,(/ nnb,nq2,nnq /),'RTempG',name_sub)
-    RTempG(:,:,:) = reshape(RTempB,shape=(/ nnb,nq2,nnq /))
+    CALL alloc_NParray(RTempG,[nnb,nq2,nnq],'RTempG',name_sub)
+    RTempG(:,:,:) = reshape(RTempB,shape=[nnb,nq2,nnq])
 
     CALL dealloc_NParray(RTempB,'RTempB',name_sub)
-    CALL alloc_NParray(RTempB,(/ nnb,nb2,nnq /),'RTempB',name_sub)
+    CALL alloc_NParray(RTempB,[nnb,nb2,nnq],'RTempB',name_sub)
 
     DO iq=1,nnq
     DO ib=1,nnb
@@ -2565,14 +2565,14 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 
   END DO
 
-  RB(:,ib0) = reshape(RTempB, shape=(/ nnb /) )
+  RB(:,ib0) = reshape(RTempB, shape=[nnb] )
 
   CALL dealloc_NParray(RTempB,'RTempB',name_sub)
  END DO
 
 
-  CALL alloc_NParray(R,(/ nnb*nb0_loc /),'R',name_sub)
-  R(:) = reshape(RB, shape=(/ nnb*nb0_loc /) )
+  CALL alloc_NParray(R,[nnb*nb0_loc],'R',name_sub)
+  R(:) = reshape(RB, shape=[nnb*nb0_loc] )
 
   CALL dealloc_NParray(RB,'RB',name_sub)
   CALL dealloc_NParray(RG,'RG',name_sub)
@@ -2741,8 +2741,8 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRep(R,tab_ba,tab_l,tab_nq,tab_der)
      nnq1 = 1
      nq2  = 1
 
-     CALL alloc_NParray(RG1,(/ nnq1,nq2,nnq3 /),"RG1",name_sub)
-     RG1(:,:,:) = reshape(R,shape=(/ nnq1,nq2,nnq3 /))
+     CALL alloc_NParray(RG1,[nnq1,nq2,nnq3],"RG1",name_sub)
+     RG1(:,:,:) = reshape(R,shape=[nnq1,nq2,nnq3])
 
      DO ibasis=1,size(tab_l)
 
@@ -2752,12 +2752,12 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRep(R,tab_ba,tab_l,tab_nq,tab_der)
        dnba_ind(:) = tab_ba(tab_l(ibasis),ibasis)%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
 
        IF (dnba_ind(1) /= 0 .OR. dnba_ind(2) /= 0) THEN
-         CALL alloc_NParray(RG2,(/ nnq1,nq2,nnq3 /),"RG2",name_sub)
-         RG2(:,:,:) = reshape(RG1,shape=(/ nnq1,nq2,nnq3 /))
+         CALL alloc_NParray(RG2,[nnq1,nq2,nnq3],"RG2",name_sub)
+         RG2(:,:,:) = reshape(RG1,shape=[nnq1,nq2,nnq3])
 
          IF (tab_ba(tab_l(ibasis),ibasis)%packed) THEN
 
-           CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
+           CALL alloc_NParray(BGG,[nq2,nq2],"BGG",name_sub)
 
            CALL Get_MatdnRGG(tab_ba(tab_l(ibasis),ibasis),BGG,dnba_ind)
 
@@ -2774,7 +2774,7 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRep(R,tab_ba,tab_l,tab_nq,tab_der)
          END IF
 
          CALL dealloc_NParray(RG1,"RG1",name_sub)
-         CALL alloc_NParray(RG1,(/ nnq1,nq2,nnq3 /),"RG1",name_sub)
+         CALL alloc_NParray(RG1,[nnq1,nq2,nnq3],"RG1",name_sub)
          RG1(:,:,:) = RG2
          CALL dealloc_NParray(RG2,"RG2",name_sub)
        END IF
@@ -2783,7 +2783,7 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRep(R,tab_ba,tab_l,tab_nq,tab_der)
 
      END DO
 
-     R(:) = reshape(RG1, shape=(/ nq /) )
+     R(:) = reshape(RG1, shape=[nq] )
      CALL dealloc_NParray(RG1,"RG1",name_sub)
    END IF
 
@@ -2848,8 +2848,8 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRepC(R,tab_ba,tab_l,tab_nq,tab_der)
      nnq1 = 1
      nq2  = 1
 
-     CALL alloc_NParray(RG1,(/ nnq1,nq2,nnq3 /),"RG1",name_sub)
-     RG1(:,:,:) = reshape(R,shape=(/ nnq1,nq2,nnq3 /))
+     CALL alloc_NParray(RG1,[nnq1,nq2,nnq3],"RG1",name_sub)
+     RG1(:,:,:) = reshape(R,shape=[nnq1,nq2,nnq3])
 
      DO ibasis=1,size(tab_l)
 
@@ -2859,12 +2859,12 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRepC(R,tab_ba,tab_l,tab_nq,tab_der)
        dnba_ind(:) = tab_ba(tab_l(ibasis),ibasis)%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
 
        IF (any(dnba_ind /= 0 )) THEN
-         CALL alloc_NParray(RG2,(/ nnq1,nq2,nnq3 /),"RG2",name_sub)
-         RG2(:,:,:) = reshape(RG1,shape=(/ nnq1,nq2,nnq3 /))
+         CALL alloc_NParray(RG2,[nnq1,nq2,nnq3],"RG2",name_sub)
+         RG2(:,:,:) = reshape(RG1,shape=[nnq1,nq2,nnq3])
 
          IF (tab_ba(tab_l(ibasis),ibasis)%packed) THEN
 
-           CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
+           CALL alloc_NParray(BGG,[nq2,nq2],"BGG",name_sub)
 
            CALL Get_MatdnRGG(tab_ba(tab_l(ibasis),ibasis),BGG,dnba_ind)
 
@@ -2881,7 +2881,7 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRepC(R,tab_ba,tab_l,tab_nq,tab_der)
          END IF
 
          CALL dealloc_NParray(RG1,"RG1",name_sub)
-         CALL alloc_NParray(RG1,(/ nnq1,nq2,nnq3 /),"RG1",name_sub)
+         CALL alloc_NParray(RG1,[nnq1,nq2,nnq3],"RG1",name_sub)
          RG1(:,:,:) = RG2
          CALL dealloc_NParray(RG2,"RG2",name_sub)
        END IF
@@ -2890,7 +2890,7 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRepC(R,tab_ba,tab_l,tab_nq,tab_der)
 
      END DO
 
-     R(:) = reshape(RG1, shape=(/ nq /) )
+     R(:) = reshape(RG1, shape=[nq] )
      CALL dealloc_NParray(RG1,"RG1",name_sub)
    END IF
 

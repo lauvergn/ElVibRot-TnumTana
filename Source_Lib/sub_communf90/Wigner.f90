@@ -213,7 +213,7 @@ MODULE wigner_m
 
       if(Nmax.gt.nbFac) then
           Write (6,1000) Nmax
- 1000     format(//' $$$$$ In F3j Nmax(',i3,') > nbFac $$$$$')
+ 1000     format[/' $$$$$ In F3j Nmax(',i3,') > nbFac $$$$$')
           stop
       Endif
 

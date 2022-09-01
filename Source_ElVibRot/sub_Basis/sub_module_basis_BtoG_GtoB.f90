@@ -84,7 +84,7 @@
         integer                          :: ibasis
         integer                          :: i_SG,iq0_SG,iq1_SG,nq_SG
         integer                          :: nb_thread
-        integer                          :: der00(2) = (/0,0/)
+        integer                          :: der00(2) = [0,0]
 
         TYPE(Type_SmolyakRep)            :: SRep ! smolyak rep for SparseGrid_type=4
         integer                          :: itabR,iG,nR
@@ -139,8 +139,8 @@
             nbb  = 1
             nq2  = 1
 
-            CALL alloc_NParray(RTempB,(/ nnq,nbb /),"RTempB",name_sub)
-            RTempB(:,:) = reshape(RVecG,shape=(/ nnq,nbb /))
+            CALL alloc_NParray(RTempB,[nnq,nbb],"RTempB",name_sub)
+            RTempB(:,:) = reshape(RVecG,shape=[nnq,nbb])
 
 
             DO ibasis=1,basis_set%nb_basis
@@ -149,8 +149,8 @@
               nq2 = get_nq_FROM_basis(basis_set%tab_Pbasis(ibasis)%Pbasis)
               nnq = nnq / nq2
 
-              CALL alloc_NParray(RTempG,(/ nnq,nq2,nnb /),"RTempG",name_sub)
-              RTempG(:,:,:) = reshape(RTempB,shape=(/ nnq,nq2,nnb /))
+              CALL alloc_NParray(RTempG,[nnq,nq2,nnb],"RTempG",name_sub)
+              RTempG(:,:,:) = reshape(RTempB,shape=[nnq,nq2,nnb])
               !write(out_unitp,*) 'ibasis shape G',ibasis,shape(RTempG)
               nbb = sum(basis_set%Tab_OF_Tabnb2(ibasis)%vec)
 
@@ -158,12 +158,12 @@
 !                                        basis_set%Tab_OF_Tabnb2(ibasis)%vec
 
               CALL dealloc_NParray(RTempB,"RTempB",name_sub)
-              CALL alloc_NParray(RTempB,(/ nnq,nbb /),"RTempB",name_sub)
+              CALL alloc_NParray(RTempB,[nnq,nbb],"RTempB",name_sub)
               !write(out_unitp,*) 'ibasis shape B',ibasis,shape(RTempB)
 
 
-              CALL alloc_NParray(RG,(/ nq2 /),"RG",name_sub)
-              CALL alloc_NParray(RB,(/ nb2 /),"RB",name_sub)
+              CALL alloc_NParray(RG,[nq2],"RG",name_sub)
+              CALL alloc_NParray(RB,[nb2],"RB",name_sub)
 
               IF (basis_set%tab_Pbasis(ibasis)%Pbasis%packed) THEN
 
@@ -217,12 +217,12 @@
 
             END DO
 
-            RvecB(:) = reshape(RTempB, shape=(/ nnq*nnb /) )
+            RvecB(:) = reshape(RTempB, shape=[nnq*nnb] )
             CALL dealloc_NParray(RTempB,"RTempB",name_sub)
 
           CASE (1) ! Sparse basis (Smolyak 1st implementation)
             RvecB(:) = ZERO
-            CALL alloc_NParray(RB,(/ nb /),"RB",name_sub)
+            CALL alloc_NParray(RB,[nb],"RB",name_sub)
             iq0_SG = 1
             iq1_SG = 0
             DO i_SG=1,basis_set%nb_SG
@@ -324,7 +324,7 @@
         integer                             :: ibasis
         integer                             :: i_SG,iq0_SG,iq1_SG,nq_SG
         integer                             :: nb_thread
-        integer                             :: der00(2) = (/0,0/)
+        integer                             :: der00(2) = [0,0]
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -372,8 +372,8 @@
             nbb  = 1
             nq2  = 1
 
-            CALL alloc_NParray(CTempB,(/ nnq,nbb /),"CTempB",name_sub)
-            CTempB(:,:) = reshape(CVecG,shape=(/ nnq,nbb /))
+            CALL alloc_NParray(CTempB,[nnq,nbb],"CTempB",name_sub)
+            CTempB(:,:) = reshape(CVecG,shape=[nnq,nbb])
 
             DO ibasis=1,basis_set%nb_basis
               nb2 = basis_set%tab_Pbasis(ibasis)%Pbasis%nb
@@ -381,9 +381,9 @@
 
               nnq = nnq / nq2
 
-              CALL alloc_NParray(CTempG,(/ nnq,nq2,nnb /),"CTempG",name_sub)
+              CALL alloc_NParray(CTempG,[nnq,nq2,nnb],"CTempG",name_sub)
 
-              CTempG(:,:,:) = reshape(CTempB,shape=(/ nnq,nq2,nnb /))
+              CTempG(:,:,:) = reshape(CTempB,shape=[nnq,nq2,nnb])
 
               nbb = sum(basis_set%Tab_OF_Tabnb2(ibasis)%vec)
 
@@ -391,16 +391,16 @@
               !                          basis_set%Tab_OF_Tabnb2(ibasis)%vec
 
               CALL dealloc_NParray(CTempB,"CTempB",name_sub)
-              CALL alloc_NParray(CTempB,(/ nnq,nbb /),"CTempB",name_sub)
+              CALL alloc_NParray(CTempB,[nnq,nbb],"CTempB",name_sub)
 
 
-              CALL alloc_NParray(CG,(/ nq2 /),"CG",name_sub)
-              CALL alloc_NParray(CB,(/ nb2 /),"CB",name_sub)
+              CALL alloc_NParray(CG,[nq2],"CG",name_sub)
+              CALL alloc_NParray(CB,[nb2],"CB",name_sub)
 
               IF (basis_set%tab_Pbasis(ibasis)%Pbasis%packed) THEN
 
                 IF (basis_set%tab_Pbasis(ibasis)%Pbasis%cplx) THEN
-                  CALL alloc_NParray(d0cb,(/ nq2,nb2 /),"d0cb",name_sub)
+                  CALL alloc_NParray(d0cb,[nq2,nb2],"d0cb",name_sub)
                   CALL Get_MatdnCGB(basis_set%tab_Pbasis(ibasis)%Pbasis,d0cb,der00)
 
                   w = get_wrho_OF_basis(basis_set%tab_Pbasis(ibasis)%Pbasis)
@@ -425,7 +425,7 @@
                   CALL dealloc_NParray(d0cb,"d0cb",name_sub)
                   CALL dealloc_NParray(w,"w",name_sub)
                 ELSE
-                  CALL alloc_NParray(d0b,(/ nq2,nb2 /),"d0cb",name_sub)
+                  CALL alloc_NParray(d0b,[nq2,nb2],"d0cb",name_sub)
                   CALL Get_MatdnRGB(basis_set%tab_Pbasis(ibasis)%Pbasis,d0b,der00)
 
                   w = get_wrho_OF_basis(basis_set%tab_Pbasis(ibasis)%Pbasis)
@@ -479,11 +479,11 @@
               nnb = nbb
             END DO
 
-            CVecB(:) = reshape(CTempB, shape=(/ nnq*nnb /) )
+            CVecB(:) = reshape(CTempB, shape=[nnq*nnb] )
             CALL dealloc_NParray(CTempB,"CTempB",name_sub)
           CASE (1) ! Sparse basis (Smolyak 1st implementation)
             CVecB(:) = CZERO
-            CALL alloc_NParray(CB,(/ nb /),"CB",name_sub)
+            CALL alloc_NParray(CB,[nb],"CB",name_sub)
             iq0_SG = 1
             iq1_SG = 0
             DO i_SG=1,basis_set%nb_SG
@@ -679,7 +679,7 @@
             RVecG(:) = matmul(basis_set%dnRGB%d0,RvecB)
           ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
               IF (basis_set%dnBBRep_done) THEN
-                CALL alloc_NParray(RB, (/ nb /),"RB",name_sub)
+                CALL alloc_NParray(RB, [nb],"RB",name_sub)
                 RB(:) = matmul(basis_set%dnRBB%d1(1:nb,1:nb,dnba_ind(2)),RvecB(1:nb))
                 DO iq=1,nq
                   RVecG(iq) = sum(basis_set%dnRGB%d0(iq,1:nb)*RB)
@@ -694,7 +694,7 @@
               END IF
           ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
             IF (basis_set%dnBBRep_done) THEN
-              CALL alloc_NParray(RB,(/ nb /),"RB",name_sub)
+              CALL alloc_NParray(RB,[nb],"RB",name_sub)
               RB(:) = matmul(basis_set%dnRBB%d1(1:nb,1:nb,dnba_ind(1)),RvecB(1:nb))
               DO iq=1,nq
                 RVecG(iq) = sum(basis_set%dnRGB%d0(iq,1:nb)*RB)
@@ -709,7 +709,7 @@
             END IF
           ELSE
             IF (basis_set%dnBBRep_done) THEN
-              CALL alloc_NParray(RB,(/ nb /),"RB",name_sub)
+              CALL alloc_NParray(RB,[nb],"RB",name_sub)
               RB(:) = matmul(basis_set%dnRBB%d2(1:nb,1:nb,dnba_ind(1),dnba_ind(2)),RvecB(1:nb))
               DO iq=1,nq
                 RVecG(iq) = sum(basis_set%dnRGB%d0(iq,1:nb)*RB)
@@ -734,9 +734,9 @@
             nb2 = 1
             nq2 = 1
 
-            CALL alloc_NParray(RTempG,(/ nnq,nq2,nnb /),"RTempG",name_sub)
+            CALL alloc_NParray(RTempG,[nnq,nq2,nnb],"RTempG",name_sub)
 
-            RTempG(:,:,:) = reshape(RvecB,shape=(/ nnq,nq2,nnb /))
+            RTempG(:,:,:) = reshape(RvecB,shape=[nnq,nq2,nnb])
 
             DO ibasis=basis_set%nb_basis,1,-1
 
@@ -744,17 +744,17 @@
               nq2 = get_nq_FROM_basis(basis_set%tab_Pbasis(ibasis)%Pbasis)
               nnb = basis_set%Tab_OF_Tabnb2(ibasis)%nb_var_vec
 
-              CALL alloc_NParray(RTempB, (/nnq,nbb /),"RTempB",name_sub)
+              CALL alloc_NParray(RTempB, [nnq,nbb],"RTempB",name_sub)
 
-              RTempB(:,:) = reshape(RTempG,shape=(/ nnq,nbb /))
+              RTempB(:,:) = reshape(RTempG,shape=[nnq,nbb])
 
               CALL dealloc_NParray(RTempG,"RTempG",name_sub)
-              CALL alloc_NParray(RTempG,(/ nnq,nq2,nnb /),"RTempG",name_sub)
+              CALL alloc_NParray(RTempG,[nnq,nq2,nnb],"RTempG",name_sub)
 
               IF (basis_set%tab_Pbasis(ibasis)%Pbasis%packed) THEN
                 dnba_ind(:) = basis_set%tab_Pbasis(ibasis)%Pbasis%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
 
-                CALL alloc_NParray(dnb,(/ nq2,nb2 /),"dnb",name_sub)
+                CALL alloc_NParray(dnb,[nq2,nb2],"dnb",name_sub)
                 CALL Get_MatdnRGB(basis_set%tab_Pbasis(ibasis)%Pbasis,dnb,dnba_ind)
 
                 ibb1 = 1
@@ -794,7 +794,7 @@
               CALL dealloc_NParray(RTempB,"RTempB",name_sub)
             END DO
 
-            RvecG(:) = reshape(RTempG, shape=(/ nnq*nnb /) )
+            RvecG(:) = reshape(RTempG, shape=[nnq*nnb] )
             CALL dealloc_NParray(RTempG,"RTempG",name_sub)
 
           CASE (1) ! Sparse basis (Smolyak 1st implementation)
@@ -933,7 +933,7 @@
             CVecG(:) = matmul(basis_set%dnCGB%d0,CVecB)
           ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
             IF (basis_set%dnBBRep_done) THEN
-              CALL alloc_NParray(CB,(/ nb /),"CB",name_sub)
+              CALL alloc_NParray(CB,[nb],"CB",name_sub)
               CB(:) = matmul(basis_set%dnCBB%d1(:,1:nb,dnba_ind(2)),CVecB(1:nb))
               CVecG(:) = matmul(basis_set%dnCGB%d0(:,1:nb),CB)
               CALL dealloc_NParray(CB,"CB",name_sub)
@@ -942,7 +942,7 @@
             END IF
           ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
             IF (basis_set%dnBBRep_done) THEN
-              CALL alloc_NParray(CB,(/ nb /),"CB",name_sub)
+              CALL alloc_NParray(CB,[nb],"CB",name_sub)
               CB(:) = matmul(basis_set%dnCBB%d1(:,1:nb,dnba_ind(1)),CVecB(1:nb))
               CVecG(:) = matmul(basis_set%dnCGB%d0(:,1:nb),CB)
               CALL dealloc_NParray(CB,"CB",name_sub)
@@ -951,7 +951,7 @@
             END IF
           ELSE ! second derivative
             IF (basis_set%dnBBRep_done) THEN
-              CALL alloc_NParray(CB,(/ nb /),"CB",name_sub)
+              CALL alloc_NParray(CB,[nb],"CB",name_sub)
               CB(:) = matmul(basis_set%dnCBB%d2(:,1:nb,dnba_ind(1),dnba_ind(2)),CVecB(1:nb))
               CVecG(:) = matmul(basis_set%dnCGB%d0(:,1:nb),CB)
               CALL dealloc_NParray(CB,"CB",name_sub)
@@ -968,7 +968,7 @@
             CVecG(:) = matmul(basis_set%dnRGB%d0,CVecB)
           ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
             IF (basis_set%dnBBRep_done) THEN
-              CALL alloc_NParray(CB,(/ nb /),"CB",name_sub)
+              CALL alloc_NParray(CB,[nb],"CB",name_sub)
               CB(:) = matmul(basis_set%dnRBB%d1(:,1:nb,dnba_ind(2)),CVecB(1:nb))
               CVecG(:) = matmul(basis_set%dnRGB%d0(:,1:nb),CB)
               CALL dealloc_NParray(CB,"CB",name_sub)
@@ -977,7 +977,7 @@
             END IF
           ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
             IF (basis_set%dnBBRep_done) THEN
-              CALL alloc_NParray(CB,(/ nb /),"CB",name_sub)
+              CALL alloc_NParray(CB,[nb],"CB",name_sub)
               CB(:) = matmul(basis_set%dnRBB%d1(:,1:nb,dnba_ind(1)),CVecB(1:nb))
               CVecG(:) = matmul(basis_set%dnRGB%d0(:,1:nb),CB)
               CALL dealloc_NParray(CB,"CB",name_sub)
@@ -986,7 +986,7 @@
             END IF
           ELSE ! second derivative
             IF (basis_set%dnBBRep_done) THEN
-              CALL alloc_NParray(CB,(/ nb /),"CB",name_sub)
+              CALL alloc_NParray(CB,[nb],"CB",name_sub)
               CB(:) = matmul(basis_set%dnRBB%d2(:,1:nb,dnba_ind(1),dnba_ind(2)),CVecB(1:nb))
               CVecG(:) = matmul(basis_set%dnRGB%d0(:,1:nb),CB)
               CALL dealloc_NParray(CB,"CB",name_sub)
@@ -1007,8 +1007,8 @@
             nb2 = 1
             nq2 = 1
 
-            CALL alloc_NParray(CTempG,(/ nnq,nq2,nnb /),"CTempG",name_sub)
-            CTempG(:,:,:) = reshape(CVecB,shape=(/ nnq,nq2,nnb /))
+            CALL alloc_NParray(CTempG,[nnq,nq2,nnb],"CTempG",name_sub)
+            CTempG(:,:,:) = reshape(CVecB,shape=[nnq,nq2,nnb])
 
             DO ibasis=basis_set%nb_basis,1,-1
 
@@ -1019,17 +1019,17 @@
 !             write(out_unitp,*) 'B=>G ibasis,Tab_OF_Tabnb2',ibasis,              &
 !                                        basis_set%Tab_OF_Tabnb2(ibasis)%vec
 
-              CALL alloc_NParray(CTempB,(/ nnq,nbb /),"CTempB",name_sub)
+              CALL alloc_NParray(CTempB,[nnq,nbb],"CTempB",name_sub)
 
-              CTempB(:,:) = reshape(CTempG,shape=(/ nnq,nbb /))
+              CTempB(:,:) = reshape(CTempG,shape=[nnq,nbb])
               CALL dealloc_NParray(CTempG,"CTempG",name_sub)
-              CALL alloc_NParray(CTempG,(/ nnq,nq2,nnb /),"CTempG",name_sub)
+              CALL alloc_NParray(CTempG,[nnq,nq2,nnb],"CTempG",name_sub)
 
               IF (basis_set%tab_Pbasis(ibasis)%Pbasis%packed) THEN
                 IF (basis_set%tab_Pbasis(ibasis)%Pbasis%cplx) THEN
                   dnba_ind(:) = basis_set%tab_Pbasis(ibasis)%Pbasis%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
 
-                  CALL alloc_NParray(dncb,(/ nq2,nb2 /),"dncb",name_sub)
+                  CALL alloc_NParray(dncb,[nq2,nb2],"dncb",name_sub)
                   CALL Get_MatdnCGB(basis_set%tab_Pbasis(ibasis)%Pbasis,dncb,dnba_ind)
 
                   ibb1 = 1
@@ -1047,7 +1047,7 @@
                 ELSE
                   dnba_ind(:) = basis_set%tab_Pbasis(ibasis)%Pbasis%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
 
-                  CALL alloc_NParray(dnb,(/ nq2,nb2 /),"dnb",name_sub)
+                  CALL alloc_NParray(dnb,[nq2,nb2],"dnb",name_sub)
                   CALL Get_MatdnRGB(basis_set%tab_Pbasis(ibasis)%Pbasis,dnb,dnba_ind)
 
                   ibb1 = 1
@@ -1084,7 +1084,7 @@
               CALL dealloc_NParray(CTempB,'CTempB',name_sub)
             END DO
 
-            CvecG(:) = reshape(CTempG, shape=(/ nnq*nnb /) )
+            CvecG(:) = reshape(CTempG, shape=[nnq*nnb] )
             CALL dealloc_NParray(CTempG,"CTempG",name_sub)
 
           CASE (1) ! Sparse basis (Smolyak 1st implementation)
@@ -1278,7 +1278,7 @@
             CONTINUE ! notthing to do
           ELSE
             nq2 = get_nq_FROM_basis(basis_set)
-            CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
+            CALL alloc_NParray(BGG,[nq2,nq2],"BGG",name_sub)
             CALL Get_MatdnRGG(basis_set,BGG,dnba_ind)
             RVecG(:) = matmul(BGG,RVecG(:))
             CALL dealloc_NParray(BGG,"BGG",name_sub)
@@ -1293,8 +1293,8 @@
             nnq1 = 1
             nq2  = 1
 
-            CALL alloc_NParray(RG1,(/ nnq1,nq2,nnq3 /),"RG1",name_sub)
-            RG1(:,:,:) = reshape(RvecG,shape=(/ nnq1,nq2,nnq3 /))
+            CALL alloc_NParray(RG1,[nnq1,nq2,nnq3],"RG1",name_sub)
+            RG1(:,:,:) = reshape(RvecG,shape=[nnq1,nq2,nnq3])
 
             DO ibasis=basis_set%nb_basis,1,-1
 
@@ -1306,12 +1306,12 @@
               dnba_ind(:) = basis_set%tab_Pbasis(ibasis)%Pbasis%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
 
               IF (dnba_ind(1) /= 0 .OR. dnba_ind(2) /= 0) THEN
-                CALL alloc_NParray(RG2,(/ nnq1,nq2,nnq3 /),"RG2",name_sub)
-                RG2(:,:,:) = reshape(RG1,shape=(/ nnq1,nq2,nnq3 /))
+                CALL alloc_NParray(RG2,[nnq1,nq2,nnq3],"RG2",name_sub)
+                RG2(:,:,:) = reshape(RG1,shape=[nnq1,nq2,nnq3])
 
                 IF (basis_set%tab_Pbasis(ibasis)%Pbasis%packed) THEN
 
-                  CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
+                  CALL alloc_NParray(BGG,[nq2,nq2],"BGG",name_sub)
 
                   CALL Get_MatdnRGG(basis_set%tab_Pbasis(ibasis)%Pbasis,BGG,dnba_ind)
 
@@ -1339,7 +1339,7 @@
                 END IF
 
                 CALL dealloc_NParray(RG1,"RG1",name_sub)
-                CALL alloc_NParray(RG1,(/ nnq1,nq2,nnq3 /),"RG1",name_sub)
+                CALL alloc_NParray(RG1,[nnq1,nq2,nnq3],"RG1",name_sub)
                 RG1 = RG2
                 CALL dealloc_NParray(RG2,"RG2",name_sub)
               END IF
@@ -1348,7 +1348,7 @@
 
             END DO
 
-            RvecG(:) = reshape(RG1, shape=(/ nq /) )
+            RvecG(:) = reshape(RG1, shape=[nq] )
             CALL dealloc_NParray(RG1,"RG1",name_sub)
 
           CASE (1) ! Sparse basis (Smolyak 1st implementation)
@@ -1502,7 +1502,7 @@
           IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN ! dnba_ind(:)=0 => no derivative
             CONTINUE ! notthing to do
           ELSE
-            CALL alloc_NParray(BGG,(/ nq,nq /),"BGG",name_sub)
+            CALL alloc_NParray(BGG,[nq,nq],"BGG",name_sub)
             CALL Get_MatdnRGG(basis_set,BGG,dnba_ind)
             CVecG(:) = matmul(BGG,CVecG)
             CALL dealloc_NParray(BGG,"BGG",name_sub)
@@ -1519,8 +1519,8 @@
             nnq1 = 1
             nq2  = 1
 
-            CALL alloc_NParray(CG1,(/ nnq1,nq2,nnq3 /),"CG1",name_sub)
-            CG1(:,:,:) = reshape(CvecG,shape=(/ nnq1,nq2,nnq3 /))
+            CALL alloc_NParray(CG1,[nnq1,nq2,nnq3],"CG1",name_sub)
+            CG1(:,:,:) = reshape(CvecG,shape=[nnq1,nq2,nnq3])
 
             DO ibasis=basis_set%nb_basis,1,-1
 
@@ -1531,12 +1531,12 @@
               dnba_ind(:) = basis_set%tab_Pbasis(ibasis)%Pbasis%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
 
               IF (dnba_ind(1) /= 0 .OR. dnba_ind(2) /= 0) THEN
-                CALL alloc_NParray(CG2,(/ nnq1,nq2,nnq3 /),"CG2",name_sub)
-                CG2(:,:,:) = reshape(CG1,shape=(/ nnq1,nq2,nnq3 /))
+                CALL alloc_NParray(CG2,[nnq1,nq2,nnq3],"CG2",name_sub)
+                CG2(:,:,:) = reshape(CG1,shape=[nnq1,nq2,nnq3])
 
                 IF (basis_set%tab_Pbasis(ibasis)%Pbasis%packed) THEN
 
-                  CALL alloc_NParray(BGG,(/ nq2,nq2 /),"BGG",name_sub)
+                  CALL alloc_NParray(BGG,[nq2,nq2],"BGG",name_sub)
                   CALL Get_MatdnRGG(basis_set%tab_Pbasis(ibasis)%Pbasis,BGG,dnba_ind)
 
                  !$OMP parallel do default(none)                        &
@@ -1563,7 +1563,7 @@
                 END IF
 
                 CALL dealloc_NParray(CG1,"CG1",name_sub)
-                CALL alloc_NParray(CG1,(/ nnq1,nq2,nnq3 /),"CG1",name_sub)
+                CALL alloc_NParray(CG1,[nnq1,nq2,nnq3],"CG1",name_sub)
                 CG1 = CG2
                 CALL dealloc_NParray(CG2,"CG2",name_sub)
               END IF
@@ -1572,7 +1572,7 @@
 
             END DO
 
-            CvecG(:) = reshape(CG1, shape=(/ nq /) )
+            CvecG(:) = reshape(CG1, shape=[nq] )
             CALL dealloc_NParray(CG1,"CG1",name_sub)
 
           CASE (1) ! Sparse basis (Smolyak 1st implementation)
@@ -1783,11 +1783,11 @@ STOP 'SparseGrid_type=0'
 ! !             write(out_unitp,*) 'B=>G ibasis,Tab_OF_Tabnb2',ibasis,              &
 ! !                                        basis_set%Tab_OF_Tabnb2(ibasis)%vec
 !
-!               CALL alloc_NParray(CTempB,(/ nnq,nbb /),"CTempB",name_sub)
+!               CALL alloc_NParray(CTempB,[nnq,nbb],"CTempB",name_sub)
 !
-!               CTempB(:,:) = reshape(CTempG,shape=(/ nnq,nbb /))
+!               CTempB(:,:) = reshape(CTempG,shape=[nnq,nbb])
 !               CALL dealloc_NParray(CTempG,"CTempG",name_sub)
-!               CALL alloc_NParray(CTempG,(/ nnq,nq2,nnb /),"CTempG",name_sub)
+!               CALL alloc_NParray(CTempG,[nnq,nq2,nnb],"CTempG",name_sub)
 !
 !                 ibb1 = 1
 !                 ibb2 = 0
@@ -1808,7 +1808,7 @@ STOP 'SparseGrid_type=0'
 !               CALL dealloc_NParray(CTempB,'CTempB',name_sub)
 !             END DO
 !
-!             CVecBout(:) = reshape(CTempG, shape=(/ nnq*nnb /) )
+!             CVecBout(:) = reshape(CTempG, shape=[nnq*nnb] )
 !             CALL dealloc_NParray(CTempG,"CTempG",name_sub)
 
           CASE (1) ! Sparse basis (Smolyak 1st implementation)

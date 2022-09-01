@@ -2597,11 +2597,11 @@ END FUNCTION Qnamealfa_Latex
    end select
 
      IF (idf2 == -1) THEN
-       CALL alloc_NParray(SplitOpEl,(/1/),'SplitOpEl in ',routine_name)
+       CALL alloc_NParray(SplitOpEl,[1],'SplitOpEl in ',routine_name)
        SplitOpEl(1) = F_OpEl
 
      ELSE IF (idf1 == 4) THEN
-       CALL alloc_NParray(SplitOpEl,(/2/),'SplitOpEl in',routine_name)
+       CALL alloc_NParray(SplitOpEl,[2],'SplitOpEl in',routine_name)
 
        CALL get_opel(SplitOpEl(1),                                      &
                      idf    = 4,                                        &
@@ -2617,7 +2617,7 @@ END FUNCTION Qnamealfa_Latex
                      indexq = F_OpEl%indexq,                            &
                      coeff  = CONE)  ! f(Q)^alfa with idf2
      ELSE ! idf2 == 4
-       CALL alloc_NParray(SplitOpEl,(/2/),'SplitOpEl in',routine_name)
+       CALL alloc_NParray(SplitOpEl,[2],'SplitOpEl in',routine_name)
 
        CALL get_opel(SplitOpEl(1),                                      &
                      idf    = idf1,                                     &
@@ -2648,7 +2648,7 @@ END FUNCTION Qnamealfa_Latex
    complex(kind=Rkind)  :: coeff
    character (len=*), parameter   :: routine_name='Der1_OF_d0OpEl_TO_d1OpEl'
 
-   CALL alloc_NParray(d1OpEl,(/2/),'d1OpEl in ',routine_name)
+   CALL alloc_NParray(d1OpEl,[2],'d1OpEl in ',routine_name)
 
    ralfa = Frac_TO_Real(d0OpEl%alfa)
 

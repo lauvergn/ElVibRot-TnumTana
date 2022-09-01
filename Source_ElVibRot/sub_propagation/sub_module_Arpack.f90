@@ -587,7 +587,7 @@ CONTAINS
 
 !----------------------------------------------------------
        IF (debug) THEN
-        CALL alloc_NParray(Evec,(/ nb_diago /),'Evec',name_sub)
+        CALL alloc_NParray(Evec,[nb_diago],'Evec',name_sub)
         Evec(:) = real( psi(1:nb_diago)%CAvOp,kind=Rkind)
         ZPE = minval(Evec)
         DO j=1,nb_diago
@@ -1124,7 +1124,7 @@ CONTAINS
 
 !----------------------------------------------------------
        IF (debug) THEN
-        CALL alloc_NParray(Evec,(/ nb_diago /),'Evec',name_sub)
+        CALL alloc_NParray(Evec,[nb_diago],'Evec',name_sub)
         Evec(:) = real( psi(1:nb_diago)%CAvOp,kind=Rkind)
         ZPE = minval(Evec)
         DO j=1,nb_diago

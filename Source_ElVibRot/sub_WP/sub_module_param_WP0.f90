@@ -412,22 +412,22 @@
 
         IF (para_WP0%nb_act1 > 0 .AND. WP0Grid_Gaussian) THEN
           IF (.NOT. allocated(para_WP0%WP0sigma)) THEN
-            CALL alloc_NParray(para_WP0%WP0sigma,(/para_WP0%nb_act1/),    &
+            CALL alloc_NParray(para_WP0%WP0sigma,[para_WP0%nb_act1],    &
                               "para_WP0%WP0sigma","alloc_param_WP0")
           END IF
 
           IF (.NOT. allocated(para_WP0%WP0Qeq)) THEN
-            CALL alloc_NParray(para_WP0%WP0Qeq,(/para_WP0%nb_act1/),      &
+            CALL alloc_NParray(para_WP0%WP0Qeq,[para_WP0%nb_act1],      &
                               "para_WP0%WP0Qeq","alloc_param_WP0")
           END IF
 
           IF (.NOT. allocated(para_WP0%WP0imp_k)) THEN
-            CALL alloc_NParray(para_WP0%WP0imp_k,(/para_WP0%nb_act1/),    &
+            CALL alloc_NParray(para_WP0%WP0imp_k,[para_WP0%nb_act1],    &
                               "para_WP0%WP0imp_k","alloc_param_WP0")
           END IF
 
           IF (.NOT. allocated(para_WP0%WP0phase)) THEN
-            CALL alloc_NParray(para_WP0%WP0phase,(/para_WP0%nb_act1/),    &
+            CALL alloc_NParray(para_WP0%WP0phase,[para_WP0%nb_act1],    &
                               "para_WP0%WP0phase","alloc_param_WP0")
           END IF
 
@@ -436,7 +436,7 @@
         IF (WP0_CleanChannel .AND.                                      &
             .NOT. allocated(para_WP0%WP0_CleanChannellist)) THEN
           CALL alloc_NParray(para_WP0%WP0_CleanChannellist,               &
-                                     (/para_WP0%WP0_nb_CleanChannel/),  &
+                                     [para_WP0%WP0_nb_CleanChannel],  &
                           "para_WP0%WP0_CleanChannellist","alloc_param_WP0")
         END IF
 

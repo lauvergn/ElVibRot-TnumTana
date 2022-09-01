@@ -258,7 +258,7 @@
 
 !---------------------------------------------------------------------
 !------- read the parameter to analyze wave functions ----------------
-      CALL alloc_NParray(Qana,(/ mole%nb_var /),"Qana",name_sub)
+      CALL alloc_NParray(Qana,[mole%nb_var],"Qana",name_sub)
       CALL get_Qact0(Qana,mole%ActiveTransfo)
 
       CALL read_analyse(para_ana,Qana,mole)
@@ -451,7 +451,7 @@
 
 
       IF (para_Tnum%Tana) THEN
-        CALL alloc_NParray(Qact,(/ mole%nb_var /),"Qact",name_sub)
+        CALL alloc_NParray(Qact,[mole%nb_var],"Qact",name_sub)
         CALL get_Qact0(Qact,mole%ActiveTransfo)
         CALL nrho_Basis_TO_nhro_Tnum(para_AllBasis,mole)
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
@@ -535,7 +535,7 @@
 
       IF (debug) write(out_unitp,*) 'para_AllOp%nb_Op        : ',para_AllOp%nb_Op
 
-      CALL alloc_array(para_AllOp%tab_Op,(/ para_AllOp%nb_Op /),        &
+      CALL alloc_array(para_AllOp%tab_Op,[para_AllOp%nb_Op],        &
                       'para_AllOp%tab_Op',name_sub)
 
       iOp = 1 ! => for H

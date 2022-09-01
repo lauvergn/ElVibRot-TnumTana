@@ -227,9 +227,9 @@ MODULE mod_export_KEO
           STOP
         END IF
 
-        CALL alloc_array(q,(/ nb_nq /),"q","export3_d0G_grid1D")
+        CALL alloc_array(q,[nb_nq],"q","export3_d0G_grid1D")
 
-        CALL alloc_array(dnGG_grid,(/nb_nq/),                           &
+        CALL alloc_array(dnGG_grid,[nb_nq],                           &
                         "dnGG_grid","export3_d0G_grid1D")
         DO iq=1,nb_nq
           CALL alloc_dnSVM(dnGG_grid(iq),                               &

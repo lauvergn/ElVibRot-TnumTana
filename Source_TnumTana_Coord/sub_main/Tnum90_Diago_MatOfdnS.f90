@@ -104,8 +104,8 @@
 
       nullify(GOFdnS)
       nullify(EigenVecOFdnS)
-      CALL alloc_array(GOFdnS,(/nb_act,nb_act/),'GOFdnS','main')
-      CALL alloc_array(EigenVecOFdnS,(/nb_act,nb_act/),'EigenVecOFdnS','main')
+      CALL alloc_array(GOFdnS,[nb_act,nb_act],'GOFdnS','main')
+      CALL alloc_array(EigenVecOFdnS,[nb_act,nb_act],'EigenVecOFdnS','main')
       CALL alloc_MatOFdnS(GOFdnS,nb_act,nderiv)
       CALL alloc_MatOFdnS(EigenVecOFdnS,nb_act,nderiv)
       CALL alloc_dnS(dnS,nb_act,nderiv)

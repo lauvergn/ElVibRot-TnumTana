@@ -704,8 +704,8 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
 !#endif
           IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(nb_diago,size1_MPI,root_MPI)
 
-          CALL alloc_NParray(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
-          CALL alloc_NParray(Ene0,(/max_diago/),"Ene0","vib")
+          CALL alloc_NParray(Tab_Psi,[max_diago],"Tab_Psi","vib")
+          CALL alloc_NParray(Ene0,[max_diago],"Ene0","vib")
 
           IF (tab_EVRT(ith)%para_ana%davidson) THEN
 
@@ -756,7 +756,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           nb_diago  = para_H%nb_tot
           max_diago = para_H%nb_tot
 
-          IF(keep_MPI) CALL alloc_NParray(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
+          IF(keep_MPI) CALL alloc_NParray(Tab_Psi,[max_diago],"Tab_Psi","vib")
 
           IF(keep_MPI) THEN
             DO i=1,max_diago
@@ -790,9 +790,9 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                                para_H%nb_tot,para_H%sym_Hamil)
 
               IF(print_level > -1) THEN
-                write(out_unitp,*) 'HMin,HMax (ua)  : ',(/ minval(para_H%Rdiag),maxval(para_H%Rdiag) /)
+                write(out_unitp,*) 'HMin,HMax (ua)  : ',[minval(para_H%Rdiag),maxval(para_H%Rdiag)]
                 write(out_unitp,*) 'HMin,HMax (cm-1): ',   &
-                  (/ minval(para_H%Rdiag),maxval(para_H%Rdiag) /)*get_Conv_au_TO_unit('E','cm-1')
+                  [minval(para_H%Rdiag),maxval(para_H%Rdiag)]*get_Conv_au_TO_unit('E','cm-1')
               END IF
 
               nb_diago = count((para_H%Rdiag(:)-para_H%Rdiag(1))< tab_EVRT(ith)%para_ana%max_ene)
@@ -818,7 +818,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           END IF
           CALL alloc_NRarray(tab_EVRT(ith)%para_AllBasis%basis_ext%liste_spec,&
                                              [nb_diago],"basis_ext%liste_spec","vib")
-          tab_EVRT(ith)%para_AllBasis%basis_ext%liste_spec(:) = (/ (i,i=1,nb_diago) /)
+          tab_EVRT(ith)%para_AllBasis%basis_ext%liste_spec(:) = [(i,i=1,nb_diago)]
 
           IF (allocated(para_H%Rmat)) THEN
             CALL dealloc_NParray(para_H%Rmat,"para_H%Rmat","vib")
@@ -1739,8 +1739,8 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(nb_diago,size1_MPI,root_MPI)
 
           nullify(Tab_Psi)
-          CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
-          CALL alloc_NParray(Ene0,(/max_diago/),"Ene0","vib")
+          CALL alloc_array(Tab_Psi,[max_diago],"Tab_Psi","vib")
+          CALL alloc_NParray(Ene0,[max_diago],"Ene0","vib")
 
           IF (para_EVRT%para_ana%davidson) THEN
 
@@ -1792,7 +1792,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
           max_diago = para_H%nb_tot
 
           nullify(Tab_Psi)
-          IF(keep_MPI) CALL alloc_array(Tab_Psi,(/ max_diago /),"Tab_Psi","vib")
+          IF(keep_MPI) CALL alloc_array(Tab_Psi,[max_diago],"Tab_Psi","vib")
 
           IF(keep_MPI) THEN
             DO i=1,max_diago
@@ -1826,9 +1826,9 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                                para_H%nb_tot,para_H%sym_Hamil)
 
               IF(print_level > -1) THEN
-                write(out_unitp,*) 'HMin,HMax (ua)  : ',(/ minval(para_H%Rdiag),maxval(para_H%Rdiag) /)
+                write(out_unitp,*) 'HMin,HMax (ua)  : ',[minval(para_H%Rdiag),maxval(para_H%Rdiag)]
                 write(out_unitp,*) 'HMin,HMax (cm-1): ',   &
-                  (/ minval(para_H%Rdiag),maxval(para_H%Rdiag) /)*get_Conv_au_TO_unit('E','cm-1')
+                  [minval(para_H%Rdiag),maxval(para_H%Rdiag)]*get_Conv_au_TO_unit('E','cm-1')
               END IF
 
               nb_diago = count((para_H%Rdiag(:)-para_H%Rdiag(1))< para_EVRT%para_ana%max_ene)
@@ -1853,7 +1853,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                                                  "basis_ext%liste_spec","vib")
           CALL alloc_NRarray(para_AllBasis%basis_ext%liste_spec,        &
                                [nb_diago],"basis_ext%liste_spec","vib")
-          para_AllBasis%basis_ext%liste_spec(:) = (/ (i,i=1,nb_diago) /)
+          para_AllBasis%basis_ext%liste_spec(:) = [(i,i=1,nb_diago)]
 
 
           IF (allocated(para_H%Rmat)) THEN

@@ -95,10 +95,10 @@
       END IF
 
       dim_rot = 2*JJ+1  ! K in [-J.... 0 .... J]
-      memory = product( (/ dim_rot,dim_rot /) )
+      memory = product( [dim_rot,dim_rot] )
       allocate(Hrot(dim_rot,dim_rot),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"Hrot","main")
-      memory = product( (/ dim_rot,dim_rot /) )
+      memory = product( [dim_rot,dim_rot] )
       allocate(Vecrot(dim_rot,dim_rot),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"Vecrot","main")
 

@@ -1214,7 +1214,7 @@ MODULE mod_dnGG_dng
       stepp = ONE/(para_Tnum%stepT+para_Tnum%stepT)
       Qact_loc(:) = Qact(:)
 
-      CALL alloc_NParray(At,(/ dnA%nb_var_Matl,dnA%nb_var_Matc /),"At",name_sub)
+      CALL alloc_NParray(At,[dnA%nb_var_Matl,dnA%nb_var_Matc],"At",name_sub)
 
 !===================================================================
 !

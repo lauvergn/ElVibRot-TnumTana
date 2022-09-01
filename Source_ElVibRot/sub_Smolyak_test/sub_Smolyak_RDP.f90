@@ -339,7 +339,7 @@ real(kind=Rkind), allocatable :: R(:)
 IF (allocated(SRep%SmolyakRep)) THEN
   igg = 0
   DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
-    R = reshape(SRep%SmolyakRep(iG)%R,(/ size(SRep%SmolyakRep(iG)%R) /) )
+    R = reshape(SRep%SmolyakRep(iG)%R,[size(SRep%SmolyakRep(iG)%R)] )
     DO i=1,size(SRep%SmolyakRep(iG)%R)
       igg = igg+1
       !write(out_unitp,*) igg,SRep%SmolyakRep(iG)%R(i)
@@ -452,7 +452,7 @@ IF (nb_BG > 0) THEN
   itabR = 0
   DO iG=lbound(SRep2%SmolyakRep,dim=1),ubound(SRep2%SmolyakRep,dim=1)
     nR = size(SRep2%SmolyakRep(iG)%R)
-    tabR1(itabR+1:itabR+nR) = reshape(SRep2%SmolyakRep(iG)%R,shape=(/nR/))
+    tabR1(itabR+1:itabR+nR) = reshape(SRep2%SmolyakRep(iG)%R,shape=[nR])
     itabR = itabR + nR
   END DO
 
@@ -749,7 +749,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   nb2 = 1
   nq2 = 1
 
-  RTempB = reshape(SRep%SmolyakRep(iG)%R,shape=(/ 1,1,nnq /))
+  RTempB = reshape(SRep%SmolyakRep(iG)%R,shape=[1,1,nnq])
 
 ! B order : b1 * b2 * b3 * ... bD ???
 ! G order : gD ... * g3 * g2 * g1 ???
@@ -759,7 +759,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
     nq2 = tab_nq(i)
     nnq = nnq / nq2
 
-    RTempG = reshape(RTempB,shape=(/ nnb,nq2,nnq /))
+    RTempG = reshape(RTempB,shape=[nnb,nq2,nnq])
 
     deallocate(RTempB)
     allocate(RTempB(nnb,nb2,nnq))
@@ -783,8 +783,8 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
   END DO
 
-  SRep%SmolyakRep(iG)%R = reshape(RTempB, shape=(/ nnb /) )
-  !SRep%SmolyakRep(iG)%R = reshape(RTempB, (/ tab_nb(1),tab_nb(2) /) )
+  SRep%SmolyakRep(iG)%R = reshape(RTempB, shape=[nnb] )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempB, [tab_nb(1),tab_nb(2)] )
 
   deallocate(RTempB)
 END DO
@@ -837,7 +837,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   nb2 = 1
   nq2 = 1
 
-  RTempB = reshape(SRep%SmolyakRep(iG)%R,shape=(/ 1,1,nnq /))
+  RTempB = reshape(SRep%SmolyakRep(iG)%R,shape=[1,1,nnq])
 
 ! B order : b1 * b2 * b3 * ... bD ???
 ! G order : gD ... * g3 * g2 * g1 ???
@@ -847,7 +847,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
     nq2 = tab_nq(i)
     nnq = nnq / nq2
 
-    RTempG = reshape(RTempB,shape=(/ nnb,nq2,nnq /))
+    RTempG = reshape(RTempB,shape=[nnb,nq2,nnq])
 
     deallocate(RTempB)
     allocate(RTempB(nnb,nb2,nnq))
@@ -870,8 +870,8 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
   END DO
 
-  SRep%SmolyakRep(iG)%R = reshape(RTempB, shape=(/ nnb /) )
-  !SRep%SmolyakRep(iG)%R = reshape(RTempB, (/ tab_nb(1),tab_nb(2) /) )
+  SRep%SmolyakRep(iG)%R = reshape(RTempB, shape=[nnb] )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempB, [tab_nb(1),tab_nb(2)] )
 
   deallocate(RTempB)
 END DO
@@ -926,14 +926,14 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   nb2 = 1
   nq2 = 1
 
-  RTempB = reshape(SRep%SmolyakRep(iG)%R,shape=(/ nnq,1,1 /))
+  RTempB = reshape(SRep%SmolyakRep(iG)%R,shape=[nnq,1,1])
 
   DO i=1,D
     nb2 = tab_nb(i)
     nq2 = tab_nq(i)
     nnq = nnq / nq2
 
-    RTempG = reshape(RTempB,shape=(/ nnq,nq2,nnb /))
+    RTempG = reshape(RTempB,shape=[nnq,nq2,nnb])
 
     deallocate(RTempB)
     allocate(RTempB(nnq,nb2,nnb))
@@ -952,8 +952,8 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
   END DO
 
-  SRep%SmolyakRep(iG)%R = reshape(RTempB, shape=(/ nnb /) )
-  !SRep%SmolyakRep(iG)%R = reshape(RTempB, (/ tab_nb(1),tab_nb(2) /) )
+  SRep%SmolyakRep(iG)%R = reshape(RTempB, shape=[nnb] )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempB, [tab_nb(1),tab_nb(2)] )
 
   deallocate(RTempB)
 END DO
@@ -1007,7 +1007,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   nb2 = 1
   nq2 = 1
 
-  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=(/ nnq,nq2,nnb /))
+  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=[nnq,nq2,nnb])
 ! B order : b1 * b2 * b3 * ... bD ???
 ! G order : gD ... * g3 * g2 * g1 ???
 
@@ -1018,7 +1018,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
 
 
-    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
+    RTempB = reshape(RTempG,shape=[nnq,nb2,nnb])
 
     deallocate(RTempG)
     allocate(RTempG(nnq,nq2,nnb))
@@ -1042,8 +1042,8 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
   END DO
 
-  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=(/ nnq*nnb /) )
-  !SRep%SmolyakRep(iG)%R = reshape(RTempG, (/ tab_nq(1),tab_nq(2) /) )
+  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=[nnq*nnb] )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempG, [tab_nq(1),tab_nq(2)] )
 
   deallocate(RTempG)
 END DO
@@ -1097,7 +1097,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   nb2 = 1
   nq2 = 1
 
-  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=(/ nnq,nq2,nnb /))
+  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=[nnq,nq2,nnb])
 ! B order : b1 * b2 * b3 * ... bD ???
 ! G order : gD ... * g3 * g2 * g1 ???
 
@@ -1108,7 +1108,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
 
 
-    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
+    RTempB = reshape(RTempG,shape=[nnq,nb2,nnb])
 
     deallocate(RTempG)
     allocate(RTempG(nnq,nq2,nnb))
@@ -1134,8 +1134,8 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
   END DO
 
-  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=(/ nnq*nnb /) )
-  !SRep%SmolyakRep(iG)%R = reshape(RTempG, (/ tab_nq(1),tab_nq(2) /) )
+  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=[nnq*nnb] )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempG, [tab_nq(1),tab_nq(2)] )
 
   deallocate(RTempG)
 END DO
@@ -1188,7 +1188,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   nb2 = 1
   nq2 = 1
 
-  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=(/ nnq,nq2,nnb /))
+  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=[nnq,nq2,nnb])
 ! B order : b1 * b2 * b3 * ... bD ???
 ! G order : gD ... * g3 * g2 * g1 ???
 
@@ -1199,7 +1199,7 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
 
 
-    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
+    RTempB = reshape(RTempG,shape=[nnq,nb2,nnb])
 
     deallocate(RTempG)
     allocate(RTempG(nnq,nq2,nnb))
@@ -1227,8 +1227,8 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
   END DO
 
-  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=(/ nnq*nnb /) )
-  !SRep%SmolyakRep(iG)%R = reshape(RTempG, (/ tab_nq(1),tab_nq(2) /) )
+  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=[nnq*nnb] )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempG, [tab_nq(1),tab_nq(2)] )
 
   deallocate(RTempG)
 END DO
@@ -1282,14 +1282,14 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   nb2 = 1
   nq2 = 1
 
-  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=(/ nnq,nq2,nnb /))
+  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=[nnq,nq2,nnb])
 
   DO i=D,1,-1
     nb2 = tab_nb(i)
     nq2 = tab_nq(i)
     nnb = nnb / nb2
 
-    RTempB = reshape(RTempG,shape=(/ nnq,nb2,nnb /))
+    RTempB = reshape(RTempG,shape=[nnq,nb2,nnb])
 
     deallocate(RTempG)
     allocate(RTempG(nnq,nq2,nnb))
@@ -1310,8 +1310,8 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
   END DO
 
-  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=(/ nnq*nnb /) )
-  !SRep%SmolyakRep(iG)%R = reshape(RTempG, (/ tab_nq(1),tab_nq(2) /) )
+  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=[nnq*nnb] )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempG, [tab_nq(1),tab_nq(2)] )
 
   deallocate(RTempG)
 END DO
@@ -1358,13 +1358,13 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
   nnq3 = 1
 
   SRep%SmolyakRep(iG)%R = ONE
-  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=(/ nnq,1,1 /))
+  RTempG = reshape(SRep%SmolyakRep(iG)%R,shape=[nnq,1,1])
 
   DO i=1,D
     nq2  = tab_nq(i)
     nnq1 = nnq1/nq2
 
-    RTempG = reshape(RTempG,shape=(/ nnq1,nq2,nnq3 /))
+    RTempG = reshape(RTempG,shape=[nnq1,nq2,nnq3])
 
     DO iq3=1,nnq3
     DO iq1=1,nnq1
@@ -1377,8 +1377,8 @@ DO iG=lbound(SRep%SmolyakRep,dim=1),ubound(SRep%SmolyakRep,dim=1)
 
   END DO
 
-  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=(/ nnq /) )
-  !SRep%SmolyakRep(iG)%R = reshape(RTempG, (/ tab_nq(1),tab_nq(2) /) )
+  SRep%SmolyakRep(iG)%R = reshape(RTempG, shape=[nnq] )
+  !SRep%SmolyakRep(iG)%R = reshape(RTempG, [tab_nq(1),tab_nq(2)] )
 
   deallocate(RTempG)
 

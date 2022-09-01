@@ -76,7 +76,7 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
       END IF
 !---------------------------------------------------------------------
-      CALL alloc_array(BasisnD_loc%tab_Pbasis,(/ mole%nb_act1+1 /),     &
+      CALL alloc_array(BasisnD_loc%tab_Pbasis,[mole%nb_act1+1],     &
                       'BasisnD_loc%tab_Pbasis',name_sub)
       DO i=1,size(BasisnD_loc%tab_Pbasis)
         CALL alloc_array(BasisnD_loc%tab_Pbasis(i)%Pbasis,              &
@@ -185,8 +185,8 @@
 
       ! Set Tabder_Qdyn_TO_Qbasis(:)
       CALL alloc_NParray(BasisnD_loc%Tabder_Qdyn_TO_Qbasis,               &
-                                                   (/ mole%nb_var /),   &
-                      'BasisnD_loc%Tabder_Qdyn_TO_Qbasis',name_sub,(/ 0 /))
+                                                   [mole%nb_var],   &
+                      'BasisnD_loc%Tabder_Qdyn_TO_Qbasis',name_sub,[0])
       BasisnD_loc%Tabder_Qdyn_TO_Qbasis(:) = 0
       DO i=1,BasisnD_loc%ndim
         BasisnD_loc%Tabder_Qdyn_TO_Qbasis(BasisnD_loc%iQdyn(i)) = i
@@ -265,7 +265,7 @@
 
       IF (basis_temp%nb_basis > 0) THEN ! Direct_product, SparseBasis
         basis_temp%active = .TRUE.
-        CALL alloc_array(basis_temp%tab_Pbasis,(/ basis_temp%nb_basis /),&
+        CALL alloc_array(basis_temp%tab_Pbasis,[basis_temp%nb_basis],&
                         'basis_temp%tab_Pbasis',name_sub)
         basis_temp%opt_param = 0
         DO i=1,basis_temp%nb_basis
@@ -307,8 +307,8 @@
 
       IF (basis_temp%active) THEN
 
-        CALL alloc_NParray(basis_temp%Tabder_Qdyn_TO_Qbasis,(/ mole%nb_var /), &
-                        'basis_temp%Tabder_Qdyn_TO_Qbasis',name_sub,(/ 0 /))
+        CALL alloc_NParray(basis_temp%Tabder_Qdyn_TO_Qbasis,[mole%nb_var], &
+                        'basis_temp%Tabder_Qdyn_TO_Qbasis',name_sub,[0])
         basis_temp%Tabder_Qdyn_TO_Qbasis(:) = 0
         ! now basis_temp%iQdyn(:) and Tabder_Qdyn_TO_Qbasis(:) are set-up
         DO i=1,basis_temp%ndim
@@ -702,7 +702,7 @@
 
 
         IF (read_L_TO_n) THEN
-          CALL alloc_NParray(Tab_L_TO_n,(/ 10 /),"Tab_L_TO_n",name_sub,(/ 0 /))
+          CALL alloc_NParray(Tab_L_TO_n,[10],"Tab_L_TO_n",name_sub,[0])
 
           read(in_unitp,*,IOSTAT=err_io) dummy_name,Tab_L_TO_n
           IF (err_io /= 0) THEN

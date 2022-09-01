@@ -295,7 +295,7 @@ PRIVATE
 
       mendeleev%max_Z = 110
       mendeleev%max_A = 300
-      memory = product( (/ 1+mendeleev%max_Z,1+mendeleev%max_A /) &
+      memory = product( [1+mendeleev%max_Z,1+mendeleev%max_A] &
                                                                  )
       allocate(mendeleev%at(0:mendeleev%max_Z,0:mendeleev%max_A), &
                                                      stat=err_mem) ! change alloc done
@@ -416,7 +416,7 @@ PRIVATE
 
       mendeleev%max_Z = 118
       mendeleev%max_A = 400
-      memory = product( (/ 1+mendeleev%max_Z,1+mendeleev%max_A /) )
+      memory = product( [1+mendeleev%max_Z,1+mendeleev%max_A] )
       allocate(mendeleev%at(0:mendeleev%max_Z,0:mendeleev%max_A),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"mendeleev%at",name_sub,"atom")
 
@@ -506,7 +506,7 @@ PRIVATE
 
       mendeleev%max_Z = 110
       mendeleev%max_A = 300
-      memory = product( (/ 1+mendeleev%max_Z,1+mendeleev%max_A /) &
+      memory = product( [1+mendeleev%max_Z,1+mendeleev%max_A] &
                                                                  )
       allocate(mendeleev%at(0:mendeleev%max_Z,0:mendeleev%max_A), &
                                                      stat=err_mem) ! change alloc done

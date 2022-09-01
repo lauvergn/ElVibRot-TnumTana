@@ -1594,11 +1594,11 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
 
   d1=psi(1)%SR_B_index(iG)
   d2=psi(1)%SR_B_index(iG+1)-1
-  CALL alloc_NParray(PsiR,(/d2-d1+1/),'PsiR',name_sub)
+  CALL alloc_NParray(PsiR,[d2-d1+1],'PsiR',name_sub)
 
   Dim=size(tab_l)
-  CALL alloc_NParray(tab_nb,(/Dim/),'tab_nb',name_sub)
-  CALL alloc_NParray(tab_nq,(/Dim/),'tab_nq',name_sub)
+  CALL alloc_NParray(tab_nb,[Dim],'tab_nb',name_sub)
+  CALL alloc_NParray(tab_nq,[Dim],'tab_nq',name_sub)
   
   tab_nq(:)=getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
   tab_nb(:)=getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
@@ -1612,7 +1612,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
   CASE (0) !-0:Scalar-------------------------------------------------------------------
 
     CALL get_OpGrid_type0_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V)
-    CALL alloc_NParray(Op_Psi,(/nq,nb0/),'Op_Psi',name_sub)
+    CALL alloc_NParray(Op_Psi,[nq,nb0],'Op_Psi',name_sub)
     
     DO itab=1,size(psi)
       DO ii=1,num
@@ -1634,7 +1634,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           END DO
         END DO
         
-        PsiR=reshape(Op_Psi,shape=(/nq*nb0/))
+        PsiR=reshape(Op_Psi,shape=[nq*nb0])
         CALL GDP_TO_BDP_OF_SmolyakRep(PsiR,BasisnD%tab_basisPrimSG,&
                                       tab_l,tab_nq,tab_nb,nb0)
         OpPsi(itab)%SR_B(d1:d2,ii)=PsiR
@@ -1647,8 +1647,8 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
   CASE (1) !-1: H: F2.d^2 + F1.d^1 + V--------------------------------------------------
 
     CALL get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2(iG,tab_l,para_Op,GridOp)
-    CALL alloc_NParray(Op_Psi,(/nq,nb0/),'Op_Psi',name_sub)
-    CALL alloc_NParray(Psi_ch,(/nq,nb0/),'Psi_ch',name_sub)
+    CALL alloc_NParray(Op_Psi,[nq,nb0],'Op_Psi',name_sub)
+    CALL alloc_NParray(Psi_ch,[nq,nb0],'Psi_ch',name_sub)
 
     DO itab=1,size(psi)
       DO ii=1,num
@@ -1659,7 +1659,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
         Op_Psi(:,:)=ZERO
         DO iterm=1,para_Op%nb_Term
           IF(para_Op%OpGrid(iterm)%grid_zero) CYCLE
-          Psi_ch(:,:)=reshape(PsiR,shape=(/nq,nb0/))
+          Psi_ch(:,:)=reshape(PsiR,shape=[nq,nb0])
           DO ib0=1,nb0
             CALL DerivOp_TO_RDP_OF_SmolaykRep(Psi_ch(:,ib0),BasisnD%tab_basisPrimSG,   &
                                           tab_l,tab_nq,para_Op%derive_termQdyn(:,iterm))
@@ -1671,7 +1671,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
             END DO
           END DO
         ENDDO ! for iterm=1,para_Op%nb_Term
-        PsiR=reshape(Op_Psi,shape=(/nq*nb0/))
+        PsiR=reshape(Op_Psi,shape=[nq*nb0])
         CALL GDP_TO_BDP_OF_SmolyakRep(PsiR,BasisnD%tab_basisPrimSG,                    &
                                       tab_l,tab_nq,tab_nb,nb0)
         OpPsi(itab)%SR_B(d1:d2,ii)=PsiR
@@ -1684,10 +1684,10 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
 
   CASE (10) !-10: H: d^1 G d^1 +V-------------------------------------------------------
 
-    CALL alloc_NParray(PsiRj,(/nq,mole%nb_act1 /),'PsiRj', name_sub)
-    CALL alloc_NParray(PsiRi,(/nq /),             'PsiRi', name_sub)
-    CALL alloc_NParray(VPsi, (/nq,nb0/),          'VPsi',  name_sub)
-    CALL alloc_NParray(OpPsiR,(/nq/),             'OpPsiR',name_sub)
+    CALL alloc_NParray(PsiRj,[nq,mole%nb_act1],'PsiRj', name_sub)
+    CALL alloc_NParray(PsiRi,[nq],             'PsiRi', name_sub)
+    CALL alloc_NParray(VPsi, [nq,nb0],          'VPsi',  name_sub)
+    CALL alloc_NParray(OpPsiR,[nq],             'OpPsiR',name_sub)
 
     CALL get_OpGrid_type10_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V,GGiq,sqRhoOVERJac,Jac)
 
@@ -1717,7 +1717,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           
           ! derivative with respect to Qj
           DO j=1,mole%nb_act1
-            derive_termQdyn(:)=(/mole%liste_QactTOQdyn(j),0/)
+            derive_termQdyn(:)=[mole%liste_QactTOQdyn(j),0]
 
             PsiRj(:,j)=PsiR(jqi:jqf)
             CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG,      &
@@ -1732,7 +1732,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
             ENDDO
             PsiRi(:)=PsiRi(:)*Jac(:)
 
-            derive_termQdyn(:)=(/mole%liste_QactTOQdyn(i),0/)
+            derive_termQdyn(:)=[mole%liste_QactTOQdyn(i),0]
 
             CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,        &
                                               tab_l,tab_nq,derive_termQdyn)
@@ -1848,11 +1848,11 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
 
   d1=psi(1)%SR_G_index(iG)
   d2=psi(1)%SR_G_index(iG+1)-1
-  CALL alloc_NParray(PsiR,(/d2-d1+1/),'PsiR',name_sub)
+  CALL alloc_NParray(PsiR,[d2-d1+1],'PsiR',name_sub)
 
   Dim=size(tab_l)
-  CALL alloc_NParray(tab_nb,(/Dim/),'tab_nb',name_sub)
-  CALL alloc_NParray(tab_nq,(/Dim/),'tab_nq',name_sub)
+  CALL alloc_NParray(tab_nb,[Dim],'tab_nb',name_sub)
+  CALL alloc_NParray(tab_nq,[Dim],'tab_nq',name_sub)
   
   tab_nq(:)=getbis_tab_nq(tab_l,BasisnD%tab_basisPrimSG)
   tab_nb(:)=getbis_tab_nb(tab_l,BasisnD%tab_basisPrimSG)
@@ -1867,7 +1867,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
     CALL get_OpGrid_type0_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V)
 
     !CALL allocate_array(Op_Psi,1,nq,1,nb0)
-    CALL alloc_NParray(Op_Psi,(/nq,nb0/),'Op_Psi',name_sub)
+    CALL alloc_NParray(Op_Psi,[nq,nb0],'Op_Psi',name_sub)
     
     DO itab=1,size(psi)
       DO ii=1,num
@@ -1889,7 +1889,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
             jqf=jqf+nq
           END DO
         END DO
-        OpPsi(itab)%SR_G(d1:d2,ii)=reshape(Op_Psi,shape=(/nq*nb0/))
+        OpPsi(itab)%SR_G(d1:d2,ii)=reshape(Op_Psi,shape=[nq*nb0])
       ENDDO ! for ii
     ENDDO ! for itab
 
@@ -1899,15 +1899,15 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
   CASE (1) !-1: H: F2.d^2 + F1.d^1 + V--------------------------------------------------
     CALL get_OpGrid_type1_OF_ONEDP_FOR_SG4_new2(iG,tab_l,para_Op,GridOp)
 
-    CALL alloc_NParray(Op_Psi,(/nq,nb0/),'Op_Psi',name_sub)
-    CALL alloc_NParray(Psi_ch,(/nq,nb0/),'Psi_ch',name_sub)
+    CALL alloc_NParray(Op_Psi,[nq,nb0],'Op_Psi',name_sub)
+    CALL alloc_NParray(Psi_ch,[nq,nb0],'Psi_ch',name_sub)
 
     DO itab=1,size(psi)
       DO ii=1,num
         Op_Psi(:,:)=ZERO
         DO iterm=1,para_Op%nb_Term
           IF(para_Op%OpGrid(iterm)%grid_zero) CYCLE
-          Psi_ch(:,:)=reshape(psi(itab)%SR_G(d1:d2,ii),shape=(/nq,nb0/))
+          Psi_ch(:,:)=reshape(psi(itab)%SR_G(d1:d2,ii),shape=[nq,nb0])
 
           DO ib0=1,nb0
             CALL DerivOp_TO_RDP_OF_SmolaykRep(Psi_ch(:,ib0),BasisnD%tab_basisPrimSG,   &
@@ -1922,7 +1922,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           END DO
         ENDDO ! for iterm=1,para_Op%nb_Term
 
-        OpPsi(itab)%SR_G(d1:d2,ii)= reshape(Op_Psi,shape=(/nq*nb0/))
+        OpPsi(itab)%SR_G(d1:d2,ii)= reshape(Op_Psi,shape=[nq*nb0])
       ENDDO ! for ii
     ENDDO ! for itab
 
@@ -1932,10 +1932,10 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
 
   CASE (10) !-10: H: d^1 G d^1 +V-------------------------------------------------------
 
-    CALL alloc_NParray(PsiRj,(/nq,mole%nb_act1 /),'PsiRj', name_sub)
-    CALL alloc_NParray(PsiRi,(/nq /),             'PsiRi', name_sub)
-    CALL alloc_NParray(VPsi, (/nq,nb0/),          'VPsi',  name_sub)
-    CALL alloc_NParray(OpPsiR,(/nq/),             'OpPsiR',name_sub)
+    CALL alloc_NParray(PsiRj,[nq,mole%nb_act1],'PsiRj', name_sub)
+    CALL alloc_NParray(PsiRi,[nq],             'PsiRi', name_sub)
+    CALL alloc_NParray(VPsi, [nq,nb0],          'VPsi',  name_sub)
+    CALL alloc_NParray(OpPsiR,[nq],             'OpPsiR',name_sub)
 
     CALL get_OpGrid_type10_OF_ONEDP_FOR_SG4(iG,tab_l,para_Op,V,GGiq,sqRhoOVERJac,Jac)
 
@@ -1962,7 +1962,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
           
           ! derivative with respect to Qj
           DO j=1,mole%nb_act1
-            derive_termQdyn(:)=(/mole%liste_QactTOQdyn(j),0/)
+            derive_termQdyn(:)=[mole%liste_QactTOQdyn(j),0]
 
             PsiRj(:,j)=PsiR(jqi:jqf)
             CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRj(:,j),BasisnD%tab_basisPrimSG,      &
@@ -1977,7 +1977,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
             ENDDO
             PsiRi(:)=PsiRi(:)*Jac(:)
 
-            derive_termQdyn(:)=(/mole%liste_QactTOQdyn(i),0/)
+            derive_termQdyn(:)=[mole%liste_QactTOQdyn(i),0]
 
             CALL DerivOp_TO_RDP_OF_SmolaykRep(PsiRi(:),BasisnD%tab_basisPrimSG,        &
                                               tab_l,tab_nq,derive_termQdyn)

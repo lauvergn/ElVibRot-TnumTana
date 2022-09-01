@@ -230,7 +230,7 @@
           CALL dealloc_NParray(PrimOp%Qit_TO_QQMLib,'Qit_TO_QQMLib',name_sub)
         END IF
         IF (PrimOp%pot_itQtransfo == 0) THEN ! Cartesian coordinates
-          CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,(/ mole%ncart_act /),'Qit_TO_QQMLib',name_sub)
+          CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,[mole%ncart_act],'Qit_TO_QQMLib',name_sub)
           PrimOp%Qit_TO_QQMLib(:) = [ (k,k=1,mole%ncart_act) ]
         ELSE
           CALL alloc_NParray(PrimOp%Qit_TO_QQMLib,[ndimI4],'Qit_TO_QQMLib',name_sub)
@@ -367,7 +367,7 @@
       ELSE
         ! why this allocation ????
         IF (allocated(Qit)) CALL dealloc_NParray(Qit,'Qit',name_sub)
-        CALL alloc_NParray(Qit,(/mole%ncart_act/),'Qit',name_sub)
+        CALL alloc_NParray(Qit,[mole%ncart_act],'Qit',name_sub)
         Qit(:) = ZERO
       END IF
       !----------------------------------------------------------------
@@ -700,8 +700,8 @@ SUBROUTINE get_Vinact_AT_Qact_HarD(Qact,Vinact,mole,para_Tnum,PrimOp)
 
   ! transfert the dnQin coordinates: type21 in dnVecQin and ....
   !   the other (active, rigid ..) in dnQout
-  CALL alloc_NParray(Qact1,(/mole%RPHTransfo%nb_act1/),"Qact1",name_sub)
-  CALL alloc_NParray(Qinact21,(/mole%RPHTransfo%nb_inact21/),"Qinact21",name_sub)
+  CALL alloc_NParray(Qact1,[mole%RPHTransfo%nb_act1],"Qact1",name_sub)
+  CALL alloc_NParray(Qinact21,[mole%RPHTransfo%nb_inact21],"Qinact21",name_sub)
 
   iQinact21 = 0
   iQact1    = 0
@@ -845,7 +845,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       ELSE
         ! why this allocation ????
         IF (allocated(Qit)) CALL dealloc_NParray(Qit,'Qit',name_sub)
-        CALL alloc_NParray(Qit,(/mole%ncart_act/),'Qit',name_sub)
+        CALL alloc_NParray(Qit,[mole%ncart_act],'Qit',name_sub)
         Qit(:) = ZERO
       END IF
 
@@ -1258,11 +1258,11 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       CALL get_d0MatOp_AT_Qact(Qact,d0MatOp_th(:,1),mole,para_Tnum,PrimOp)
 
       DO k=1,nb_Op
-        CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,1),Tab_dnMatOp(k),(/0,0/))
+        CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,1),Tab_dnMatOp(k),[0,0])
         IF (nderiv_loc > 1) THEN ! diagonal hessian (the -2f(0) contribution)
           DO i=1,mole%nb_act
-            CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,1),Tab_dnMatOp(k),(/i,i/))
-            CALL WeightDer_dnMatOp(Tab_dnMatOp(k),-TWO,(/i,i/))
+            CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,1),Tab_dnMatOp(k),[i,i])
+            CALL WeightDer_dnMatOp(Tab_dnMatOp(k),-TWO,[i,i])
           END DO
         END IF
       END DO
@@ -1298,10 +1298,10 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
         DO k=1,size(Tab_dnMatOp)
           IF (nderiv_loc > 0) THEN ! gradient
-            CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,0/))
+            CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),[i,0])
           END IF
           IF (nderiv_loc > 1) THEN ! hessian (diagonal)
-            CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,i/),ONE)
+            CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),[i,i],ONE)
           END IF
         END DO
 
@@ -1312,12 +1312,12 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
         DO k=1,size(Tab_dnMatOp)
           IF (nderiv_loc > 0) THEN ! gradient
-            CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,0/),-ONE)
-            CALL WeightDer_dnMatOp(Tab_dnMatOp(k),stepp,(/i,0/))
+            CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),[i,0],-ONE)
+            CALL WeightDer_dnMatOp(Tab_dnMatOp(k),stepp,[i,0])
           END IF
           IF (nderiv_loc > 1) THEN ! diagonal hessian
-            CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,i/),ONE)
-            CALL WeightDer_dnMatOp(Tab_dnMatOp(k),step2,(/i,i/))
+            CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),[i,i],ONE)
+            CALL WeightDer_dnMatOp(Tab_dnMatOp(k),step2,[i,i])
           END IF
         END DO
 
@@ -1357,7 +1357,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
-          CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/))
+          CALL d0MatOp_TO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),[i,j])
         END DO
 
         !-- pot0 at Qact(i)-step Qact(j)-step
@@ -1367,7 +1367,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
-          CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),ONE)
+          CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),[i,j],ONE)
         END DO
 
 
@@ -1378,7 +1378,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
-          CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),-ONE)
+          CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),[i,j],-ONE)
         END DO
 
 
@@ -1389,9 +1389,9 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         CALL get_d0MatOp_AT_Qact(Qact_th(:,ith),d0MatOp_th(:,ith),mole,para_Tnum,PrimOp)
 
         DO k=1,size(Tab_dnMatOp)
-          CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),(/i,j/),-ONE)
-          CALL WeightDer_dnMatOp(Tab_dnMatOp(k),step24,(/i,j/))
-          CALL dnMatOp2Der_TO_dnMatOp1Der(Tab_dnMatOp(k),(/j,i/),Tab_dnMatOp(k),(/i,j/))
+          CALL d0MatOp_wADDTO_dnMatOp(d0MatOp_th(k,ith),Tab_dnMatOp(k),[i,j],-ONE)
+          CALL WeightDer_dnMatOp(Tab_dnMatOp(k),step24,[i,j])
+          CALL dnMatOp2Der_TO_dnMatOp1Der(Tab_dnMatOp(k),[j,i],Tab_dnMatOp(k),[i,j])
         END DO
 
         Qact_th(i,ith) = Qact(i)
@@ -1756,12 +1756,12 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         CALL flush_perso(out_unitp)
       END IF
 !-----------------------------------------------------------
-      CALL alloc_NParray(d0c,    (/ mole%nb_act,mole%nb_act /),"d0c",    name_sub)
-      CALL alloc_NParray(d0k,    (/ mole%nb_act,mole%nb_act /),"d0k",    name_sub)
-      CALL alloc_NParray(d0h,    (/ mole%nb_act,mole%nb_act /),"d0h",    name_sub)
-      CALL alloc_NParray(d0grad, (/ mole%nb_act /),            "d0grad", name_sub)
-      CALL alloc_NParray(d0c_inv,(/ mole%nb_act,mole%nb_act /),"d0c_inv",name_sub)
-      CALL alloc_NParray(d0c_ini,(/ mole%nb_act,mole%nb_act /),"d0c_ini",name_sub)
+      CALL alloc_NParray(d0c,    [mole%nb_act,mole%nb_act],"d0c",    name_sub)
+      CALL alloc_NParray(d0k,    [mole%nb_act,mole%nb_act],"d0k",    name_sub)
+      CALL alloc_NParray(d0h,    [mole%nb_act,mole%nb_act],"d0h",    name_sub)
+      CALL alloc_NParray(d0grad, [mole%nb_act],            "d0grad", name_sub)
+      CALL alloc_NParray(d0c_inv,[mole%nb_act,mole%nb_act],"d0c_inv",name_sub)
+      CALL alloc_NParray(d0c_ini,[mole%nb_act,mole%nb_act],"d0c_ini",name_sub)
 
 
       !----- Hessian ------------------------------------
@@ -1909,7 +1909,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
       IF (mole%NMTransfo%hessian_read .AND. mole%NMTransfo%k_read) THEN
         nb_NM = ubound(mole%NMTransfo%d0k,dim=1)
-        CALL alloc_NParray(d0k,(/nb_NM,nb_NM/),"d0k",name_sub)
+        CALL alloc_NParray(d0k,[nb_NM,nb_NM],"d0k",name_sub)
         d0k(:,:) = mole%NMTransfo%d0k(:,:)
 
         IF (nb_NM /= ubound(mole%NMTransfo%d0h,dim=1)) THEN
@@ -1920,10 +1920,10 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
           write(out_unitp,*) ' Check your data !!'
           STOP
         END IF
-        CALL alloc_NParray(d0h,(/nb_NM,nb_NM/),"d0h",name_sub)
+        CALL alloc_NParray(d0h,[nb_NM,nb_NM],"d0h",name_sub)
         d0h(:,:) = mole%NMTransfo%d0h(:,:)
 
-        CALL alloc_NParray(d0grad,(/nb_NM/),"d0grad",name_sub)
+        CALL alloc_NParray(d0grad,[nb_NM],"d0grad",name_sub)
         d0grad(:) = ZERO
 
 
@@ -1946,15 +1946,15 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
         nb_NM = mole_1%nb_act
 
-        CALL alloc_NParray(d0k,(/nb_NM,nb_NM/),"d0k",name_sub)
+        CALL alloc_NParray(d0k,[nb_NM,nb_NM],"d0k",name_sub)
         d0k(:,:) = dnGG%d0(1:nb_NM,1:nb_NM)
 
         CALL dealloc_dnSVM(dnGG)
 
         !- calculation of the hessian (mole_1)
-        CALL alloc_NParray(d0h,(/nb_NM,nb_NM/),"d0h",name_sub)
+        CALL alloc_NParray(d0h,[nb_NM,nb_NM],"d0h",name_sub)
         d0h(:,:) = ZERO
-        CALL alloc_NParray(d0grad,(/nb_NM/),"d0grad",name_sub)
+        CALL alloc_NParray(d0grad,[nb_NM],"d0grad",name_sub)
         d0grad(:) = ZERO
 
         CALL alloc_MatOFdnS(dnECC,mole_1%ncart_act,2)
@@ -2043,7 +2043,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
 
       ! parameters for uncoupled HO
-      CALL alloc_NParray(ScalePara,(/ nb_NM /),"ScalePara",name_sub)
+      CALL alloc_NParray(ScalePara,[nb_NM],"ScalePara",name_sub)
       DO i=1,nb_NM
         ScalePara(i) = sqrt(sqrt(abs(d0h(i,i)/d0k(i,i))))
         !write(out_unitp,*) 'i,d0h,d0k',i,d0h(i,i),d0k(i,i)
@@ -2052,10 +2052,10 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       ! parameters for uncoupled HO
 
 !     - frequencies
-      CALL alloc_NParray(d0c_inv,(/ nb_NM,nb_NM /),"d0c_inv",name_sub)
-      CALL alloc_NParray(d0c_ini,(/ nb_NM,nb_NM /),"d0c_ini",name_sub)
-      CALL alloc_NParray(d0c,    (/ nb_NM,nb_NM /),"d0c",    name_sub)
-      CALL alloc_NParray(d0eh,   (/ nb_NM /),      "d0eh",   name_sub)
+      CALL alloc_NParray(d0c_inv,[nb_NM,nb_NM],"d0c_inv",name_sub)
+      CALL alloc_NParray(d0c_ini,[nb_NM,nb_NM],"d0c_ini",name_sub)
+      CALL alloc_NParray(d0c,    [nb_NM,nb_NM],"d0c",    name_sub)
+      CALL alloc_NParray(d0eh,   [nb_NM],      "d0eh",   name_sub)
 
       IF (mole%NMTransfo%purify_hess) THEN
 
@@ -2081,7 +2081,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       write(out_unitp,*) '======== frequencies ===================='
       write(out_unitp,*) '========================================='
 
-      CALL alloc_NParray(d0k_save,(/ nb_NM,nb_NM /),"d0k_save",name_sub)
+      CALL alloc_NParray(d0k_save,[nb_NM,nb_NM],"d0k_save",name_sub)
       d0k_save(:,:) = d0k(:,:)
       IF (mole%NMTransfo%d0c_read) THEN
         d0c(:,:) = mole%NMTransfo%d0c(:,:)
@@ -2103,7 +2103,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       IF (associated(mole%NMTransfo%Qact1_sym)) THEN
         IF (debug) write(out_unitp,*) '   d0eh,d0c,d0c_inv after "sort_with_Tab"'
 
-        CALL alloc_NParray(tab_sort,(/ nb_NM /),"tab_sort",name_sub)
+        CALL alloc_NParray(tab_sort,[nb_NM],"tab_sort",name_sub)
         tab_sort(:) = ZERO
         max_freq = maxval(d0eh(:))
         DO i=1,nb_NM
@@ -2144,15 +2144,15 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
       mole%NMTransfo%nb_NM = nb_NM
 
-      CALL alloc_array(mole%NMTransfo%d0c,(/ nb_NM,nb_NM /),            &
+      CALL alloc_array(mole%NMTransfo%d0c,[nb_NM,nb_NM],            &
                       "mole%NMTransfo%d0c",name_sub)
       mole%NMTransfo%d0c(:,:)     = d0c(:,:)
 
-      CALL alloc_array(mole%NMTransfo%d0c_inv,(/ nb_NM,nb_NM /),        &
+      CALL alloc_array(mole%NMTransfo%d0c_inv,[nb_NM,nb_NM],        &
                       "mole%NMTransfo%d0c_inv",name_sub)
       mole%NMTransfo%d0c_inv(:,:) = d0c_inv(:,:)
 
-      CALL alloc_array(mole%NMTransfo%d0eh,(/ nb_NM /),                 &
+      CALL alloc_array(mole%NMTransfo%d0eh,[nb_NM],                 &
                       "mole%NMTransfo%d0eh",name_sub)
       mole%NMTransfo%d0eh(:)      = d0eh(:)
 
@@ -2166,8 +2166,8 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       write(out_unitp,*) '========================================='
       write(out_unitp,*)
 
-      CALL alloc_NParray(mat,    (/ mole%nb_var,mole%nb_var /),"mat",name_sub)
-      CALL alloc_NParray(mat_inv,(/ mole%nb_var,mole%nb_var /),"mat_inv",name_sub)
+      CALL alloc_NParray(mat,    [mole%nb_var,mole%nb_var],"mat",name_sub)
+      CALL alloc_NParray(mat_inv,[mole%nb_var,mole%nb_var],"mat_inv",name_sub)
 
 
       CALL mat_id(mat,mole%nb_var,mole%nb_var)
@@ -2387,23 +2387,23 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       !-----------------------------------------------------------------
       !-----------------------------------------------------------------
       ! analysis the number of block ... => nb_NM
-      CALL alloc_NParray(Ind_Coord_PerBlock,(/ mole%nb_var /),          &
+      CALL alloc_NParray(Ind_Coord_PerBlock,[mole%nb_var],          &
                         "Ind_Coord_PerBlock",name_sub)
 
       ! parameters for uncoupled HO
-      CALL alloc_NParray(ScalePara   ,(/mole%nb_var/),"ScalePara",name_sub)
-      CALL alloc_NParray(ScalePara_NM,(/mole%nb_var/),"ScalePara_NM",name_sub)
+      CALL alloc_NParray(ScalePara   ,[mole%nb_var],"ScalePara",name_sub)
+      CALL alloc_NParray(ScalePara_NM,[mole%nb_var],"ScalePara_NM",name_sub)
       ScalePara(:)    = ONE
       ScalePara_NM(:) = ONE
 
       ! to store temporaly mat and mat_inv
-      CALL alloc_NParray(mat,    (/ mole%nb_var,mole%nb_var /),"mat",name_sub)
-      CALL alloc_NParray(mat_inv,(/ mole%nb_var,mole%nb_var /),"mat_inv",name_sub)
+      CALL alloc_NParray(mat,    [mole%nb_var,mole%nb_var],"mat",name_sub)
+      CALL alloc_NParray(mat_inv,[mole%nb_var,mole%nb_var],"mat_inv",name_sub)
 
       CALL mat_id(mat,mole%nb_var,mole%nb_var)
       CALL mat_id(mat_inv,mole%nb_var,mole%nb_var)
 
-      CALL alloc_NParray(d0eh_all,(/mole%nb_var/),"d0eh_all",name_sub)
+      CALL alloc_NParray(d0eh_all,[mole%nb_var],"d0eh_all",name_sub)
       d0eh_all(:) = ZERO
 
       IF (associated(mole%NMTransfo%Qact1_sym)) THEN
@@ -2423,8 +2423,8 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         Ind_Coord_PerBlock(:) = mole%NMTransfo%Qact1_sym(:)
 
         ! then, count the number of coordinates per block
-        CALL alloc_NParray(nb_PerBlock,      (/ nb_Block /),"nb_PerBlock",      name_sub)
-        CALL alloc_NParray(Ind_Coord_AtBlock,(/ nb_Block /),"Ind_Coord_AtBlock",name_sub)
+        CALL alloc_NParray(nb_PerBlock,      [nb_Block],"nb_PerBlock",      name_sub)
+        CALL alloc_NParray(Ind_Coord_AtBlock,[nb_Block],"Ind_Coord_AtBlock",name_sub)
         Ind_Coord_AtBlock(:) = 0
         nb_PerBlock(:)       = 0
 
@@ -2443,8 +2443,8 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       ELSE
         Ind_Coord_PerBlock(:) = 1
         nb_Block    = 1
-        CALL alloc_NParray(nb_PerBlock,      (/ nb_Block /),"nb_PerBlock",      name_sub)
-        CALL alloc_NParray(Ind_Coord_AtBlock,(/ nb_Block /),"Ind_Coord_AtBlock",name_sub)
+        CALL alloc_NParray(nb_PerBlock,      [nb_Block],"nb_PerBlock",      name_sub)
+        CALL alloc_NParray(Ind_Coord_AtBlock,[nb_Block],"Ind_Coord_AtBlock",name_sub)
 
         Ind_Coord_AtBlock(1) = 1
         nb_PerBlock(1) = count(Ind_Coord_PerBlock == 1)
@@ -2505,14 +2505,14 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
           CALL flush_perso(out_unitp)
         END IF
 
-        CALL alloc_NParray(d0c,     (/nb_NM,nb_NM/),"d0c",     name_sub)
-        CALL alloc_NParray(d0c_inv, (/nb_NM,nb_NM/),"d0c_inv", name_sub)
+        CALL alloc_NParray(d0c,     [nb_NM,nb_NM],"d0c",     name_sub)
+        CALL alloc_NParray(d0c_inv, [nb_NM,nb_NM],"d0c_inv", name_sub)
 
-        CALL alloc_NParray(d0k,     (/nb_NM,nb_NM/),"d0k",     name_sub)
-        CALL alloc_NParray(d0h,     (/nb_NM,nb_NM/),"d0h",     name_sub)
-        CALL alloc_NParray(d0k_save,(/nb_NM,nb_NM/),"d0k_save",name_sub)
-        CALL alloc_NParray(d0c_ini, (/nb_NM,nb_NM/),"d0c_ini", name_sub)
-        CALL alloc_NParray(d0eh,    (/ nb_NM /),    "d0eh",    name_sub)
+        CALL alloc_NParray(d0k,     [nb_NM,nb_NM],"d0k",     name_sub)
+        CALL alloc_NParray(d0h,     [nb_NM,nb_NM],"d0h",     name_sub)
+        CALL alloc_NParray(d0k_save,[nb_NM,nb_NM],"d0k_save",name_sub)
+        CALL alloc_NParray(d0c_ini, [nb_NM,nb_NM],"d0c_ini", name_sub)
+        CALL alloc_NParray(d0eh,    [nb_NM],    "d0eh",    name_sub)
 
         CALL get_hess_k(d0k,d0h,nb_NM,Qact,mole_1,para_Tnum,          &
                         Ind_Coord_AtBlock(i_Block),Ind_Coord_PerBlock,  &
@@ -2627,7 +2627,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh_all(i:i2)*auTOcm_inv
       END DO
-      CALL alloc_array(mole%NMTransfo%d0eh,(/ nb_NM /),                 &
+      CALL alloc_array(mole%NMTransfo%d0eh,[nb_NM],                 &
                       "mole%NMTransfo%d0eh",name_sub)
 
       mole%NMTransfo%d0eh(1:nb_NM) = d0eh_all(1:nb_NM)
@@ -2662,11 +2662,11 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
 
 
-      CALL alloc_array(mole%NMTransfo%Q0_HObasis,(/mole%nb_var/),       &
+      CALL alloc_array(mole%NMTransfo%Q0_HObasis,[mole%nb_var],       &
                       "mole%NMTransfo%Q0_HObasis",name_sub)
       mole%NMTransfo%Q0_HObasis(:) = mole%ActiveTransfo%Qdyn0(:)
 
-      CALL alloc_array(mole%NMTransfo%scaleQ_HObasis,(/mole%nb_var/),   &
+      CALL alloc_array(mole%NMTransfo%scaleQ_HObasis,[mole%nb_var],   &
                       "mole%NMTransfo%scaleQ_HObasis",name_sub)
       mole%NMTransfo%scaleQ_HObasis(:) = ScalePara_NM(:)
 
@@ -2854,27 +2854,27 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       !-----------------------------------------------------------------
       !-----------------------------------------------------------------
       ! analysis the number of block ... => nb_NM
-      CALL alloc_NParray(Ind_Coord_PerBlock,(/ mole%nb_var /),          &
+      CALL alloc_NParray(Ind_Coord_PerBlock,[mole%nb_var],          &
                         "Ind_Coord_PerBlock",name_sub)
 
       ! parameters for uncoupled HO
-      CALL alloc_NParray(ScalePara   ,(/mole%nb_var/),"ScalePara",name_sub)
-      CALL alloc_NParray(ScalePara_NM,(/mole%nb_var/),"ScalePara_NM",name_sub)
+      CALL alloc_NParray(ScalePara   ,[mole%nb_var],"ScalePara",name_sub)
+      CALL alloc_NParray(ScalePara_NM,[mole%nb_var],"ScalePara_NM",name_sub)
       ScalePara(:)    = ONE
       ScalePara_NM(:) = ONE
 
       ! to store temporaly mat and mat_inv
-      CALL alloc_NParray(mat,    (/ mole%nb_var,mole%nb_var /),"mat",name_sub)
-      CALL alloc_NParray(mat_inv,(/ mole%nb_var,mole%nb_var /),"mat_inv",name_sub)
+      CALL alloc_NParray(mat,    [mole%nb_var,mole%nb_var],"mat",name_sub)
+      CALL alloc_NParray(mat_inv,[mole%nb_var,mole%nb_var],"mat_inv",name_sub)
 
       CALL mat_id(mat,mole%nb_var,mole%nb_var)
       CALL mat_id(mat_inv,mole%nb_var,mole%nb_var)
 
-      CALL alloc_NParray(d0eh_all,(/mole%nb_var/),"d0eh_all",name_sub)
+      CALL alloc_NParray(d0eh_all,[mole%nb_var],"d0eh_all",name_sub)
       d0eh_all(:) = ZERO
 
       IF (.NOT. associated(mole%NMTransfo%Qact1_sym)) THEN
-        CALL alloc_array(mole%NMTransfo%Qact1_sym,(/mole%nb_var/),      &
+        CALL alloc_array(mole%NMTransfo%Qact1_sym,[mole%nb_var],      &
                         "mole%NMTransfo%Qact1_sym",name_sub)
         mole%NMTransfo%Qact1_sym(:) = mole%ActiveTransfo%list_act_OF_Qdyn(:)
       END IF
@@ -2896,8 +2896,8 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         Ind_Coord_PerBlock(:) = mole%NMTransfo%Qact1_sym(:)
 
         ! then, count the number of coordinates per block
-        CALL alloc_NParray(nb_PerBlock,      (/ nb_Block /),"nb_PerBlock",      name_sub)
-        CALL alloc_NParray(Ind_Coord_AtBlock,(/ nb_Block /),"Ind_Coord_AtBlock",name_sub)
+        CALL alloc_NParray(nb_PerBlock,      [nb_Block],"nb_PerBlock",      name_sub)
+        CALL alloc_NParray(Ind_Coord_AtBlock,[nb_Block],"Ind_Coord_AtBlock",name_sub)
         Ind_Coord_AtBlock(:) = 0
         nb_PerBlock(:)       = 0
 
@@ -2916,8 +2916,8 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       ELSE
         Ind_Coord_PerBlock(:) = 1
         nb_Block    = 1
-        CALL alloc_NParray(nb_PerBlock,      (/ nb_Block /),"nb_PerBlock",      name_sub)
-        CALL alloc_NParray(Ind_Coord_AtBlock,(/ nb_Block /),"Ind_Coord_AtBlock",name_sub)
+        CALL alloc_NParray(nb_PerBlock,      [nb_Block],"nb_PerBlock",      name_sub)
+        CALL alloc_NParray(Ind_Coord_AtBlock,[nb_Block],"Ind_Coord_AtBlock",name_sub)
 
         Ind_Coord_AtBlock(1) = 1
         nb_PerBlock(1) = count(Ind_Coord_PerBlock == 1)
@@ -2975,14 +2975,14 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
             CALL Write_CoordType(mole_1)
           END IF
 
-          CALL alloc_NParray(d0c,     (/nb_NM,nb_NM/),"d0c",     name_sub)
-          CALL alloc_NParray(d0c_inv, (/nb_NM,nb_NM/),"d0c_inv", name_sub)
+          CALL alloc_NParray(d0c,     [nb_NM,nb_NM],"d0c",     name_sub)
+          CALL alloc_NParray(d0c_inv, [nb_NM,nb_NM],"d0c_inv", name_sub)
 
-          CALL alloc_NParray(d0k,     (/nb_NM,nb_NM/),"d0k",     name_sub)
-          CALL alloc_NParray(d0h,     (/nb_NM,nb_NM/),"d0h",     name_sub)
-          CALL alloc_NParray(d0k_save,(/nb_NM,nb_NM/),"d0k_save",name_sub)
-          CALL alloc_NParray(d0c_ini, (/nb_NM,nb_NM/),"d0c_ini", name_sub)
-          CALL alloc_NParray(d0eh,    (/ nb_NM /),    "d0eh",    name_sub)
+          CALL alloc_NParray(d0k,     [nb_NM,nb_NM],"d0k",     name_sub)
+          CALL alloc_NParray(d0h,     [nb_NM,nb_NM],"d0h",     name_sub)
+          CALL alloc_NParray(d0k_save,[nb_NM,nb_NM],"d0k_save",name_sub)
+          CALL alloc_NParray(d0c_ini, [nb_NM,nb_NM],"d0c_ini", name_sub)
+          CALL alloc_NParray(d0eh,    [nb_NM],    "d0eh",    name_sub)
 
 
           CALL get_hess_k(d0k,d0h,nb_NM,Qact,mole_1,para_Tnum,          &
@@ -3096,7 +3096,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh_all(i:i2)*auTOcm_inv
       END DO
-      CALL alloc_array(mole%NMTransfo%d0eh,(/ nb_NM /),                 &
+      CALL alloc_array(mole%NMTransfo%d0eh,[nb_NM],                 &
                       "mole%NMTransfo%d0eh",name_sub)
 
       mole%NMTransfo%d0eh(:)      = d0eh_all(:)
@@ -3131,11 +3131,11 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
 
 
-      CALL alloc_array(mole%NMTransfo%Q0_HObasis,(/mole%nb_var/),       &
+      CALL alloc_array(mole%NMTransfo%Q0_HObasis,[mole%nb_var],       &
                       "mole%NMTransfo%Q0_HObasis",name_sub)
       mole%NMTransfo%Q0_HObasis(:) = mole%ActiveTransfo%Qdyn0(:)
 
-      CALL alloc_array(mole%NMTransfo%scaleQ_HObasis,(/mole%nb_var/),   &
+      CALL alloc_array(mole%NMTransfo%scaleQ_HObasis,[mole%nb_var],   &
                       "mole%NMTransfo%scaleQ_HObasis",name_sub)
       mole%NMTransfo%scaleQ_HObasis(:) = ScalePara_NM(:)
 
@@ -3617,7 +3617,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
 
           SELECT CASE (mole%NMTransfo%NM_TO_sym_ver)
           CASE(3)
-            CALL alloc_NParray(hCC,(/ mole%ncart_act,mole%ncart_act /),"hCC",name_sub)
+            CALL alloc_NParray(hCC,[mole%ncart_act,mole%ncart_act],"hCC",name_sub)
             CALL calc3_NM_TO_sym(Qact,mole,para_Tnum,PrimOp,hCC,.FALSE.)
             CALL dealloc_NParray(hCC,"hCC",name_sub)
 
@@ -3753,7 +3753,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
     END IF
 
     IF (para_Tnum%Gcte) THEN
-      CALL alloc_array(para_Tnum%Gref,(/ mole%ndimG,mole%ndimG /),    &
+      CALL alloc_array(para_Tnum%Gref,[mole%ndimG,mole%ndimG],    &
                       'para_Tnum%Gref',name_sub)
 
       para_Tnum%Gref(:,:) = ZERO

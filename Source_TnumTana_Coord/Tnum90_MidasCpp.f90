@@ -90,14 +90,14 @@
 !===========================================================
 !===========================================================
 
-      CALL alloc_NParray(Qact,(/ mole%nb_var /),'Qact',name_sub)
+      CALL alloc_NParray(Qact,[mole%nb_var],'Qact',name_sub)
       CALL get_Qact0(Qact,mole%ActiveTransfo) ! important when constraints (rigid, flexible are added)
 
 !-------------------------------------------------
 !     - Cartesian coordinates of the reference geometry
 !     --------------------------------------------
 
-       CALL alloc_NParray(Qxyz,(/ mole%ncart /),'Qxyz',name_sub)
+       CALL alloc_NParray(Qxyz,[mole%ncart],'Qxyz',name_sub)
 
 
        CALL sub_QactTOd0x(Qxyz,Qact,mole,Gcenter=.FALSE.)

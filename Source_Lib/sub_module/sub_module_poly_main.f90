@@ -887,8 +887,8 @@
       CALL alloc_poly(p3,npoly=5)
 
 
-      p1%Ccoef(:) = (/ (1.,1.),(2.,0.) /)
-      p2%Rcoef(:) = (/ 0.,0.,1. /)
+      p1%Ccoef(:) = [(1.,1.),(2.,0.)]
+      p2%Rcoef(:) = [0.,0.,1.]
 
       CALL p1PLUSp2TOp3(p2,p1,p3)
 
@@ -910,8 +910,8 @@
       CALL alloc_poly(p3,npoly=5,ndim=2)
 
 
-      p1%Rcoef(:) = (/ 0.,   1.0, -1.0/)
-      p2%Rcoef(:) = (/ 0.,   0.,3. , 1.,0.,3./)
+      p1%Rcoef(:) = [0.,   1.0, -1.0]
+      p2%Rcoef(:) = [0.,   0.,3. , 1.,0.,3.]
 
       CALL p1PLUSp2TOp3(p2,p1,p3)
 
@@ -931,10 +931,10 @@
       CALL alloc_poly(p3,npoly=5,ndim=2,cplx=.TRUE.)
 
 
-      p1%Ccoef(:) = (/ (0.,0.),  ( 1.0,-1.),(-1.0,3.)/)
+      p1%Ccoef(:) = [(0.,0.),  ( 1.0,-1.),(-1.0,3.)]
 
-      p2%Ccoef(:) = (/ (3.,1.),  (1.,0.), (-1.,2.),                     &
-                       (2.,2.), (4.,1.),(-3.,0.)/)
+      p2%Ccoef(:) = [(3.,1.),  (1.,0.), (-1.,2.),                     &
+                       (2.,2.), (4.,1.),(-3.,0.)]
 
       CALL p1TIMEp2TOp3(p2,p1,p3)
 
@@ -953,8 +953,8 @@
       CALL alloc_poly(p1,npoly=2,ndim=2,cplx=.TRUE.)
       CALL alloc_poly(p2,npoly=1,ndim=2,cplx=.TRUE.)
 
-      p1%Ccoef(:) = (/ (3.,1.),  (1.,0.), (-1.,2.),                     &
-                       (2.,2.), (4.,1.),(-3.,0.)/)
+      p1%Ccoef(:) = [(3.,1.),  (1.,0.), (-1.,2.),                     &
+                       (2.,2.), (4.,1.),(-3.,0.)]
       CALL write_poly(p1)
       CALL write_poly(p2)
 
@@ -974,8 +974,8 @@
       CALL alloc_poly(p1,npoly=2,ndim=2,cplx=.TRUE.)
       CALL alloc_poly(p2,npoly=2,ndim=2,cplx=.TRUE.)
 
-      p1%Ccoef(:) = (/ (3.,1.),  (1.,0.), (-1.,2.),                     &
-                       (2.,2.), (4.,1.),(-3.,0.)/)
+      p1%Ccoef(:) = [(3.,1.),  (1.,0.), (-1.,2.),                     &
+                       (2.,2.), (4.,1.),(-3.,0.)]
       CALL write_poly(p1)
 
       CALL p1_linearTransfoTOp3(p1,ivar=1,Ra=0.d0,Ca=(2.d0,0d0),Rb=0.d0,&
@@ -1000,9 +1000,9 @@
       write(out_unitp,*) 'locate  '
 
       CALL alloc_poly(p1,npoly=2,ndim=2,cplx=.TRUE.)
-      p1%Ccoef(:) = (/ (3.,1.),  (1.,0.), (-1.,2.),                     &
-                       (2.,2.), (4.,1.),(-3.,0.)/)
-      ind(:) = (/ 0,0 /)
+      p1%Ccoef(:) = [(3.,1.),  (1.,0.), (-1.,2.),                     &
+                       (2.,2.), (4.,1.),(-3.,0.)]
+      ind(:) = [0,0]
 
  10   CONTINUE
 !     read(in_unitp,*) ind

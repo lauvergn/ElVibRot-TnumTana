@@ -110,7 +110,7 @@
 
 
          IF (nb > 0) THEN
-           CALL alloc_NParray(P_SymAbelian%tab_symab,(/ nb /),          &
+           CALL alloc_NParray(P_SymAbelian%tab_symab,[nb],          &
                              'P_SymAbelian%tab_symab',name_sub)
            P_SymAbelian%tab_symab(:) = 0
          END IF

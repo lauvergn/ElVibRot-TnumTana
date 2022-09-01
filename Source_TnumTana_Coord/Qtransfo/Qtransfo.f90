@@ -249,7 +249,7 @@
           Qtransfo%nb_Qin  = nb_Qin
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qorder")
 
-          CALL alloc_array(Qtransfo%list_Qin_TO_Qout,(/Qtransfo%nb_Qin/),&
+          CALL alloc_array(Qtransfo%list_Qin_TO_Qout,[Qtransfo%nb_Qin],&
                           "Qtransfo%list_Qin_TO_Qout",name_sub)
           read(in_unitp,*,IOSTAT=err_io) Qtransfo%list_Qin_TO_Qout(1:nb_Qin)
           IF (err_io /= 0) THEN
@@ -610,9 +610,9 @@
           Qtransfo%BFTransfo%Def_cos_th = cos_th
           Qtransfo%nb_Qin               = nb_Qin
           Qtransfo%nb_Qout              = 3*nb_vect
-          CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
+          CALL alloc_array(Qtransfo%type_Qin,[Qtransfo%nb_Qin],       &
                           "Qtransfo%type_Qin",name_sub)
-          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),       &
+          CALL alloc_array(Qtransfo%name_Qin,[Qtransfo%nb_Qin],       &
                           "Qtransfo%name_Qin",name_sub)
 
           Qtransfo%BFTransfo%type_Qin => Qtransfo%type_Qin
@@ -642,9 +642,9 @@
           Qtransfo%Primitive_Coord    = .TRUE.
           Qtransfo%nb_Qin             = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%nb_Qout            = 3*nat+3
-          CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
+          CALL alloc_array(Qtransfo%type_Qin,[Qtransfo%nb_Qin],       &
                           "Qtransfo%type_Qin",name_sub)
-          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),       &
+          CALL alloc_array(Qtransfo%name_Qin,[Qtransfo%nb_Qin],       &
                           "Qtransfo%name_Qin",name_sub)
           DO i=1,Qtransfo%nb_Qin
             CALL make_nameQ(Qtransfo%name_Qin(i),"Qana",i,it)
@@ -669,9 +669,9 @@
         CASE ('cartesian') ! It should be one of the first transfo read
           Qtransfo%nb_Qin             = nb_Qin ! ncart_act
           Qtransfo%nb_Qout            = nb_Qin ! ncart_act
-          CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
+          CALL alloc_array(Qtransfo%type_Qin,[Qtransfo%nb_Qin],       &
                           "Qtransfo%type_Qin",name_sub)
-          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),       &
+          CALL alloc_array(Qtransfo%name_Qin,[Qtransfo%nb_Qin],       &
                           "Qtransfo%name_Qin",name_sub)
           DO i=1,Qtransfo%nb_Qin
             CALL make_nameQ(Qtransfo%name_Qin(i),"Qxyz_transfo",i,it)
@@ -691,9 +691,9 @@
 
         ! for Qout type, name ....
         IF (Qtransfo%num_transfo == 1) THEN ! cartessian coordinates (Qout)
-          CALL alloc_array(Qtransfo%type_Qout,(/Qtransfo%nb_Qout/),     &
+          CALL alloc_array(Qtransfo%type_Qout,[Qtransfo%nb_Qout],     &
                           "Qtransfo%type_Qout",name_sub)
-          CALL alloc_array(Qtransfo%name_Qout,(/Qtransfo%nb_Qout/),     &
+          CALL alloc_array(Qtransfo%name_Qout,[Qtransfo%nb_Qout],     &
                           "Qtransfo%name_Qout",name_sub)
           Qtransfo%type_Qout(:) = 1 ! cartesian type
           DO i=1,Qtransfo%nb_Qout
@@ -1344,7 +1344,7 @@
 
           ! initialization : allocation....
           nullify(tab_dnXVect)
-          CALL alloc_array(tab_dnXVect,(/Qtransfo%BFTransfo%nb_vect_tot/),&
+          CALL alloc_array(tab_dnXVect,[Qtransfo%BFTransfo%nb_vect_tot],&
                           "tab_dnXVect",name_sub)
           DO iv=1,Qtransfo%BFTransfo%nb_vect_tot
             CALL alloc_dnSVM(tab_dnXVect(iv),3,dnQin%nb_var_deriv,nderiv)
@@ -1612,12 +1612,12 @@
         character (len=*), parameter :: name_sub = 'sub_Type_Name_OF_Qin'
 
         IF (.NOT. associated(Qtransfo%type_Qin)) THEN
-          CALL alloc_array(Qtransfo%type_Qin,(/Qtransfo%nb_Qin/),       &
+          CALL alloc_array(Qtransfo%type_Qin,[Qtransfo%nb_Qin],       &
                           "Qtransfo%type_Qin",name_sub)
         END IF
 
         IF (.NOT. associated(Qtransfo%name_Qin)) THEN
-          CALL alloc_array(Qtransfo%name_Qin,(/Qtransfo%nb_Qin/),       &
+          CALL alloc_array(Qtransfo%name_Qin,[Qtransfo%nb_Qin],       &
                           "Qtransfo%name_Qin",name_sub)
         END IF
 

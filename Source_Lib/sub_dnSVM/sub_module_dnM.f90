@@ -119,21 +119,21 @@
 
 
         IF (nml > 0 .AND. nmc > 0) THEN
-          CALL alloc_array(dnMat%d0,(/ nml,nmc /),'dnMat%d0','alloc_dnMat')
+          CALL alloc_array(dnMat%d0,[nml,nmc],'dnMat%d0','alloc_dnMat')
           dnMat%d0(:,:) = ZERO
 
           IF (dnMat%nderiv >= 1) THEN
-            CALL alloc_array(dnMat%d1,(/ nml,nmc,nd /),'dnMat%d1','alloc_dnMat')
+            CALL alloc_array(dnMat%d1,[nml,nmc,nd],'dnMat%d1','alloc_dnMat')
             dnMat%d1(:,:,:) = ZERO
           END IF
 
           IF (dnMat%nderiv >= 2) THEN
-            CALL alloc_array(dnMat%d2,(/ nml,nmc,nd,nd /),'dnMat%d2','alloc_dnMat')
+            CALL alloc_array(dnMat%d2,[nml,nmc,nd,nd],'dnMat%d2','alloc_dnMat')
             dnMat%d2(:,:,:,:) = ZERO
           END IF
 
           IF (dnMat%nderiv >= 3) THEN
-            CALL alloc_array(dnMat%d3,(/ nml,nmc,nd,nd,nd /),'dnMat%d3','alloc_dnMat')
+            CALL alloc_array(dnMat%d3,[nml,nmc,nd,nd,nd],'dnMat%d3','alloc_dnMat')
             dnMat%d3(:,:,:,:,:) = ZERO
           END IF
 
@@ -273,21 +273,21 @@
 
 
         IF (nml > 0 .AND. nmc > 0) THEN
-          CALL alloc_array(dnMat%d0,(/ nml,nmc /),'dnMat%d0','alloc_dnCplxMat')
+          CALL alloc_array(dnMat%d0,[nml,nmc],'dnMat%d0','alloc_dnCplxMat')
           dnMat%d0(:,:) = CZERO
 
           IF (dnMat%nderiv >= 1) THEN
-            CALL alloc_array(dnMat%d1,(/ nml,nmc,nd /),'dnMat%d1','alloc_dnCplxMat')
+            CALL alloc_array(dnMat%d1,[nml,nmc,nd],'dnMat%d1','alloc_dnCplxMat')
             dnMat%d1(:,:,:) = CZERO
           END IF
 
           IF (dnMat%nderiv >= 2) THEN
-            CALL alloc_array(dnMat%d2,(/ nml,nmc,nd,nd /),'dnMat%d2','alloc_dnCplxMat')
+            CALL alloc_array(dnMat%d2,[nml,nmc,nd,nd],'dnMat%d2','alloc_dnCplxMat')
             dnMat%d2(:,:,:,:) = CZERO
           END IF
 
           IF (dnMat%nderiv >= 3) THEN
-            CALL alloc_array(dnMat%d3,(/ nml,nmc,nd,nd,nd /),'dnMat%d3','alloc_dnCplxMat')
+            CALL alloc_array(dnMat%d3,[nml,nmc,nd,nd,nd],'dnMat%d3','alloc_dnCplxMat')
             dnMat%d3(:,:,:,:,:) = CZERO
           END IF
 

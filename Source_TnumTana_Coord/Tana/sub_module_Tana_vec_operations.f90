@@ -70,7 +70,7 @@ MODULE mod_Tana_vec_operations
          ! Here both vectors (i,j) must defined the z-axis of a frame.
 
          IF (i==j) THEN
-           IF (compare_tab(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .true./))) THEN
+           IF (compare_tab(F_system%tab_BFTransfo(i)%euler, [.true., .true., .true.])) THEN
 
              falpha = F_system%tab_BFTransfo(i)%QEuler(1)
              fbeta  = F_system%tab_BFTransfo(i)%QEuler(2)
@@ -78,7 +78,7 @@ MODULE mod_Tana_vec_operations
 
              CALL Jdag_scalar_J_from_Eq122(falpha,fbeta,fgamma, JJ = JJ)
 
-           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .false./))) THEN
+           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, [.true., .true., .false.])) THEN
 
              falpha = F_system%tab_BFTransfo(i)%QEuler(1)
              fbeta  = F_system%tab_BFTransfo(i)%QEuler(2)
@@ -86,7 +86,7 @@ MODULE mod_Tana_vec_operations
              call Li_scalar_Li_from_Eq75(fbeta,falpha,LiLi = JJ) ! the order is different
              ! because we are using a subroutine made for theta, phi
 
-           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .true./))) THEN
+           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, [.false., .true., .true.])) THEN
 
              fbeta  = F_system%tab_BFTransfo(i)%QEuler(2)
              fgamma = F_system%tab_BFTransfo(i)%QEuler(3)
@@ -97,7 +97,7 @@ MODULE mod_Tana_vec_operations
 
              CALL delete_op(Ja_sum_subsyst)
 
-           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .false./))) THEN
+           ELSE IF (compare_tab(F_system%tab_BFTransfo(i)%euler, [.false., .true., .false.])) THEN
              CALL V1_scalar_V2_in_F_sum_nd(F_system%tab_BFTransfo(i)%Jdag, &
                                            F_system%tab_BFTransfo(i)%J, JJ)
            END IF
@@ -263,7 +263,7 @@ MODULE mod_Tana_vec_operations
        write(out_unitp,*) "  The elementary operators should be the Id and idq = 8"
        STOP
      end if
-     CALL alloc_array(M_opnd,(/3,3/),'M_opnd',routine_name)
+     CALL alloc_array(M_opnd,[3,3],'M_opnd',routine_name)
      call allocate_op(Pabg, 3)
      call allocate_op(Pabg_dag, 3)
 
@@ -363,7 +363,7 @@ MODULE mod_Tana_vec_operations
      Ptf_dag%vec_sum(1) = get_Pq_dag(theta) ! theta
      Ptf_dag%vec_sum(2) = get_Pq_dag(phi) ! phi
 
-     CALL alloc_array(M_opnd,(/2,2/),'M_opnd',routine_name)
+     CALL alloc_array(M_opnd,[2,2],'M_opnd',routine_name)
 
      if( theta%idq == 3 .or. theta%idq == 7 ) then
 

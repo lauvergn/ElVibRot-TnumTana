@@ -330,54 +330,54 @@
 
        IF (basis_set%ndim > 0) THEN
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%iQdyn) ) THEN
-           CALL alloc_NParray(basis_set%iQdyn,(/ basis_set%ndim /),       &
+           CALL alloc_NParray(basis_set%iQdyn,[basis_set%ndim],       &
                            "basis_set%iQdyn",name_sub)
            basis_set%iQdyn(:) = 0
          END IF
          IF (basis_set%nb_Transfo > 0 .AND. .NOT. allocated(basis_set%cte_Transfo) ) THEN
-           CALL alloc_NParray(basis_set%cte_Transfo,(/ 20,basis_set%nb_Transfo /),&
+           CALL alloc_NParray(basis_set%cte_Transfo,[20,basis_set%nb_Transfo],&
                              "basis_set%cte_Transfo",name_sub)
            basis_set%cte_Transfo(:,:) = ZERO
          END IF
 
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%A) ) THEN
-           CALL alloc_NParray(basis_set%A,(/ basis_set%ndim /),           &
+           CALL alloc_NParray(basis_set%A,[basis_set%ndim],           &
                            "basis_set%A",name_sub)
            basis_set%A(:) = ZERO
          END IF
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%B) ) THEN
-           CALL alloc_NParray(basis_set%B,(/ basis_set%ndim /),           &
+           CALL alloc_NParray(basis_set%B,[basis_set%ndim],           &
                            "basis_set%B",name_sub)
            basis_set%B(:) = ZERO
          END IF
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%Q0) ) THEN
-           CALL alloc_NParray(basis_set%Q0,(/ basis_set%ndim /),          &
+           CALL alloc_NParray(basis_set%Q0,[basis_set%ndim],          &
                            "basis_set%Q0",name_sub)
            basis_set%Q0(:) = ZERO
          END IF
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%scaleQ) ) THEN
-           CALL alloc_NParray(basis_set%scaleQ,(/ basis_set%ndim /),      &
+           CALL alloc_NParray(basis_set%scaleQ,[basis_set%ndim],      &
                            "basis_set%scaleQ",name_sub)
            basis_set%scaleQ(:) = ONE
          END IF
 
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%opt_A) ) THEN
-           CALL alloc_NParray(basis_set%opt_A,(/ basis_set%ndim /),       &
+           CALL alloc_NParray(basis_set%opt_A,[basis_set%ndim],       &
                            "basis_set%opt_A",name_sub)
            basis_set%opt_A(:) = 0
          END IF
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%opt_B) ) THEN
-           CALL alloc_NParray(basis_set%opt_B,(/ basis_set%ndim /),       &
+           CALL alloc_NParray(basis_set%opt_B,[basis_set%ndim],       &
                            "basis_set%opt_B",name_sub)
            basis_set%opt_B(:) = 0
          END IF
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%opt_Q0) ) THEN
-           CALL alloc_NParray(basis_set%opt_Q0,(/ basis_set%ndim /),      &
+           CALL alloc_NParray(basis_set%opt_Q0,[basis_set%ndim],      &
                            "basis_set%opt_Q0",name_sub)
            basis_set%opt_Q0(:) = 0
          END IF
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%opt_scaleQ) ) THEN
-           CALL alloc_NParray(basis_set%opt_scaleQ,(/ basis_set%ndim /),  &
+           CALL alloc_NParray(basis_set%opt_scaleQ,[basis_set%ndim],  &
                            "basis_set%opt_scaleQ",name_sub)
            basis_set%opt_scaleQ(:) = 0
          END IF
@@ -394,7 +394,7 @@
          END IF
 
          IF (basis_set%ndim > 0 .AND. .NOT. allocated(basis_set%nrho) ) THEN
-           CALL alloc_NParray(basis_set%nrho,(/ basis_set%ndim /),        &
+           CALL alloc_NParray(basis_set%nrho,[basis_set%ndim],        &
                            "basis_set%nrho",name_sub)
            basis_set%nrho(:) = 1 ! with nrho(i)=1, the voume element is dT = dQi
          END IF
@@ -445,7 +445,7 @@
 
          ! then allocation
          IF (basis_set%ndim > 0) THEN
-           CALL alloc_NParray(basis_set%tab_ndim_index,(/basis_set%ndim,basis_set%nb /), &
+           CALL alloc_NParray(basis_set%tab_ndim_index,[basis_set%ndim,basis_set%nb], &
                          "basis_set%tab_ndim_index",name_sub)
            basis_set%tab_ndim_index(:,:) = 0
          END IF
@@ -536,26 +536,26 @@
          IF (allocated(basis_set%x))  THEN
            CALL dealloc_NParray(basis_set%x,"basis_set%x",name_sub)
          END IF
-         CALL alloc_NParray(basis_set%x,(/ basis_set%ndim,nq /),          &
+         CALL alloc_NParray(basis_set%x,[basis_set%ndim,nq],          &
                          "basis_set%x",name_sub)
          basis_set%x     = ZERO
 
          IF (allocated(basis_set%w))  THEN
            CALL dealloc_NParray(basis_set%w,"basis_set%w",name_sub)
          END IF
-         CALL alloc_NParray(basis_set%w,(/ nq /),"basis_set%w",name_sub)
+         CALL alloc_NParray(basis_set%w,[nq],"basis_set%w",name_sub)
          basis_set%w     = ZERO
 
          IF (allocated(basis_set%wrho))  THEN
            CALL dealloc_NParray(basis_set%wrho,"basis_set%wrho",name_sub)
          END IF
-         CALL alloc_NParray(basis_set%wrho,(/ nq /),"basis_set%wrho",name_sub)
+         CALL alloc_NParray(basis_set%wrho,[nq],"basis_set%wrho",name_sub)
          basis_set%wrho     = ZERO
 
          IF (allocated(basis_set%rho))  THEN
            CALL dealloc_NParray(basis_set%rho,"basis_set%rho",name_sub)
          END IF
-         CALL alloc_NParray(basis_set%rho,(/ nq /),"basis_set%rho",name_sub)
+         CALL alloc_NParray(basis_set%rho,[nq],"basis_set%rho",name_sub)
          basis_set%rho     = ZERO
 
        END SUBROUTINE alloc_xw_OF_basis
@@ -679,7 +679,7 @@
                                'get_wrho_OF_basis',name_sub)
              get_wrho_OF_basis = basis_set%wrho
            ELSE
-             CALL alloc_NParray(get_wrho_OF_basis,(/ basis_set%nb /),&
+             CALL alloc_NParray(get_wrho_OF_basis,[basis_set%nb],&
                                'get_wrho_OF_basis',name_sub)
              get_wrho_OF_basis = ONE
            END IF
@@ -731,7 +731,7 @@
                              'basis_set%tab_Pbasis',name_sub)
          END IF
 
-         CALL alloc_array(basis_set%tab_Pbasis,(/ basis_set%nb_basis /),&
+         CALL alloc_array(basis_set%tab_Pbasis,[basis_set%nb_basis],&
                          'basis_set%tab_Pbasis',name_sub)
 
          DO i=1,basis_set%nb_basis
@@ -746,7 +746,7 @@
            CALL dealloc_array(basis_set%Tab_OF_Tabnb2,                  &
                              'basis_set%Tab_OF_Tabnb2',name_sub)
          END IF
-         CALL alloc_array(basis_set%Tab_OF_Tabnb2,(/ basis_set%nb_basis /),&
+         CALL alloc_array(basis_set%Tab_OF_Tabnb2,[basis_set%nb_basis],&
                          'basis_set%Tab_OF_Tabnb2',name_sub)
 
 
@@ -1700,7 +1700,7 @@
 
         IF (allocated(basis_set2%tab_ndim_index) .AND. .NOT. init_only_loc) THEN
           CALL alloc_NParray(basis_set1%tab_ndim_index,                   &
-                                  (/ basis_set2%ndim,basis_set2%nb /),  &
+                                  [basis_set2%ndim,basis_set2%nb],  &
                           "basis_set1%tab_ndim_index",name_sub)
           basis_set1%tab_ndim_index = basis_set2%tab_ndim_index
         END IF
@@ -1744,8 +1744,8 @@
 
         IF (allocated(basis_set2%Tabder_Qdyn_TO_Qbasis)) THEN
           n1 = ubound(basis_set2%Tabder_Qdyn_TO_Qbasis,dim=1)
-          CALL alloc_NParray(basis_set1%Tabder_Qdyn_TO_Qbasis,(/ n1 /),   &
-                          "basis_set1%Tabder_Qdyn_TO_Qbasis",name_sub, (/ 0 /))
+          CALL alloc_NParray(basis_set1%Tabder_Qdyn_TO_Qbasis,[n1],   &
+                          "basis_set1%Tabder_Qdyn_TO_Qbasis",name_sub, [0])
           basis_set1%Tabder_Qdyn_TO_Qbasis = basis_set2%Tabder_Qdyn_TO_Qbasis
         END IF
 
@@ -1758,7 +1758,7 @@
           basis_set1%tab_basis_linked = basis_set2%tab_basis_linked
           IF (basis_set2%tab_basis_linked) THEN
             IF (associated(basis_set2%tab_Pbasis) ) THEN
-              CALL alloc_array(basis_set1%tab_Pbasis,(/ basis_set2%nb_basis /),&
+              CALL alloc_array(basis_set1%tab_Pbasis,[basis_set2%nb_basis],&
                               'basis_set1%tab_Pbasis',name_sub)
               DO i=1,basis_set2%nb_basis
                 basis_set1%tab_Pbasis(i)%Pbasis => basis_set2%tab_Pbasis(i)%Pbasis
@@ -1767,7 +1767,7 @@
             !STOP 'pb with tab_basis_linked'
           ELSE
             IF (associated(basis_set2%tab_Pbasis) ) THEN
-              CALL alloc_array(basis_set1%tab_Pbasis,(/ basis_set2%nb_basis /),&
+              CALL alloc_array(basis_set1%tab_Pbasis,[basis_set2%nb_basis],&
                               'basis_set1%tab_Pbasis',name_sub)
 
               DO i=1,basis_set2%nb_basis
@@ -1781,7 +1781,7 @@
           END IF
           IF (associated(basis_set2%Tab_OF_Tabnb2)) THEN
             CALL alloc_array(basis_set1%Tab_OF_Tabnb2,                          &
-                                              (/ basis_set2%nb_basis /),        &
+                                              [basis_set2%nb_basis],        &
                             'basis_set1%Tab_OF_Tabnb2',name_sub)
             DO i=1,basis_set2%nb_basis
               CALL sub_IntVec1_TO_IntVec2(basis_set2%Tab_OF_Tabnb2(i),          &
@@ -1923,7 +1923,7 @@
           END IF
 
           IF (with_SG_loc .AND. associated(basis_set2%tab_PbasisSG)) THEN
-            CALL alloc_array(basis_set1%tab_PbasisSG,(/ basis_set2%nb_SG /), &
+            CALL alloc_array(basis_set1%tab_PbasisSG,[basis_set2%nb_SG], &
                             'basis_set1%tab_PbasisSG',name_sub)
             DO i=1,basis_set2%nb_SG
               CALL alloc_array(basis_set1%tab_PbasisSG(i)%Pbasis,       &
@@ -2680,7 +2680,7 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
 
        IF (basis_set%SparseGrid_type == 1) THEN
 
-         CALL alloc_NParray(tab_nq,(/ nb_basis /),"tab_nq","RecWrite_basis")
+         CALL alloc_NParray(tab_nq,[nb_basis],"tab_nq","RecWrite_basis")
          DO i=1,basis_set%nb_SG
            DO j=1,nb_basis
              tab_nq(j) =                                                &

@@ -120,7 +120,7 @@
       logical                        :: propa         = .FALSE.      ! To perform special analysis of WP
       logical                        :: With_field    = .FALSE.      ! when the field is present
       real (kind=Rkind)              :: T             = ZERO         ! time in au
-      real (kind=Rkind)              :: field(3)= (/ZERO,ZERO,ZERO/) ! Electric field
+      real (kind=Rkind)              :: field(3)= [ZERO,ZERO,ZERO] ! Electric field
 
     CONTAINS
       PROCEDURE, PRIVATE, PASS(ana_psi1) :: ana_psi2_TO_ana_psi1
@@ -327,7 +327,7 @@
     !------------------------------------------------------------
     ana_psi%propa               = .FALSE.             ! To perform special analysis of WP
     ana_psi%T                   = ZERO                ! time in au
-    ana_psi%field(:)            = (/ZERO,ZERO,ZERO/)  ! Electric field
+    ana_psi%field(:)            = [ZERO,ZERO,ZERO]  ! Electric field
     ana_psi%With_field          = .FALSE.             ! Propagation with a field
     IF (present(propa))         ana_psi%propa      = propa
     IF (present(T))             ana_psi%T          = T

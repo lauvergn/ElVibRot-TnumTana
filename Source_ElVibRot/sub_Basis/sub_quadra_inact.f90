@@ -116,7 +116,7 @@
         Basis2n%tab_Pbasis(i)%Pbasis%scaleQ(:)         = ONE
 
 
-        CALL init_nDindexPrim(Basis2n%tab_Pbasis(i)%Pbasis%nDindB,1,(/ nb /))
+        CALL init_nDindexPrim(Basis2n%tab_Pbasis(i)%Pbasis%nDindB,1,[nb])
         Basis2n%tab_Pbasis(i)%Pbasis%nDindB%nDweight(1)     = ONE
         Basis2n%tab_Pbasis(i)%Pbasis%nDindB%Type_OF_nDindex = 1
         Basis2n%tab_Pbasis(i)%Pbasis%nDindB%MaxNorm         = ZERO
@@ -125,7 +125,7 @@
         Basis2n%tab_Pbasis(i)%Pbasis%iQdyn(1) =                         &
                                   mole%ActiveTransfo%list_QactTOQdyn(iQ)
         CALL alloc_NParray(Basis2n%tab_Pbasis(i)%Pbasis%Tabder_Qdyn_TO_Qbasis, &
-             (/mole%nb_var/),"...%Tabder_Qdyn_TO_Qbasis",name_sub,(/0/))
+             [mole%nb_var],"...%Tabder_Qdyn_TO_Qbasis",name_sub,[0])
         Basis2n%tab_Pbasis(i)%Pbasis%Tabder_Qdyn_TO_Qbasis(:) = 0
         Basis2n%tab_Pbasis(i)%Pbasis%Tabder_Qdyn_TO_Qbasis(iQ) = 1
 
@@ -156,8 +156,8 @@
         i0 = i1
       END DO
       ! Set Tabder_Qdyn_TO_Qbasis(:)
-      CALL alloc_NParray(Basis2n%Tabder_Qdyn_TO_Qbasis,(/ mole%nb_var /), &
-                        "Basis2n%Tabder_Qdyn_TO_Qbasis",name_sub,(/0/))
+      CALL alloc_NParray(Basis2n%Tabder_Qdyn_TO_Qbasis,[mole%nb_var], &
+                        "Basis2n%Tabder_Qdyn_TO_Qbasis",name_sub,[0])
       Basis2n%Tabder_Qdyn_TO_Qbasis(:) = 0
       DO i=1,Basis2n%ndim
         Basis2n%Tabder_Qdyn_TO_Qbasis(Basis2n%iQdyn(i)) = i

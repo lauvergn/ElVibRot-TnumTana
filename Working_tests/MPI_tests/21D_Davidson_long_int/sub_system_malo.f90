@@ -217,7 +217,7 @@
         STOP
       END IF
 
-      CALL get_CurviRPH( (/ Qact /),mole%CurviRPH,Hess=hess)
+      CALL get_CurviRPH( [Qact],mole%CurviRPH,Hess=hess)
 
       DO i=1,mole%nb_inact2n
       DO j=1,mole%nb_inact2n
@@ -335,7 +335,7 @@
 !c---------------------------------------------------------------------
       Qact = Qdyn(mole%liste_QactTOQsym(1))
 
-      CALL get_CurviRPH( (/ Qact /),mole%CurviRPH,Q21=Qtot)
+      CALL get_CurviRPH( [Qact],mole%CurviRPH,Q21=Qtot)
 
       d0req  = Qtot(i_Qdyn)
 !c---------------------------------------------------------------------

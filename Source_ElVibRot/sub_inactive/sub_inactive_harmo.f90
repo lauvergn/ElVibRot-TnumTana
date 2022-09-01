@@ -231,8 +231,8 @@
 
         DO i=1,Basis2n%nb_basis
           !CALL Rec_d0d1d2bnD(d0herm_ij(i),                              &
-          !                       reshape((/ d1herm_ij(i) /),(/1,1/)),   &
-          !                       reshape((/ d2herm_ij(i) /),(/1,1,1/)), &
+          !                       reshape([d1herm_ij(i)],[1,1]),   &
+          !                       reshape([d2herm_ij(i)],[1,1,1]), &
           !      Basis2n%tab_Pbasis(i)%Pbasis,ind_quadra(i),ind_basis(i))
           d0herm_ij(i) = Basis2n%tab_Pbasis(i)%Pbasis%dnRGB%d0(          &
                                              ind_quadra(i),ind_basis(i))

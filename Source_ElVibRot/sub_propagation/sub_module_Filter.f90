@@ -206,12 +206,12 @@ nb       = nb0
 write(out_unitp,*) ' nb,nq init: ',nb,nq
 CALL flush_perso(out_unitp)
 
-CALL alloc_NParray(x_cheby,(/nq/),'x_cheby',name_sub)
-CALL alloc_NParray(w_cheby,(/nq/),'w_cheby',name_sub)
-CALL alloc_NParray(sqw_cheby,(/nq/),'sqw_cheby',name_sub)
-CALL alloc_NParray(P0_cheby,(/nq/),'P0_cheby',name_sub)
-CALL alloc_NParray(P1_cheby,(/nq/),'P1_cheby',name_sub)
-CALL alloc_NParray(P2_cheby,(/nq/),'P2_cheby',name_sub)
+CALL alloc_NParray(x_cheby,[nq],'x_cheby',name_sub)
+CALL alloc_NParray(w_cheby,[nq],'w_cheby',name_sub)
+CALL alloc_NParray(sqw_cheby,[nq],'sqw_cheby',name_sub)
+CALL alloc_NParray(P0_cheby,[nq],'P0_cheby',name_sub)
+CALL alloc_NParray(P1_cheby,[nq],'P1_cheby',name_sub)
+CALL alloc_NParray(P2_cheby,[nq],'P2_cheby',name_sub)
 
 DO
   nb = nb*11/10
@@ -226,13 +226,13 @@ DO
   ! first the chebychev polynomials + grid/weight
   !nb = para_propa%para_Davidson%M_filter+1
   nq = nb
-  CALL alloc_NParray(x_cheby,(/nq/),'x_cheby',name_sub)
-  CALL alloc_NParray(w_cheby,(/nq/),'w_cheby',name_sub)
-  CALL alloc_NParray(sqw_cheby,(/nq/),'sqw_cheby',name_sub)
-  !CALL alloc_NParray(d0P_cheby,(/nq,nb/),'d0P_cheby',name_sub)
-  CALL alloc_NParray(P0_cheby,(/nq/),'P0_cheby',name_sub)
-  CALL alloc_NParray(P1_cheby,(/nq/),'P1_cheby',name_sub)
-  CALL alloc_NParray(P2_cheby,(/nq/),'P2_cheby',name_sub)
+  CALL alloc_NParray(x_cheby,[nq],'x_cheby',name_sub)
+  CALL alloc_NParray(w_cheby,[nq],'w_cheby',name_sub)
+  CALL alloc_NParray(sqw_cheby,[nq],'sqw_cheby',name_sub)
+  !CALL alloc_NParray(d0P_cheby,[nq,nb],'d0P_cheby',name_sub)
+  CALL alloc_NParray(P0_cheby,[nq],'P0_cheby',name_sub)
+  CALL alloc_NParray(P1_cheby,[nq],'P1_cheby',name_sub)
+  CALL alloc_NParray(P2_cheby,[nq],'P2_cheby',name_sub)
 
   CALL gauss_chebyWeight(x_cheby,w_cheby,nq)
   sqw_cheby = ONE/sqrt(sqrt(1-x_cheby*x_cheby)) * sqrt(TWO/pi)
@@ -252,9 +252,9 @@ DO
   !CALL Set_filter(filter,3,A=A_filter,B=B_filter,beta=FOUR)
   !CALL Set_filter(filter,4,A=A_filter,B=B_filter)
 
-  CALL alloc_NParray(f,(/nb,1/),'f',name_sub)
-  CALL alloc_NParray(wfl,(/nq/),'wfl',name_sub)
-  CALL alloc_NParray(wfl_cheby,(/nq/),'wfl',name_sub)
+  CALL alloc_NParray(f,[nb,1],'f',name_sub)
+  CALL alloc_NParray(wfl,[nq],'wfl',name_sub)
+  CALL alloc_NParray(wfl_cheby,[nq],'wfl',name_sub)
   wfl_cheby = ZERO
 
   ! l-filter values x weight on the grid
@@ -308,8 +308,8 @@ nb = size(P0_cheby)
 
   !-----------------------------------------------------------
 ! then the filter(s) are projected on the chebyshev polynomials
-  CALL alloc_NParray(f,(/nb,para_propa%para_Davidson%L_filter/),'f',name_sub)
-  CALL alloc_NParray(wfl,(/nq/),'wfl',name_sub)
+  CALL alloc_NParray(f,[nb,para_propa%para_Davidson%L_filter],'f',name_sub)
+  CALL alloc_NParray(wfl,[nq],'wfl',name_sub)
   sigma       = para_propa%para_Davidson%W_filter /para_H%Esc / para_propa%para_Davidson%L_filter
 
 
@@ -399,8 +399,8 @@ nb = size(P0_cheby)
        !- z vectors -------------------------------------------
 
         !- diagonalization -----------------------------------
-        CALL alloc_NParray(H,  (/ nb_diago,nb_diago /),'H',  name_sub)
-        CALL alloc_NParray(Vec,(/ nb_diago,nb_diago /),'Vec',name_sub)
+        CALL alloc_NParray(H,  [nb_diago,nb_diago],'H',  name_sub)
+        CALL alloc_NParray(Vec,[nb_diago,nb_diago],'Vec',name_sub)
 
         DO j=1,nb_diago
         DO i=1,nb_diago
@@ -686,9 +686,9 @@ STOP
 ! first the chebychev polynomials + grid/weight
   nb = para_propa%para_Davidson%M_filter+1
   nq = para_propa%para_Davidson%M_filter+1
-  CALL alloc_NParray(x_cheby,(/nq/),'x_cheby',name_sub)
-  CALL alloc_NParray(w_cheby,(/nq/),'w_cheby',name_sub)
-  CALL alloc_NParray(d0P_cheby,(/nq,nb/),'d0P_cheby',name_sub)
+  CALL alloc_NParray(x_cheby,[nq],'x_cheby',name_sub)
+  CALL alloc_NParray(w_cheby,[nq],'w_cheby',name_sub)
+  CALL alloc_NParray(d0P_cheby,[nq,nb],'d0P_cheby',name_sub)
   CALL gauss_chebyWeight(x_cheby,w_cheby,nq)
   !write(out_unitp,*) 'x_cheby',x_cheby
   !write(out_unitp,*) 'w_cheby',w_cheby
@@ -704,8 +704,8 @@ STOP
 !-----------------------------------------------------------
 ! then the filter(s) are projected on the chebyshev polynomials
   sigma = para_propa%para_Davidson%W_filter /para_H%Esc
-  CALL alloc_NParray(f,(/nb,para_propa%para_Davidson%L_filter/),'f',name_sub)
-  CALL alloc_NParray(wfl,(/nq/),'wfl',name_sub)
+  CALL alloc_NParray(f,[nb,para_propa%para_Davidson%L_filter],'f',name_sub)
+  CALL alloc_NParray(wfl,[nq],'wfl',name_sub)
 
   DO l=1,para_propa%para_Davidson%L_filter
     El = para_propa%para_Davidson%LambdaMin + real(l-1,kind=Rkind)*Delta_Lambda
@@ -773,8 +773,8 @@ STOP
        !- z vectors -------------------------------------------
 
         !- diagonalization -----------------------------------
-        CALL alloc_NParray(H,  (/ nb_diago,nb_diago /),'H',  name_sub)
-        CALL alloc_NParray(Vec,(/ nb_diago,nb_diago /),'Vec',name_sub)
+        CALL alloc_NParray(H,  [nb_diago,nb_diago],'H',  name_sub)
+        CALL alloc_NParray(Vec,[nb_diago,nb_diago],'Vec',name_sub)
 
         DO j=1,nb_diago
         DO i=1,nb_diago
@@ -1068,7 +1068,7 @@ STOP
      JJ = mf+1  ! J=K+1   in Guo paper
 
      sigma = para_propa%para_Davidson%W_filter /para_H%Esc / para_propa%para_Davidson%L_filter
-     CALL alloc_NParray(f,(/mf,para_propa%para_Davidson%L_filter/),'f',name_sub,(/0,1/))
+     CALL alloc_NParray(f,[mf,para_propa%para_Davidson%L_filter],'f',name_sub,[0,1])
 
      DO
 
@@ -1136,8 +1136,8 @@ STOP
        !- z vectors -------------------------------------------
 
         !- diagonalization -----------------------------------
-        CALL alloc_NParray(H,  (/ nb_diago,nb_diago /),'H',  name_sub)
-        CALL alloc_NParray(Vec,(/ nb_diago,nb_diago /),'Vec',name_sub)
+        CALL alloc_NParray(H,  [nb_diago,nb_diago],'H',  name_sub)
+        CALL alloc_NParray(Vec,[nb_diago,nb_diago],'Vec',name_sub)
 
         DO j=1,nb_diago
         DO i=1,nb_diago
@@ -1453,8 +1453,8 @@ STOP
        !- z vectors -------------------------------------------
 
         !- diagonalization -----------------------------------
-        CALL alloc_NParray(H,  (/ nb_diago,nb_diago /),'H',  name_sub)
-        CALL alloc_NParray(Vec,(/ nb_diago,nb_diago /),'Vec',name_sub)
+        CALL alloc_NParray(H,  [nb_diago,nb_diago],'H',  name_sub)
+        CALL alloc_NParray(Vec,[nb_diago,nb_diago],'Vec',name_sub)
 
         DO j=1,nb_diago
         DO i=1,nb_diago
@@ -1795,8 +1795,8 @@ STOP
       !- z vectors -------------------------------------------
 
       !- diagonalization -----------------------------------
-      CALL alloc_NParray(H,  (/ nb_diago,nb_diago /),'H',  name_sub)
-      CALL alloc_NParray(Vec,(/ nb_diago,nb_diago /),'Vec',name_sub)
+      CALL alloc_NParray(H,  [nb_diago,nb_diago],'H',  name_sub)
+      CALL alloc_NParray(Vec,[nb_diago,nb_diago],'Vec',name_sub)
 
       DO j=1,nb_diago
       DO i=1,nb_diago
@@ -2116,8 +2116,8 @@ STOP
       !- z vectors -------------------------------------------
 
       !- diagonalization -----------------------------------
-      CALL alloc_NParray(H,  (/ nb_diago,nb_diago /),'H',  name_sub)
-      CALL alloc_NParray(Vec,(/ nb_diago,nb_diago /),'Vec',name_sub)
+      CALL alloc_NParray(H,  [nb_diago,nb_diago],'H',  name_sub)
+      CALL alloc_NParray(Vec,[nb_diago,nb_diago],'Vec',name_sub)
 
       DO j=1,nb_diago
       DO i=1,nb_diago

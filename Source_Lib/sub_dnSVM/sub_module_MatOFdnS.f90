@@ -459,7 +459,7 @@
         IF (check) THEN
           N = ubound(MatdnS,dim=2)
           nullify(MatdnS_save)
-          CALL alloc_array(MatdnS_save,(/N,N/),'MatdnS_save',name_sub)
+          CALL alloc_array(MatdnS_save,[N,N],'MatdnS_save',name_sub)
           CALL alloc_MatOFdnS(MatdnS_save,MatdnS(1,1)%nb_var_deriv,nderiv_loc)
           CALL sub_Mat1OFdnS_TO_Mat2OFdnS(MatdnS,MatdnS_save)
         END IF
@@ -500,9 +500,9 @@
         IF (check) THEN
           ! allocation
           nullify(MatPdnS)
-          CALL alloc_array(MatPdnS,(/N,N/),'MatPdnS',name_sub)
+          CALL alloc_array(MatPdnS,[N,N],'MatPdnS',name_sub)
           nullify(MatWorkdnS)
-          CALL alloc_array(MatWorkdnS,(/N,N/),'MatWorkdnS',name_sub)
+          CALL alloc_array(MatWorkdnS,[N,N],'MatWorkdnS',name_sub)
 
           write(out_unitp,*) '=========================================='
           write(out_unitp,*) '======= CHECK DIAGO ======================'
@@ -510,10 +510,10 @@
 
           ! check line or column
           nullify(Vec1dnS)
-          CALL alloc_array(Vec1dnS,(/N/),'Vec1dnS',name_sub)
+          CALL alloc_array(Vec1dnS,[N],'Vec1dnS',name_sub)
           CALL alloc_VecOFdnS(Vec1dnS,MatdnS(1,1)%nb_var_deriv,nderiv_loc)
           nullify(Vec2dnS)
-          CALL alloc_array(Vec2dnS,(/N/),'Vec2dnS',name_sub)
+          CALL alloc_array(Vec2dnS,[N],'Vec2dnS',name_sub)
           CALL alloc_VecOFdnS(Vec2dnS,MatdnS(1,1)%nb_var_deriv,nderiv_loc)
 
 
@@ -640,10 +640,10 @@
         ! allocation
         N = ubound(MatdnS,dim=2)
         nullify(MatPdnS)
-        CALL alloc_array(MatPdnS,(/N,N/),'MatPdnS',name_sub)
+        CALL alloc_array(MatPdnS,[N,N],'MatPdnS',name_sub)
         CALL alloc_MatOFdnS(MatPdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
         nullify(MatWorkdnS)
-        CALL alloc_array(MatWorkdnS,(/N,N/),'MatWorkdnS',name_sub)
+        CALL alloc_array(MatWorkdnS,[N,N],'MatWorkdnS',name_sub)
         CALL alloc_MatOFdnS(MatWorkdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
 
         ! initialization
@@ -788,10 +788,10 @@
         ! allocation
         N = ubound(MatdnS,dim=2)
         nullify(MatPdnS)
-        CALL alloc_array(MatPdnS,(/N,N/),'MatPdnS',name_sub)
+        CALL alloc_array(MatPdnS,[N,N],'MatPdnS',name_sub)
         CALL alloc_MatOFdnS(MatPdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
         nullify(MatWorkdnS)
-        CALL alloc_array(MatWorkdnS,(/N,N/),'MatWorkdnS',name_sub)
+        CALL alloc_array(MatWorkdnS,[N,N],'MatWorkdnS',name_sub)
         CALL alloc_MatOFdnS(MatWorkdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
 
 
@@ -954,9 +954,9 @@
 
         ! allocation
         N = ubound(MatdnS,dim=2)
-        CALL alloc_array(MatPdnS,(/N,N/),'MatPdnS',name_sub)
+        CALL alloc_array(MatPdnS,[N,N],'MatPdnS',name_sub)
         CALL alloc_MatOFdnS(MatPdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
-        CALL alloc_array(MatWorkdnS,(/N,N/),'MatWorkdnS',name_sub)
+        CALL alloc_array(MatWorkdnS,[N,N],'MatWorkdnS',name_sub)
         CALL alloc_MatOFdnS(MatWorkdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
 
 
@@ -1126,10 +1126,10 @@
         END IF
 
         nullify(MatPdnS)
-        CALL alloc_array(MatPdnS,(/N,N/),'MatPdnS',name_sub)
+        CALL alloc_array(MatPdnS,[N,N],'MatPdnS',name_sub)
         CALL alloc_MatOFdnS(MatPdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
         nullify(MatWorkdnS)
-        CALL alloc_array(MatWorkdnS,(/N,N/),'MatWorkdnS',name_sub)
+        CALL alloc_array(MatWorkdnS,[N,N],'MatWorkdnS',name_sub)
         CALL alloc_MatOFdnS(MatWorkdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
 
 
@@ -1268,10 +1268,10 @@
         ! allocation
         N = ubound(MatdnS,dim=2)
         nullify(MatPdnS)
-        CALL alloc_array(MatPdnS,(/N,N/),'MatPdnS',name_sub)
+        CALL alloc_array(MatPdnS,[N,N],'MatPdnS',name_sub)
         CALL alloc_MatOFdnS(MatPdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
         nullify(MatWorkdnS)
-        CALL alloc_array(MatWorkdnS,(/N,N/),'MatWorkdnS',name_sub)
+        CALL alloc_array(MatWorkdnS,[N,N],'MatWorkdnS',name_sub)
         CALL alloc_MatOFdnS(MatWorkdnS,MatdnS(1,1)%nb_var_deriv,nderiv)
 
         ! initialization

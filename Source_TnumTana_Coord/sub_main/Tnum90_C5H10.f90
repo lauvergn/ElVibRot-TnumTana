@@ -121,7 +121,7 @@
       allocate(Qdyn(mole%nb_var))
       allocate(Qact(mole%nb_var))
 
-      !xread(:,:) = reshape(para_Q%Qread(:), (/3,mole%nat/) )
+      !xread(:,:) = reshape(para_Q%Qread(:), [3,mole%nat] )
 
       xc12(1) = sum(xread(1,1:15))
       xc12(2) = sum(xread(2,1:15))
@@ -131,12 +131,12 @@
       DO i=1,15
         xread(:,i) = xread(:,i) - xc12(:)
       END DO
-      xread(:,16) = (/ ONE,ZERO,ZERO /)
-      xread(:,17) = (/ ZERO,ZERO,ONE /)
-      xread(:,18) = (/ ZERO,ZERO,ZERO /)
+      xread(:,16) = [ONE,ZERO,ZERO]
+      xread(:,17) = [ZERO,ZERO,ONE]
+      xread(:,18) = [ZERO,ZERO,ZERO]
 
 
-      !para_Q%Qread(:) = reshape(xread, (/3*mole%nat/) )
+      !para_Q%Qread(:) = reshape(xread, [3*mole%nat] )
 
 
       CALL get_Qact0(Qact,mole%ActiveTransfo)
@@ -168,7 +168,7 @@ stop
       allocate(xinth(3,mole%nat_act))
       allocate(xpermh(3,mole%nat_act))
 
-      xread(:,:) = reshape(para_Q%Qread(:), (/3,mole%nat/) )
+      xread(:,:) = reshape(para_Q%Qread(:), [3,mole%nat] )
 !     --------------------------------------------
 !-------------------------------------------------
 
@@ -208,19 +208,19 @@ stop
       CALL alloc_dnSVM(dnFCC,mole%ncart_act,nderiv)
       CALL alloc_dnSVM(dnFcurvi,mole%nb_act,nderiv)
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,0)
-      memory = product( (/ mole%nb_act /) )
+      memory = product( [mole%nb_act] )
       allocate(d0eh(mole%nb_act),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"d0eh","main")
-      memory = product( (/ mole%nb_act,mole%nb_act /) )
+      memory = product( [mole%nb_act,mole%nb_act] )
       allocate(d0c(mole%nb_act,mole%nb_act),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"d0c","main")
-      memory = product( (/ mole%nb_act,mole%nb_act /) )
+      memory = product( [mole%nb_act,mole%nb_act] )
       allocate(d0k(mole%nb_act,mole%nb_act),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"d0k","main")
-      memory = product( (/ mole%nb_act,mole%nb_act /) )
+      memory = product( [mole%nb_act,mole%nb_act] )
       allocate(d0c_inv(mole%nb_act,mole%nb_act),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"d0c_inv","main")
-      memory = product( (/ mole%nb_act,mole%nb_act /) )
+      memory = product( [mole%nb_act,mole%nb_act] )
       allocate(d0c_ini(mole%nb_act,mole%nb_act),stat=err_mem) ! change alloc done
       CALL error_memo_allo(err_mem,memory,"d0c_ini","main")
 
@@ -283,12 +283,12 @@ stop
       write(out_unitp,*) '======================================================'
 
       CALL permut_cart(xperm,xread,mole%nat)
-      xperm(:,16) = (/ ONE,ZERO,ZERO /)
-      xperm(:,17) = (/ ZERO,ZERO,ONE /)
-      xperm(:,18) = (/ ZERO,ZERO,ZERO /)
+      xperm(:,16) = [ONE,ZERO,ZERO]
+      xperm(:,17) = [ZERO,ZERO,ONE]
+      xperm(:,18) = [ZERO,ZERO,ZERO]
 
 
-      !para_Q%Qread(:) = reshape(xperm, (/3*mole%nat/) )
+      !para_Q%Qread(:) = reshape(xperm, [3*mole%nat] )
       CALL sub_QinRead_TO_Qact(para_Q%Qread,Qact,mole,0)
 
 
@@ -300,14 +300,14 @@ stop
 
 
       DO i=1,mole%nat_act
-        xinth(:,:) = reshape(hCC(:,i), (/ 3,mole%nat_act /))
+        xinth(:,:) = reshape(hCC(:,i), [3,mole%nat_act])
         CALL permut_cart(xpermh,xinth,mole%nat_act)
-        dnFCC%d2(:,i) = reshape(xpermh, (/3*mole%nat_act/) )
+        dnFCC%d2(:,i) = reshape(xpermh, [3*mole%nat_act] )
       END DO
       DO i=1,mole%nat_act
-        xinth(:,:) = reshape(hCC(i,:), (/ 3,mole%nat_act /))
+        xinth(:,:) = reshape(hCC(i,:), [3,mole%nat_act])
         CALL permut_cart(xpermh,xinth,mole%nat_act)
-        dnFCC%d2(i,:) = reshape(xpermh, (/3*mole%nat_act/) )
+        dnFCC%d2(i,:) = reshape(xpermh, [3*mole%nat_act] )
       END DO
 
 

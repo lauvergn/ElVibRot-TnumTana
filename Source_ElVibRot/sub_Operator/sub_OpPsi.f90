@@ -385,7 +385,7 @@ CONTAINS
         IF(Psi%SRB_MPI) THEN
 
         IF(openmpi) THEN
-          CALL sub_TabOpPsi_FOR_SGtype4_SRB_MPI((/Psi/),RROpPsi,para_Op)
+          CALL sub_TabOpPsi_FOR_SGtype4_SRB_MPI([Psi],RROpPsi,para_Op)
           OpPsi=RROpPsi(1)  ! find a way to avoid it
         ENDIF
 
@@ -408,9 +408,9 @@ CONTAINS
 
         ELSE
           IF(openmpi) THEN
-            CALL sub_TabOpPsi_FOR_SGtype4_MPI( (/Psi/) ,RROpPsi,para_Op)
+            CALL sub_TabOpPsi_FOR_SGtype4_MPI( [Psi] ,RROpPsi,para_Op)
           ELSE
-            CALL sub_TabOpPsi_FOR_SGtype4( (/Psi/) ,RROpPsi,para_Op)
+            CALL sub_TabOpPsi_FOR_SGtype4( [Psi] ,RROpPsi,para_Op)
           ENDIF
           IF(keep_MPI) OpPsi = RROpPsi(1)
           CALL dealloc_psi(RROpPsi(1),delete_all=.TRUE.)
@@ -1197,10 +1197,10 @@ END SUBROUTINE sub_OpBasis_OneCBF
         ELSE
           !---- initialization -------------------------------------
           nullify(thread_Psi)
-          CALL alloc_array(thread_Psi,(/nb_thread/),                    &
+          CALL alloc_array(thread_Psi,[nb_thread],                    &
                           "thread_Psi",name_sub)
           nullify(thread_OpPsi)
-          CALL alloc_array(thread_OpPsi,(/nb_thread/),                  &
+          CALL alloc_array(thread_OpPsi,[nb_thread],                  &
                           "thread_OpPsi",name_sub)
 
           DO ith=1,nb_thread
@@ -1247,7 +1247,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
         END IF
 
         IF (para_Op%cplx) THEN
-        IF ( .NOT. skip_term(derOp, (/0,0/) ) ) THEN
+        IF ( .NOT. skip_term(derOp, [0,0] ) ) THEN
         IF (.NOT. para_Op%imOpGrid(1)%grid_zero) THEN
           CALL sub_PsiBasisRep_TO_GridRep(Psi)
 
@@ -1378,9 +1378,9 @@ END SUBROUTINE sub_OpBasis_OneCBF
         CALL sub_sqRhoOVERJac_Psi(Psi,para_Op,inv=.FALSE.)
 
         IF (Psi%cplx) THEN
-          CALL alloc_NParray(CG1,(/ Psi%nb_qa /),"CG1",name_sub)
+          CALL alloc_NParray(CG1,[Psi%nb_qa],"CG1",name_sub)
         ELSE
-          CALL alloc_NParray(RG1,(/ Psi%nb_qa /),"RG1",name_sub)
+          CALL alloc_NParray(RG1,[Psi%nb_qa],"RG1",name_sub)
         END IF
 
         DO iterm=1,para_Op%nb_term
@@ -1598,7 +1598,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
         nb_block   = Psi%nb_qa/block_size
         IF (mod(Psi%nb_qa,block_size) > 0) nb_block = nb_block + 1
 
-        CALL alloc_NParray(GGiq,(/block_size,para_Op%mole%nb_act,para_Op%mole%nb_act/),&
+        CALL alloc_NParray(GGiq,[block_size,para_Op%mole%nb_act,para_Op%mole%nb_act],&
                           'GGiq',name_sub)
       ELSE
         block_size = Psi%nb_qa
@@ -1623,11 +1623,11 @@ END SUBROUTINE sub_OpBasis_OneCBF
 
         IF (Psi%cplx) THEN
           STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
-          CALL alloc_NParray(CG1,(/ Psi%nb_qa /),"CG1",name_sub)
+          CALL alloc_NParray(CG1,[Psi%nb_qa],"CG1",name_sub)
           OpPsi%CvecG = CZERO
         ELSE
-          CALL alloc_NParray(derRGi,(/ Psi%nb_qa,para_Op%nb_Qact /),"derRGi",name_sub)
-          CALL alloc_NParray(derRGj,(/ Psi%nb_qa,para_Op%nb_Qact /),"derRGj",name_sub)
+          CALL alloc_NParray(derRGi,[Psi%nb_qa,para_Op%nb_Qact],"derRGi",name_sub)
+          CALL alloc_NParray(derRGj,[Psi%nb_qa,para_Op%nb_Qact],"derRGj",name_sub)
           OpPsi%RvecG = ZERO
         END IF
 
@@ -1646,7 +1646,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 
      ! first derivatives of sqrt(J/rho)*psi,  in derRGi(:,i)
      DO i=1,para_Op%nb_Qact
-       derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(i),0 /)
+       derive_termQdyn(:) = [para_Op%mole%liste_QactTOQdyn(i),0]
        derRGi(:,i) = Psi%RvecG(iqi2:fqi2)
 
        CALL DerivOp_TO_RVecG(derRGi(:,i),Psi%nb_qa,para_Op%BasisnD,  &
@@ -1663,7 +1663,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
           !$OMP shared(para_Op,GGiq,iq1,iq2)           &
           !$OMP private(iq,Qact)                       &
           !$OMP num_threads(nb_thread)
-          CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
+          CALL alloc_NParray(Qact,[para_Op%mole%nb_var],'Qact',name_sub)
           !$OMP  do
           DO iq=iq1,iq2
             CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
@@ -1705,7 +1705,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
        derRGj(:,j) = derRGj(:,j) * para_Op%para_AllBasis%basis_ext%Jac
 
        ! derivative with respect to Qact_j
-       derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(j),0 /)
+       derive_termQdyn(:) = [para_Op%mole%liste_QactTOQdyn(j),0]
        CALL DerivOp_TO_RVecG(derRGj(:,j),Psi%nb_qa,para_Op%BasisnD,derive_termQdyn)
 
        ! add each term to OpPsi%RvecG
@@ -1874,7 +1874,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
    nb_block   = 1
  END IF
 
- CALL alloc_NParray(derRGi,(/ Psi(1)%nb_qa,para_Op%nb_Qact,size(Psi) /),"derRGi",name_sub)
+ CALL alloc_NParray(derRGi,[Psi(1)%nb_qa,para_Op%nb_Qact,size(Psi)],"derRGi",name_sub)
 
  nb_mult_OpPsi = 0
  DO itab=1,size(Psi)
@@ -1951,7 +1951,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
    END IF
 
    DO i=1,para_Op%nb_Qact
-     derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(i),0 /)
+     derive_termQdyn(:) = [para_Op%mole%liste_QactTOQdyn(i),0]
      derRGi(:,i,itab) = Psi(itab)%RvecG(:)
      CALL DerivOp_TO_RVecG(derRGi(:,i,itab),Psi(itab)%nb_qa,para_Op%BasisnD,  &
                            derive_termQdyn)
@@ -1966,11 +1966,11 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
    CALL alloc_psi(Psi(itab))
  END DO
 
- CALL alloc_NParray(derRGj,(/ Psi(1)%nb_qa,para_Op%nb_Qact,size(Psi) /),"derRGj",name_sub)
+ CALL alloc_NParray(derRGj,[Psi(1)%nb_qa,para_Op%nb_Qact,size(Psi)],"derRGj",name_sub)
  derRGj(:,:,:) = ZERO
 
 
- CALL alloc_NParray(GGiq,(/block_size,para_Op%mole%nb_act,para_Op%mole%nb_act/),&
+ CALL alloc_NParray(GGiq,[block_size,para_Op%mole%nb_act,para_Op%mole%nb_act],&
                    'GGiq',name_sub)
 
  DO iblock=1,nb_block
@@ -1982,7 +1982,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
       !$OMP shared(para_Op,GGiq,iq1,iq2)  &
       !$OMP private(iq,Qact)                       &
       !$OMP num_threads(nb_thread)
-      CALL alloc_NParray(Qact,(/para_Op%mole%nb_var/),'Qact',name_sub)
+      CALL alloc_NParray(Qact,[para_Op%mole%nb_var],'Qact',name_sub)
       !$OMP  do
       DO iq=iq1,iq2
         CALL Rec_Qact(Qact,para_Op%para_AllBasis%BasisnD,iq,para_Op%mole)
@@ -2017,7 +2017,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
      derRGj(:,j,itab) = derRGj(:,j,itab) * para_Op%para_AllBasis%basis_ext%Jac
 
      ! derivative with respect to Qact_j
-     derive_termQdyn(:) = (/ para_Op%mole%liste_QactTOQdyn(j),0 /)
+     derive_termQdyn(:) = [para_Op%mole%liste_QactTOQdyn(j),0]
      CALL DerivOp_TO_RVecG(derRGj(:,j,itab),Psi(itab)%nb_qa,para_Op%BasisnD,derive_termQdyn)
 
      IF (debug) THEN
@@ -2126,7 +2126,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
               para_Op%para_ReadOp%para_FileGrid%Type_FileGrid == 2)) THEN
 
         CALL alloc_NParray(Grid,                                          &
-                       (/para_Op%nb_qa,para_Op%nb_bie,para_Op%nb_bie/), &
+                       [para_Op%nb_qa,para_Op%nb_bie,para_Op%nb_bie], &
                         'Grid',name_sub)
 
         IF (.NOT. With_Grid) THEN
@@ -2145,9 +2145,9 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 
 
         IF (Psi%cplx) THEN
-          CALL alloc_NParray(CG1,(/ Psi%nb_qa /),"CG1",name_sub)
+          CALL alloc_NParray(CG1,[Psi%nb_qa],"CG1",name_sub)
         ELSE
-          CALL alloc_NParray(RG1,(/ Psi%nb_qa /),"RG1",name_sub)
+          CALL alloc_NParray(RG1,[Psi%nb_qa],"RG1",name_sub)
         END IF
 
         DO iterm=1,para_Op%nb_term
@@ -2380,7 +2380,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
       !=================================================================
 
         CALL alloc_NParray(Grid,                                          &
-                       (/para_Op%nb_qa,para_Op%nb_bie,para_Op%nb_bie/), &
+                       [para_Op%nb_qa,para_Op%nb_bie,para_Op%nb_bie], &
                         'Grid',name_sub)
 
         !-----------------------------------------------------------------
@@ -2451,7 +2451,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
 
 
         IF (para_Op%cplx ) THEN
-        IF ( .NOT. skip_term(derOp, (/0,0/) ) ) THEN
+        IF ( .NOT. skip_term(derOp, [0,0] ) ) THEN
         IF (.NOT. para_Op%imOpGrid(1)%grid_zero) THEN
           CALL sub_PsiBasisRep_TO_GridRep(Psi)
 
@@ -2609,7 +2609,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
       !=====================================================================
 
         nullify(tab_Psi)
-        CALL alloc_array(tab_Psi,(/para_Op%nb_term/),"tab_Psi",name_sub)
+        CALL alloc_array(tab_Psi,[para_Op%nb_term],"tab_Psi",name_sub)
         DO iterm=1,para_Op%nb_term
           tab_Psi(iterm) = Psi
           tab_Psi(iterm)%GridRep=.TRUE.
@@ -2678,7 +2678,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
             END IF
 
             IF (para_Op%cplx) THEN
-            IF ( skip_term(derOp,(/ 0,0 /)) ) THEN
+            IF ( skip_term(derOp,[0,0]) ) THEN
                OpPsi%CvecG(iqi1:fqi1) = OpPsi%CvecG(iqi1:fqi1) +      &
                                         Psi%CvecG(iqi2:fqi2) *        &
                                        EYE * d0MatOp%ImVal(i1_bi,i2_bi)

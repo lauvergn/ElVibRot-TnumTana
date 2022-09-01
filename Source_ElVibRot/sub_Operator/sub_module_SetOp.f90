@@ -275,20 +275,20 @@ MODULE mod_SetOp
       IF (lo_mat .AND. para_Op%diago) THEN
         IF (para_Op%cplx) THEN
           IF (.NOT. associated(para_Op%Cdiag) ) THEN
-             CALL alloc_array(para_Op%Cdiag,(/ nb_tot /),               &
+             CALL alloc_array(para_Op%Cdiag,[nb_tot],               &
                              'para_Op%Cdiag',name_sub)
           END IF
           IF (.NOT. associated(para_Op%Cvp) ) THEN
-             CALL alloc_array(para_Op%Cvp,(/ nb_tot,nb_tot /),          &
+             CALL alloc_array(para_Op%Cvp,[nb_tot,nb_tot],          &
                              'para_Op%Cvp',name_sub)
           END IF
         ELSE
           IF (.NOT. associated(para_Op%Rdiag) ) THEN
-             CALL alloc_array(para_Op%Rdiag,(/ nb_tot /),               &
+             CALL alloc_array(para_Op%Rdiag,[nb_tot],               &
                              'para_Op%Rdiag',name_sub)
           END IF
           IF (.NOT. associated(para_Op%Rvp) ) THEN
-             CALL alloc_array(para_Op%Rvp,(/ nb_tot,nb_tot /),          &
+             CALL alloc_array(para_Op%Rvp,[nb_tot,nb_tot],          &
                               'para_Op%Rvp',name_sub)
           END IF
         END IF
@@ -298,7 +298,7 @@ MODULE mod_SetOp
         para_Op%alloc_Grid = .TRUE.
 
         IF (.NOT. associated(para_Op%OpGrid)) THEN
-          CALL alloc_array(para_Op%OpGrid,(/nb_term/),"para_Op%OpGrid",name_sub)
+          CALL alloc_array(para_Op%OpGrid,[nb_term],"para_Op%OpGrid",name_sub)
           para_Op%OpGrid(:)%grid_cte = lo_Grid_cte(:)
 
           ! special case for scalar part (potential ...)
@@ -324,7 +324,7 @@ MODULE mod_SetOp
         END IF
         IF (.NOT. associated(para_Op%imOpGrid) .AND. para_Op%cplx) THEN
 
-          CALL alloc_array(para_Op%imOpGrid,(/1/),                      &
+          CALL alloc_array(para_Op%imOpGrid,[1],                      &
                           "para_Op%imOpGrid",name_sub)
 
           para_Op%imOpGrid(1)%para_FileGrid = para_Op%para_ReadOp%para_FileGrid
@@ -338,7 +338,7 @@ MODULE mod_SetOp
 
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &
-                            (/ 0,0 /),(/ 0,0 /),SmolyakRep,Type_FileGrid4,nb_SG,info)
+                            [0,0],[0,0],SmolyakRep,Type_FileGrid4,nb_SG,info)
 
             IF (debug) write(out_unitp,*) 'shape ...ImGrid',shape(para_Op%imOpGrid(1)%Grid)
 
@@ -954,7 +954,7 @@ END SUBROUTINE alloc_MatOp
       para_H_HADA%param_TypeOp = para_H%param_TypeOp
 
       CALL alloc_NParray(para_H_HADA%derive_termQdyn,                   &
-                                          (/ 2,para_H_HADA%nb_term /),  &
+                                          [2,para_H_HADA%nb_term],  &
                         'para_H_HADA%derive_termQdyn',name_sub)
       para_H_HADA%derive_termQdyn(:,:) = para_H%derive_termQdyn(:,:)
 
@@ -995,9 +995,9 @@ END SUBROUTINE alloc_MatOp
 
       para_H_HADA%nb_act1       = para_H%nb_act1
 
-      CALL alloc_array(para_H_HADA%OpGrid,(/para_H_HADA%nb_term/),      &
+      CALL alloc_array(para_H_HADA%OpGrid,[para_H_HADA%nb_term],      &
                       "para_H_HADA%OpGrid","param_HTOparam_H_HADA")
-      CALL alloc_array(para_H_HADA%imOpGrid,(/1/),                      &
+      CALL alloc_array(para_H_HADA%imOpGrid,[1],                      &
                       "para_H_HADA%imOpGrid","param_HTOparam_H_HADA")
 
 

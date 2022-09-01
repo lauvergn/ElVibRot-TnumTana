@@ -140,7 +140,7 @@
       write(out_unitp,*) '================================================='
       write(out_unitp,*)
 !=====================================================================
-      CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
+      CALL alloc_NParray(Qact,[mole%nb_var],'Qact',name_sub)
       CALL get_Qact0(Qact,mole%ActiveTransfo)
 
       CALL Read_param_Optimization(para_Optimization)
@@ -157,10 +157,10 @@
         STOP
       ELSE
         write(out_unitp,*) 'para_FOR_optimization%nb_OptParam',nb_Opt
-        CALL alloc_NParray(para_FOR_optimization%Val_RVec,(/nb_Opt/),     &
+        CALL alloc_NParray(para_FOR_optimization%Val_RVec,[nb_Opt],     &
                         'para_FOR_optimization%Val_RVec',name_sub)
         para_FOR_optimization%Val_RVec(:) = ZERO
-        CALL alloc_NParray(para_FOR_optimization%opt_RVec,(/nb_Opt/),     &
+        CALL alloc_NParray(para_FOR_optimization%opt_RVec,[nb_Opt],     &
                         'para_FOR_optimization%opt_RVec',name_sub)
         para_FOR_optimization%opt_RVec(:) = 1
       END IF
@@ -169,11 +169,11 @@
       CALL Set_ALL_para_FOR_optimization(mole,para_AllBasis%BasisnD,Qact,-1)
 
       ! transfert xOpt to para_FOR_optimization%tab_OF_RVec(1)%P_RVec
-      CALL alloc_NParray(xOpt_min,(/ nb_Opt /),'xOpt_min',name_sub)
-      CALL alloc_NParray(SQ,      (/ nb_Opt /),'SQ',      name_sub)
-      CALL alloc_NParray(SQini,   (/ nb_Opt /),'SQini',   name_sub)
-      CALL alloc_NParray(QA,      (/ nb_Opt /),'QA',      name_sub)
-      CALL alloc_NParray(QB,      (/ nb_Opt /),'QB',      name_sub)
+      CALL alloc_NParray(xOpt_min,[nb_Opt],'xOpt_min',name_sub)
+      CALL alloc_NParray(SQ,      [nb_Opt],'SQ',      name_sub)
+      CALL alloc_NParray(SQini,   [nb_Opt],'SQini',   name_sub)
+      CALL alloc_NParray(QA,      [nb_Opt],'QA',      name_sub)
+      CALL alloc_NParray(QB,      [nb_Opt],'QB',      name_sub)
 
 
       SQ(:) = ZERO
@@ -193,10 +193,10 @@
           xOpt_min(:) = ZERO
         END IF
         CALL ReCentered_grid(reshape(xOpt_min,                          &
-            (/ para_AllBasis%BasisnD%ndim,para_AllBasis%BasisnD%nqc /)),&
+            [para_AllBasis%BasisnD%ndim,para_AllBasis%BasisnD%nqc]),&
                     para_AllBasis%BasisnD%ndim,para_AllBasis%BasisnD%nqc)
         CALL ReOriented_grid(reshape(xOpt_min,                          &
-            (/ para_AllBasis%BasisnD%ndim,para_AllBasis%BasisnD%nqc /)),&
+            [para_AllBasis%BasisnD%ndim,para_AllBasis%BasisnD%nqc]),&
                     para_AllBasis%BasisnD%ndim,para_AllBasis%BasisnD%nqc)
         IF (para_Optimization%ReadRange) THEN
            DO i=1,size(QA)
@@ -278,7 +278,7 @@
       END IF
       IF (para_Optimization%Freq) THEN
         write(out_unitp,*) '============ Freq:'
-        CALL alloc_NParray(freq,(/ nb_Opt /),'freq',name_sub)
+        CALL alloc_NParray(freq,[nb_Opt],'freq',name_sub)
         CALL sub_freq_AT_Qact(freq,Qact,para_Tnum,mole,                 &
                            para_H%para_ReadOp%PrimOp_t,print_freq=.TRUE.)
         CALL dealloc_NParray(freq,'freq',name_sub)
@@ -286,7 +286,7 @@
 
       IF (para_Optimization%Grad) THEN
         write(out_unitp,*) '============ GRAD:'
-        CALL alloc_NParray(Grad,(/ nb_Opt /),'Grad',name_sub)
+        CALL alloc_NParray(Grad,[nb_Opt],'Grad',name_sub)
 
         CALL Init_Tab_OF_dnMatOp(dnMatOp,mole%nb_act,                   &
                            para_H%para_ReadOp%PrimOp_t%nb_elec,nderiv=1)
@@ -317,7 +317,7 @@
         write(out_unitp,*) 'END Qact geometry:'
 
 
-        CALL alloc_NParray(Qdyn,(/mole%nb_var/),'Qdyn',name_sub)
+        CALL alloc_NParray(Qdyn,[mole%nb_var],'Qdyn',name_sub)
         CALL Qact_TO_Qdyn_FROM_ActiveTransfo(Qact,Qdyn,mole%ActiveTransfo)
         write(out_unitp,*) 'Qdyn geometry:'
         DO i=1,size(Qdyn)
@@ -459,7 +459,7 @@
 
       ! init0 of para_H
       para_AllOp_loc%nb_Op = 2 ! just H and S
-      CALL alloc_array(para_AllOp_loc%tab_Op,(/para_AllOp_loc%nb_Op/),  &
+      CALL alloc_array(para_AllOp_loc%tab_Op,[para_AllOp_loc%nb_Op],  &
                       "para_AllOp_loc%tab_Op",name_sub)
 
 
@@ -498,11 +498,11 @@
       para_AllOp_loc%tab_Op(2)%nb_Term = 1
 
       CALL alloc_NParray(para_AllOp_loc%tab_Op(2)%derive_termQact,        &
-              (/ 2,1 /),"para_AllOp_loc%tab_Op(2)%derive_termQact",name_sub)
+              [2,1],"para_AllOp_loc%tab_Op(2)%derive_termQact",name_sub)
       para_AllOp_loc%tab_Op(2)%derive_termQact(:,:) = 0
 
       CALL alloc_NParray(para_AllOp_loc%tab_Op(2)%derive_termQdyn,        &
-              (/ 2,1 /),"para_AllOp_loc%tab_Op(2)%derive_termQdyn",name_sub)
+              [2,1],"para_AllOp_loc%tab_Op(2)%derive_termQdyn",name_sub)
       para_AllOp_loc%tab_Op(2)%derive_termQdyn(:,:) = 0
 
       IF (debug) THEN
@@ -708,12 +708,12 @@
       IF (FirstTime) CALL Write_nDindex(nDindB)
       FirstTime = .FALSE.
 
-      CALL alloc_NParray(M ,(/ nDindB%Max_nDI,BasisnD%nqc /),'M', name_sub)
-      CALL alloc_NParray(W ,(/ BasisnD%nqc /),               'W', name_sub)
-      CALL alloc_NParray(R ,(/ nDindB%Max_nDI /),            'R', name_sub)
-      CALL alloc_NParray(ER,(/ nDindB%Max_nDI /),            'ER',name_sub)
-      CALL alloc_NParray(MM,(/ BasisnD%nqc,BasisnD%nqc /),   'MM',name_sub)
-      CALL alloc_NParray(MR,(/ BasisnD%nqc /),               'MR',name_sub)
+      CALL alloc_NParray(M ,[nDindB%Max_nDI,BasisnD%nqc],'M', name_sub)
+      CALL alloc_NParray(W ,[BasisnD%nqc],               'W', name_sub)
+      CALL alloc_NParray(R ,[nDindB%Max_nDI],            'R', name_sub)
+      CALL alloc_NParray(ER,[nDindB%Max_nDI],            'ER',name_sub)
+      CALL alloc_NParray(MM,[BasisnD%nqc,BasisnD%nqc],   'MM',name_sub)
+      CALL alloc_NParray(MR,[BasisnD%nqc],               'MR',name_sub)
 
 
       R(:)   = ZERO
@@ -819,7 +819,7 @@
       w(:)    = xOpt(size(x0)+1:BasisnD%nqc)
       CALL ReCentered_grid(x0,BasisnD%ndim,BasisnD%nqc)
       CALL ReOriented_grid(x0,BasisnD%ndim,BasisnD%nqc)
-      Xopt(1:size(x0)) = reshape(x0,(/ size(x0) /) )
+      Xopt(1:size(x0)) = reshape(x0,[size(x0)] )
 
       deg = int(BasisnD%Norm_OF_nDindB)
       !write(out_unitp,*) 'ndim,deg,nqc',BasisnD%ndim,deg,BasisnD%nqc
@@ -833,9 +833,9 @@
       IF (FirstTime) CALL Write_nDindex(nDindB)
       FirstTime = .FALSE.
 
-      CALL alloc_NParray(M ,(/ nDindB%Max_nDI,BasisnD%nqc /),'M', name_sub)
-      CALL alloc_NParray(R ,(/ nDindB%Max_nDI /),            'R', name_sub)
-      CALL alloc_NParray(ER,(/ nDindB%Max_nDI /),            'ER',name_sub)
+      CALL alloc_NParray(M ,[nDindB%Max_nDI,BasisnD%nqc],'M', name_sub)
+      CALL alloc_NParray(R ,[nDindB%Max_nDI],            'R', name_sub)
+      CALL alloc_NParray(ER,[nDindB%Max_nDI],            'ER',name_sub)
 
       R(:)   = ZERO
       M(:,:) = ONE

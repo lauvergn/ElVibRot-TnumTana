@@ -201,30 +201,30 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
   deallocate(name_file)
 
   ! no derivative
-  d0psi(:,:) = reshape(psi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+  d0psi(:,:) = reshape(psi%CvecG,shape=[psi%nb_qa,psi%nb_be])
 
   ! time derivative
   CALL sub_OpPsi(psi,dpsi,para_H) ! H.psi
   CALL sub_PsiBasisRep_TO_GridRep(dpsi) ! put H.psi on the grid
-  dtpsi(:,:) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+  dtpsi(:,:) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
   dtpsi(:,:) = -EYE*dtpsi(:,:) ! -i H.psi
 
   ! Q derivatives
   DO iact1=1,psi%nb_act1
     dpsi = psi
     idyn = para_H%mole%liste_QactTOQdyn(iact1)
-    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=(/ idyn,0 /) ) ! put d./dQ psi on the grid
-    d1psi(:,:,iact1) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=[idyn,0] ) ! put d./dQ psi on the grid
+    d1psi(:,:,iact1) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
   END DO
 
   ! cross Q-time derivatives (we use the time derivative, dtpsi(:,:))
   DO iact1=1,psi%nb_act1
-    dpsi%CvecG = reshape(dtpsi,shape=(/ psi%nb_qa*psi%nb_be /))
+    dpsi%CvecG = reshape(dtpsi,shape=[psi%nb_qa*psi%nb_be])
     CALL sub_PsiGridRep_TO_BasisRep(dpsi) ! put dtpsi on the basis
 
     idyn = para_H%mole%liste_QactTOQdyn(iact1)
-    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=(/ idyn,0 /) ) ! put d./dQ psi on the grid
-    d1dtpsi(:,:,iact1) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=[idyn,0] ) ! put d./dQ psi on the grid
+    d1dtpsi(:,:,iact1) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
   END DO
 
 
@@ -297,7 +297,7 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
     IF (psi%BasisnD%nb_basis == 0) THEN ! not a direct product, just one basis set
       write(nio,*) 'tab_nq(:)',psi%nb_qa,' number of grid points per basis set'
     ELSE
-      CALL alloc_NParray(tab_nq,(/ psi%BasisnD%nb_basis /),'tab_nq',name_sub)
+      CALL alloc_NParray(tab_nq,[psi%BasisnD%nb_basis],'tab_nq',name_sub)
       CALL get_tab_nq_OF_Qact(tab_nq,psi%BasisnD)
       write(nio,*) 'tab_nq(:)',tab_nq,' number of grid points per basis set'
       CALL dealloc_NParray(tab_nq,'tab_nq',name_sub)
@@ -544,7 +544,7 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
     IF (psi%BasisnD%nb_basis == 0) THEN ! not a direct product, just one basis set
       write(nio,*) 'tab_nq(:)',psi%nb_qa,' number of grid points per basis set'
     ELSE
-      CALL alloc_NParray(tab_nq,(/ psi%BasisnD%nb_basis /),'tab_nq',name_sub)
+      CALL alloc_NParray(tab_nq,[psi%BasisnD%nb_basis],'tab_nq',name_sub)
       CALL get_tab_nq_OF_Qact(tab_nq,psi%BasisnD)
       write(nio,*) 'tab_nq(:)',tab_nq,' number of grid points per basis set'
       CALL dealloc_NParray(tab_nq,'tab_nq',name_sub)
@@ -583,30 +583,30 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
 
 
   ! no derivative
-  d0psi(:,:) = reshape(psi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+  d0psi(:,:) = reshape(psi%CvecG,shape=[psi%nb_qa,psi%nb_be])
 
   ! time derivative
   CALL sub_OpPsi(psi,dpsi,para_H) ! H.psi
   CALL sub_PsiBasisRep_TO_GridRep(dpsi) ! put H.psi on the grid
-  dtpsi(:,:) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+  dtpsi(:,:) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
   dtpsi(:,:) = -EYE*dtpsi(:,:) ! -i H.psi
 
   ! Q derivatives
   DO iact1=1,psi%nb_act1
     dpsi = psi
     idyn = para_H%mole%liste_QactTOQdyn(iact1)
-    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=(/ idyn,0 /) ) ! put d./dQ psi on the grid
-    d1psi(:,:,iact1) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=[idyn,0] ) ! put d./dQ psi on the grid
+    d1psi(:,:,iact1) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
   END DO
 
   ! cross Q-time derivatives (we use the time derivative, dtpsi(:,:))
   DO iact1=1,psi%nb_act1
-    dpsi%CvecG = reshape(dtpsi,shape=(/ psi%nb_qa*psi%nb_be /))
+    dpsi%CvecG = reshape(dtpsi,shape=[psi%nb_qa*psi%nb_be])
     CALL sub_PsiGridRep_TO_BasisRep(dpsi) ! put dtpsi on the basis
 
     idyn = para_H%mole%liste_QactTOQdyn(iact1)
-    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=(/ idyn,0 /) ) ! put d./dQ psi on the grid
-    d1dtpsi(:,:,iact1) = reshape(dpsi%CvecG,shape=(/ psi%nb_qa,psi%nb_be /))
+    CALL sub_d0d1d2PsiBasisRep_TO_GridRep(dpsi,tab_derQdyn=[idyn,0] ) ! put d./dQ psi on the grid
+    d1dtpsi(:,:,iact1) = reshape(dpsi%CvecG,shape=[psi%nb_qa,psi%nb_be])
   END DO
 
 
@@ -699,8 +699,8 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
 
   !---------------------------------------------------------------------
   ! allocation of chi2(:) and chi(:)
-  CALL alloc_NParray(chi2, (/ psi%nb_qa /),'chi2',name_sub)
-  CALL alloc_NParray(chi,  (/ psi%nb_qa /),'chi' ,name_sub)
+  CALL alloc_NParray(chi2, [psi%nb_qa],'chi2',name_sub)
+  CALL alloc_NParray(chi,  [psi%nb_qa],'chi' ,name_sub)
 
   ! calculation of chi2(:) and chi(:)
   iqe = 0
@@ -717,7 +717,7 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   !---------------------------------------------------------------------
 
   ! allocation of EF_Scal_Pot(:)
-  CALL alloc_NParray(EF_Scal_Pot,(/ psi%nb_qa /),'EF_Scal_Pot' ,name_sub)
+  CALL alloc_NParray(EF_Scal_Pot,[psi%nb_qa],'EF_Scal_Pot' ,name_sub)
 
   iqe = 0
   EF_Scal_Pot(:) = ZERO
@@ -736,7 +736,7 @@ SUBROUTINE sub_ExactFact_analysis_v0(T,psi,ana_psi,para_H,para_field)
   !EF_Scal_Pot(:) =  EF_Scal_Pot(:)/chi2(:)
 
   ! Write the EF_Scal_Pot(:)
-  CALL alloc_NParray(Qact,(/ para_H%mole%nb_var /),'Qact',name_sub)
+  CALL alloc_NParray(Qact,[para_H%mole%nb_var],'Qact',name_sub)
   DO iq=1,psi%nb_qa
     CALL Rec_Qact(Qact,psi%BasisnD,iq,para_H%mole)
     write(out_unitp,*) 'EF_Scal_Pot',T,Qact(1:para_H%mole%nb_act1),chi2(iq),&

@@ -130,30 +130,30 @@
         CALL alloc_dnSVM(dnMu(3),mole%nb_act,nderiv-1)
 
 
-        memory = product( (/ mole%nb_inact2n,mole%nb_inact2n /) )
+        memory = product( [mole%nb_inact2n,mole%nb_inact2n] )
         allocate(hess(mole%nb_inact2n,mole%nb_inact2n),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"hess","main")
-        memory = product( (/ mole%nb_inact2n,mole%nb_inact2n /) )
+        memory = product( [mole%nb_inact2n,mole%nb_inact2n] )
         allocate(hess_inv(mole%nb_inact2n,mole%nb_inact2n),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"hess_inv","main")
-        memory = product( (/ mole%nb_inact2n /) )
+        memory = product( [mole%nb_inact2n] )
         allocate(trav(mole%nb_inact2n),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"trav","main")
-        memory = product( (/ mole%nb_inact2n /) )
+        memory = product( [mole%nb_inact2n] )
         allocate(grad(mole%nb_inact2n),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"grad","main")
-        memory = product( (/ mole%nb_inact2n /) )
+        memory = product( [mole%nb_inact2n] )
         allocate(dQinact2n(mole%nb_inact2n),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"dQinact2n","main")
-        memory = product( (/ mole%nb_inact2n /) )
+        memory = product( [mole%nb_inact2n] )
         allocate(trav_index(mole%nb_inact2n),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"trav_index","main")
 
 
-        memory = product( (/ mole%nb_act,mole%nb_act /) )
+        memory = product( [mole%nb_act,mole%nb_act] )
         allocate(hessG36(mole%nb_act,mole%nb_act),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"hessG36","main")
-        memory = product( (/ mole%nb_act,mole%nb_act /) )
+        memory = product( [mole%nb_act,mole%nb_act] )
         allocate(symhessG36(mole%nb_act,mole%nb_act),stat=err_mem) ! change alloc done
         CALL error_memo_allo(err_mem,memory,"symhessG36","main")
 
@@ -251,7 +251,7 @@
       real (kind=Rkind),allocatable :: blocG36_FROM_blocS1xS2(:,:,:),blocG36(:)
       integer,allocatable :: symblocG36_FROM_blocS1xS2(:)
 
-      integer :: degen_FROM_symG36(0:16) = (/0, 1,1,1,1,  2,0,2,0,2,0,2,0,  4,0,0,0 /)
+      integer :: degen_FROM_symG36(0:16) = [0, 1,1,1,1,  2,0,2,0,2,0,2,0,  4,0,0,0]
       integer :: sym1,sym2,n1,n2,i1,i2,k12,i
       integer :: err_mem,memory
 
@@ -305,15 +305,15 @@
           n2 = degen_FROM_symG36(sym2)
           IF (n2 == 0) CYCLE
           !write(out_unitp,*) i1,i2,sym1,sym2,n1,n2
-          memory = product( (/ n1*n2 /) )
+          memory = product( [n1*n2] )
           allocate(symblocG36_FROM_blocS1xS2(n1*n2),stat=err_mem) ! change alloc done
           CALL error_memo_allo(err_mem,memory,                          &
                         "symblocG36_FROM_blocS1xS2","symetrization_G36")
-          memory = product( (/ n1*n2,n1,n2 /) )
+          memory = product( [n1*n2,n1,n2] )
           allocate(blocG36_FROM_blocS1xS2(n1*n2,n1,n2),stat=err_mem) ! change alloc done
           CALL error_memo_allo(err_mem,memory,"blocG36_FROM_blocS1xS2", &
                                                     "symetrization_G36")
-          memory = product( (/ n1*n2 /) )
+          memory = product( [n1*n2] )
           allocate(blocG36(n1*n2),stat=err_mem) ! change alloc done
           CALL error_memo_allo(err_mem,memory,"blocG36",                &
                                                     "symetrization_G36")
@@ -325,8 +325,8 @@
             blocG36(k12) = sum(hess(i1:i1-1+n1,i2:i2-1+n2)*blocG36_FROM_blocS1xS2(k12,:,:))
           END DO
 
-          hessG36(i1:i1-1+n1,i2:i2-1+n2)    = reshape(blocG36,(/ n1,n2 /) )
-          symhessG36(i1:i1-1+n1,i2:i2-1+n2) = reshape(symblocG36_FROM_blocS1xS2,(/ n1,n2 /) )
+          hessG36(i1:i1-1+n1,i2:i2-1+n2)    = reshape(blocG36,[n1,n2] )
+          symhessG36(i1:i1-1+n1,i2:i2-1+n2) = reshape(symblocG36_FROM_blocS1xS2,[n1,n2] )
           !write(out_unitp,*) 'blocG36',blocG36(:)
           memory = size(symblocG36_FROM_blocS1xS2)
           deallocate(symblocG36_FROM_blocS1xS2,stat=err_mem) ! change dealloc done
@@ -404,7 +404,7 @@
           blocG36_FROM_blocS1xS2(2,1,2)  = ONE
           blocG36_FROM_blocS1xS2(3,1,3)  = ONE
           blocG36_FROM_blocS1xS2(4,1,4)  = ONE
-          symblocG36_FROM_blocS1xS2(1:4) = (/ 13,14,15,16 /) ! Ga,Gb,Gc,Gd
+          symblocG36_FROM_blocS1xS2(1:4) = [13,14,15,16] ! Ga,Gb,Gc,Gd
         ELSE
           STOP 'E sym are not implemented !'
         END IF
@@ -431,7 +431,7 @@
           blocG36_FROM_blocS1xS2(2,1,1)  = ONE
           blocG36_FROM_blocS1xS2(3,1,4)  = ONE
           blocG36_FROM_blocS1xS2(4,1,3)  = ONE
-          symblocG36_FROM_blocS1xS2(1:4) = (/ 13,14,15,16 /) ! Ga,Gb,Gc,Gd
+          symblocG36_FROM_blocS1xS2(1:4) = [13,14,15,16] ! Ga,Gb,Gc,Gd
         ELSE
           STOP 'E sym are not implemented !'
         END IF
@@ -442,7 +442,7 @@
           blocG36_FROM_blocS1xS2(2,2,1)  = ONE
           blocG36_FROM_blocS1xS2(3,3,1)  = ONE
           blocG36_FROM_blocS1xS2(4,4,1)  = ONE
-          symblocG36_FROM_blocS1xS2(1:4) = (/ 13,14,15,16 /) ! Ga,Gb,Gc,Gd
+          symblocG36_FROM_blocS1xS2(1:4) = [13,14,15,16] ! Ga,Gb,Gc,Gd
         ELSE IF (sym2 == 2) THEN  ! A2
           STOP 'A2 sym are not implemented !'
         ELSE IF (sym2 == 3) THEN  ! A3
@@ -452,7 +452,7 @@
           blocG36_FROM_blocS1xS2(2,1,1)  = ONE
           blocG36_FROM_blocS1xS2(3,4,1)  = ONE
           blocG36_FROM_blocS1xS2(4,3,1)  = ONE
-          symblocG36_FROM_blocS1xS2(1:4) = (/ 13,14,15,16 /) ! Ga,Gb,Gc,Gd
+          symblocG36_FROM_blocS1xS2(1:4) = [13,14,15,16] ! Ga,Gb,Gc,Gd
         ELSE IF (sym2 == 13) THEN ! G
          ia=1
          ib=2
@@ -548,7 +548,7 @@
          blocG36_FROM_blocS1xS2(is,ic,id) = ONE/sqrt(TWO)
          blocG36_FROM_blocS1xS2(is,id,ic) = ONE/sqrt(TWO)
 
-         symblocG36_FROM_blocS1xS2(1:16) = (/ (i,i=1,16) /) ! A1...., Ga,Gb,Gc,Gd
+         symblocG36_FROM_blocS1xS2(1:16) = [(i,i=1,16)] ! A1...., Ga,Gb,Gc,Gd
 
         ELSE
           STOP 'E sym are not implemented !'
@@ -658,32 +658,32 @@
       symblocG36_FROM_blocA4xA4(1) = 1 ! A1
 
 !     A1xG
-      blocG36_FROM_blocA1xG(1,1,:) = (/ ONE, ZERO, ZERO, ZERO /)
-      blocG36_FROM_blocA1xG(2,1,:) = (/ ZERO, ONE, ZERO, ZERO /)
-      blocG36_FROM_blocA1xG(3,1,:) = (/ ZERO, ZERO, ONE, ZERO /)
-      blocG36_FROM_blocA1xG(4,1,:) = (/ ZERO, ZERO, ZERO, ONE /)
-      symblocG36_FROM_blocA1xG(1:4) = (/ 13,14,15,16 /) ! Ga,Gb,Gc,Gd
+      blocG36_FROM_blocA1xG(1,1,:) = [ONE, ZERO, ZERO, ZERO]
+      blocG36_FROM_blocA1xG(2,1,:) = [ZERO, ONE, ZERO, ZERO]
+      blocG36_FROM_blocA1xG(3,1,:) = [ZERO, ZERO, ONE, ZERO]
+      blocG36_FROM_blocA1xG(4,1,:) = [ZERO, ZERO, ZERO, ONE]
+      symblocG36_FROM_blocA1xG(1:4) = [13,14,15,16] ! Ga,Gb,Gc,Gd
 
 !     GxA1
-      blocG36_FROM_blocGxA1(1,:,1) = (/ ONE, ZERO, ZERO, ZERO /)
-      blocG36_FROM_blocGxA1(2,:,1) = (/ ZERO, ONE, ZERO, ZERO /)
-      blocG36_FROM_blocGxA1(3,:,1) = (/ ZERO, ZERO, ONE, ZERO /)
-      blocG36_FROM_blocGxA1(4,:,1) = (/ ZERO, ZERO, ZERO, ONE /)
-      symblocG36_FROM_blocGxA1(1:4) = (/ 13,14,15,16 /) ! Ga,Gb,Gc,Gd
+      blocG36_FROM_blocGxA1(1,:,1) = [ONE, ZERO, ZERO, ZERO]
+      blocG36_FROM_blocGxA1(2,:,1) = [ZERO, ONE, ZERO, ZERO]
+      blocG36_FROM_blocGxA1(3,:,1) = [ZERO, ZERO, ONE, ZERO]
+      blocG36_FROM_blocGxA1(4,:,1) = [ZERO, ZERO, ZERO, ONE]
+      symblocG36_FROM_blocGxA1(1:4) = [13,14,15,16] ! Ga,Gb,Gc,Gd
 
 !     A4xG
-      blocG36_FROM_blocA4xG(1,1,:) = (/ ZERO, ONE, ZERO, ZERO /)
-      blocG36_FROM_blocA4xG(2,1,:) = (/ ONE, ZERO, ZERO, ZERO /)
-      blocG36_FROM_blocA4xG(3,1,:) = (/ ZERO, ZERO, ZERO, ONE /)
-      blocG36_FROM_blocA4xG(4,1,:) = (/ ZERO, ZERO, ONE, ZERO /)
-      symblocG36_FROM_blocA4xG(1:4) = (/ 13,14,15,16 /) ! Ga,Gb,Gc,Gd
+      blocG36_FROM_blocA4xG(1,1,:) = [ZERO, ONE, ZERO, ZERO]
+      blocG36_FROM_blocA4xG(2,1,:) = [ONE, ZERO, ZERO, ZERO]
+      blocG36_FROM_blocA4xG(3,1,:) = [ZERO, ZERO, ZERO, ONE]
+      blocG36_FROM_blocA4xG(4,1,:) = [ZERO, ZERO, ONE, ZERO]
+      symblocG36_FROM_blocA4xG(1:4) = [13,14,15,16] ! Ga,Gb,Gc,Gd
 
 !     GxA4
-      blocG36_FROM_blocGxA4(1,:,1) = (/ ZERO, ONE, ZERO, ZERO /)
-      blocG36_FROM_blocGxA4(2,:,1) = (/ ONE, ZERO, ZERO, ZERO /)
-      blocG36_FROM_blocGxA4(3,:,1) = (/ ZERO, ZERO, ZERO, ONE /)
-      blocG36_FROM_blocGxA4(4,:,1) = (/ ZERO, ZERO, ONE, ZERO /)
-      symblocG36_FROM_blocGxA1(1:4) = (/ 13,14,15,16 /) ! Ga,Gb,Gc,Gd
+      blocG36_FROM_blocGxA4(1,:,1) = [ZERO, ONE, ZERO, ZERO]
+      blocG36_FROM_blocGxA4(2,:,1) = [ONE, ZERO, ZERO, ZERO]
+      blocG36_FROM_blocGxA4(3,:,1) = [ZERO, ZERO, ZERO, ONE]
+      blocG36_FROM_blocGxA4(4,:,1) = [ZERO, ZERO, ONE, ZERO]
+      symblocG36_FROM_blocGxA1(1:4) = [13,14,15,16] ! Ga,Gb,Gc,Gd
 
 !     GxG
       blocG36_FROM_blocGxG(:,:,:) = ZERO
@@ -807,7 +807,7 @@
 
 
 stop
-      symblocG36_FROM_blocGxG(1:16) = (/ (i,i=1,16) /) ! Ga,Gb,Gc,Gd
+      symblocG36_FROM_blocGxG(1:16) = [(i,i=1,16)] ! Ga,Gb,Gc,Gd
 
 
 

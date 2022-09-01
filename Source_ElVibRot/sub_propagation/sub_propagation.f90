@@ -192,9 +192,9 @@ CONTAINS
 
         nb_diago = min(para_propa%max_ana,para_H%nb_tot)
         nullify(psi)
-        CALL alloc_array(psi,(/nb_diago/),"psi",name_sub)
+        CALL alloc_array(psi,[nb_diago],"psi",name_sub)
         nullify(Ene0)
-        CALL alloc_array(Ene0,(/nb_diago/),"Ene0",name_sub)
+        CALL alloc_array(Ene0,[nb_diago],"Ene0",name_sub)
 
         CALL sub_propagation34(psi,Ene0,nb_diago,                       &
                                para_H,para_propa)
@@ -1160,7 +1160,7 @@ CONTAINS
       cplx = .FALSE.
       CALL init_psi(w1,para_AllOp%tab_Op(1),cplx)
       CALL alloc_psi(w1)
-      w1%RvecB(:) = (/ (i,i=1,w1%nb_tot) /)
+      w1%RvecB(:) = [(i,i=1,w1%nb_tot)]
       w2 = w1
 
       write(6,*) 'init w1',w1%init
@@ -1178,7 +1178,7 @@ CONTAINS
       DO i=1,1
          !write(out_unitp,*) 'i',i ; CALL flush_perso(out_unitp)
          CALL sub_OpPsi(w1,w2,para_AllOp%tab_Op(1))
-         !CALL sub_d0d1d2PsiBasisRep_TO_GridRep(w1,(/ 1,2 /))
+         !CALL sub_d0d1d2PsiBasisRep_TO_GridRep(w1,[1,2])
          !CALL sub_PsiBasisRep_TO_GridRep(w1)
          !CALL sub_PsiGridRep_TO_BasisRep(w1)
       END DO

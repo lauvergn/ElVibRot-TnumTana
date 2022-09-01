@@ -669,7 +669,7 @@
         END IF
         nb_bie = d0MatOp%nb_bie
 
-        CALL alloc_NParray(work_bhe,(/n3,n3/),'work_bhe',name_sub)
+        CALL alloc_NParray(work_bhe,[n3,n3],'work_bhe',name_sub)
         work_bhe(:,:) = ZERO
 
         read(nio,*) name1,w
@@ -807,7 +807,7 @@
         END IF
         nb_bie = d0MatOp%nb_bie
 
-        CALL alloc_NParray(work_bhe,(/n3,n3/),'work_bhe',name_sub)
+        CALL alloc_NParray(work_bhe,[n3,n3],'work_bhe',name_sub)
         work_bhe(:,:) = ZERO
 
         read(nio) w
@@ -900,7 +900,7 @@
       nb_qa  = para_AllOp%tab_Op(1)%nb_qa
       nb_bie = para_AllOp%tab_Op(1)%nb_bie
 
-      CALL alloc_NParray(Grid,(/ nb_qa,nb_bie,nb_bie /),                  &
+      CALL alloc_NParray(Grid,[nb_qa,nb_bie,nb_bie],                  &
                                    'Grid','sub_ReadDir_TO_SaveSeq_Grid')
 
       !-- Read / write the grids ---------------------------------------
@@ -997,7 +997,7 @@
        END IF
        !-----------------------------------------------------------
 
-       CALL alloc_NParray(iQact,  (/mole%nb_act1/),'iQact',  'd0d1d2bnDQact')
+       CALL alloc_NParray(iQact,  [mole%nb_act1],'iQact',  'd0d1d2bnDQact')
        CALL alloc_NParray(d1b_loc,shape(d1b),      'd1b_loc','d0d1d2bnDQact')
        CALL alloc_NParray(d2b_loc,shape(d2b),      'd2b_loc','d0d1d2bnDQact')
 

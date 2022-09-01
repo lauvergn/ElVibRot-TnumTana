@@ -108,7 +108,7 @@
 
       CALL dealloc_nDindex(base%nDindB)
       base%nDindB%packed = .TRUE.
-      CALL init_nDindexPrim(base%nDindB,1,(/ base%nb /))
+      CALL init_nDindexPrim(base%nDindB,1,[base%nb])
       base%nDindB%With_L      = .TRUE.
       base%nDindB%Tab_L(:)    = 0
       base%nDindB%Tab_Norm(:) = ZERO

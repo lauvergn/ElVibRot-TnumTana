@@ -102,7 +102,7 @@
      END IF
 
 
-     CALL alloc_NParray(M_opnd,(/3,3/),'M_opnd',routine_name)
+     CALL alloc_NParray(M_opnd,[3,3],'M_opnd',routine_name)
 
      M_opnd(1,1) = get_cot(fbeta)
      M_opnd(1,1)%Cn(1) = -CONE
@@ -199,7 +199,7 @@
      END IF
 
 
-     CALL alloc_NParray(M_opnd,(/3,3/),'M_opnd',routine_name)
+     CALL alloc_NParray(M_opnd,[3,3],'M_opnd',routine_name)
 
      if(fbeta%idq == 7) then
        M_opnd(1,2) = get_sin(falpha)
@@ -299,7 +299,7 @@
      END IF
 
 
-     CALL alloc_NParray(M_opnd,(/3,3/),'M_opnd',routine_name)
+     CALL alloc_NParray(M_opnd,[3,3],'M_opnd',routine_name)
 
      if(fbeta%idq == 7) then
        M_opnd(1,2) = get_sin(falpha)
@@ -413,7 +413,7 @@
        END IF
 
 
-       CALL alloc_NParray(M_opnd,(/3,3/),'M_opnd',routine_name)
+       CALL alloc_NParray(M_opnd,[3,3],'M_opnd',routine_name)
 
        if(F2el%idq == 7) then
 
@@ -527,7 +527,7 @@
        V%vec_sum(3) = get_Pq(fgamma)
      END IF
 
-     CALL alloc_NParray(M_opnd,(/3,3/),'M_opnd',routine_name)
+     CALL alloc_NParray(M_opnd,[3,3],'M_opnd',routine_name)
 
      M_opnd(1,1) = get_sin(fbeta,-1) * get_cos(fgamma)
      M_opnd(1,1)%Cn(1) = -CONE
@@ -1292,7 +1292,7 @@
      character (len=*), parameter :: routine_name = 'get_MatRotz'
 
 
-       CALL alloc_NParray(mat_R,(/3,3/),'mat_R',routine_name)
+       CALL alloc_NParray(mat_R,[3,3],'mat_R',routine_name)
 
        mat_R(1,1) = get_cos(angle)
        mat_R(1,2) = get_sin(angle)
@@ -1316,7 +1316,7 @@
      character (len=*), parameter :: routine_name = 'get_MatRoty'
 
 
-       CALL alloc_NParray(mat_R,(/3,3/),'mat_R',routine_name)
+       CALL alloc_NParray(mat_R,[3,3],'mat_R',routine_name)
 
        mat_R(1,1) = get_cos(angle)
        mat_R(1,2) = CZERO
@@ -1364,7 +1364,7 @@
      end do
      nvec = F_system%nb_vect-nsub_syst+1
 
-     if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
+     if (compare_tab(F_system%euler, [.false., .false., .false.])) then
        true_BF = .true.
      else
        true_BF = .false.
@@ -1419,7 +1419,7 @@
      nvec = F_system%nb_vect-nsub_syst+1
      n = size(P_Euler)
 
-     if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
+     if (compare_tab(F_system%euler, [.false., .false., .false.])) then
        true_BF = .true.
      else
        true_BF = .false.
@@ -1661,7 +1661,7 @@
      nvec      = F_system%nb_vect-nsub_syst+1
      nvec_tot  = F_system%nb_vect_tot
 
-     if (compare_tab(F_system%euler, (/.false., .false., .false./))) then
+     if (compare_tab(F_system%euler, [.false., .false., .false.])) then
        true_BF = .true.
      else
        true_BF = .false.
@@ -2029,20 +2029,20 @@
        do j = 1, F_system%nb_vect
            if (F_system%tab_BFTransfo(i)%frame .and. F_system%tab_BFTransfo(j)%frame) then
              if(i==j) then
-               if(compare_tab(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .true./))) then
+               if(compare_tab(F_system%tab_BFTransfo(i)%euler, [.true., .true., .true.])) then
 
                  call Jdag_scalar_J_from_Eq122(falpha = F_system%tab_BFTransfo(i)%QEuler(1), &
                  &                             fbeta  = F_system%tab_BFTransfo(i)%QEuler(2), &
                  &                             fgamma = F_system%tab_BFTransfo(i)%QEuler(3), &
                  &                             JJ = LiLi)
 
-               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, (/.true., .true., .false./))) then
+               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, [.true., .true., .false.])) then
 !
                  call Li_scalar_Li_from_Eq75(theta = F_system%tab_BFTransfo(i)%QEuler(2), &
                  &                           phi   = F_system%tab_BFTransfo(i)%QEuler(1), &
                  &                           LiLi  = LiLi)
 
-               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .true./))) then
+               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, [.false., .true., .true.])) then
 !
                  Ja_sum_subsyst = F_system%tab_BFTransfo(i)%J%vec_sum(3)
 
@@ -2053,7 +2053,7 @@
 
                  call delete_op(Ja_sum_subsyst)
 
-               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, (/.false., .true., .false./))) then
+               else if(compare_tab(F_system%tab_BFTransfo(i)%euler, [.false., .true., .false.])) then
 
                  call  V1_scalar_V2_in_F_sum_nd(F_system%tab_BFTransfo(i)%Jdag,&
                                                 F_system%tab_BFTransfo(i)%J,LiLi)
@@ -2182,7 +2182,7 @@
      do i = 1, nvec
        if(.not.associated(P_Euler(F_system%listVFr(i))%Tab_num_Frame)) then
 
-         CALL alloc_array(P_Euler(F_system%listVFr(i))%Tab_num_Frame,(/n_size/), &
+         CALL alloc_array(P_Euler(F_system%listVFr(i))%Tab_num_Frame,[n_size], &
                          'P_Euler(F_system%listVFr(i))%Tab_num_Frame',routine_name)
          P_Euler(F_system%listVFr(i))%Tab_num_Frame(:) = F_system%Tab_num_Frame(:)
 
@@ -2191,11 +2191,11 @@
 
        write(out_unitp,*) 'processing S_(',F_system%tab_num_frame,')'
        CALL flush_perso(out_unitp)
-       CALL alloc_NParray(E,    (/nvec/),'E',routine_name)
-       CALL alloc_NParray(L,    (/nvec/),'L',routine_name)
-       CALL alloc_NParray(L_dag,(/nvec/),'L_dag',routine_name)
+       CALL alloc_NParray(E,    [nvec],'E',routine_name)
+       CALL alloc_NParray(L,    [nvec],'L',routine_name)
+       CALL alloc_NParray(L_dag,[nvec],'L_dag',routine_name)
 
-       if( compare_tab(F_system%euler, (/.true., .true., .false./))) then
+       if( compare_tab(F_system%euler, [.true., .true., .false.])) then
 
          CALL Li_scalar_Li_from_Eq75(theta = F_system%QEuler(2), phi = F_system%QEuler(1), LiLi = LiLi)
 
@@ -2225,29 +2225,29 @@
          call get_opPi_dagger(P_Euler(F_system%listVFr(1))%Pidag, F_system%Qvec(1),&
                               L_dag(1), E(1))
 
-       else if(compare_tab(F_system%euler, (/.false., .false., .false./))) then
+       else if(compare_tab(F_system%euler, [.false., .false., .false.])) then
 
          STOP 'FFF'
 
-       else if(compare_tab(F_system%euler, (/.false., .true., .false./))) then
+       else if(compare_tab(F_system%euler, [.false., .true., .false.])) then
 
          nvec_parent = count( .NOT. F_system_parent%tab_BFTransfo(:)%frame )
          IF (nvec_parent >=1 ) THEN
-           CALL alloc_NParray(Liz_parent,(/nvec_parent/),'Liz_parent',routine_name)
+           CALL alloc_NParray(Liz_parent,[nvec_parent],'Liz_parent',routine_name)
            CALL get_Lz_F_system_parent(F_system_parent, Liz_parent)
          END IF
 
-         if(compare_tab(F_system_parent%euler, (/.false., .false., .false./))) then ! true BF
+         if(compare_tab(F_system_parent%euler, [.false., .false., .false.])) then ! true BF
 
            Ja_sum     = get_Jz(F_system_parent%QEuler(3))
            Ja_sum_dag = get_Jz(F_system_parent%QEuler(3))
 
-         else if(compare_tab(F_system_parent%euler, (/.true., .true., .true./))) then
+         else if(compare_tab(F_system_parent%euler, [.true., .true., .true.])) then
 
            Ja_sum     = get_Pq(F_system_parent%QEuler(3))
            Ja_sum_dag = get_Pq_dag(F_system_parent%QEuler(3))
 
-         else if(compare_tab(F_system_parent%euler, (/.false., .true., .true./))) then
+         else if(compare_tab(F_system_parent%euler, [.false., .true., .true.])) then
 
            Ja_sum     = get_Pq(F_system_parent%QEuler(3))
            Ja_sum_dag = get_Pq_dag(F_system_parent%QEuler(3))
@@ -2379,7 +2379,7 @@
        end if
      end do
 
-     if(.not.compare_tab(F_system%euler, (/.false., .true., .true./))) then
+     if(.not.compare_tab(F_system%euler, [.false., .true., .true.])) then
        write(out_unitp,*) ' ERROR in',routine_name
        write(out_unitp,*) "This routine can be call only for a subsystem"
        write(out_unitp,*) "which has two Euler's angles"
@@ -2395,12 +2395,12 @@
      end do
 
 
-     CALL alloc_NParray(L,(/nvec/),'L',routine_name)
-     CALL alloc_NParray(L_dag,(/nvec/),'L_dag',routine_name)
+     CALL alloc_NParray(L,[nvec],'L',routine_name)
+     CALL alloc_NParray(L_dag,[nvec],'L_dag',routine_name)
      if(nsub_syst > 0) then
-       CALL alloc_NParray(Lz,(/nvec+nsub_syst/),'Lz',routine_name)
+       CALL alloc_NParray(Lz,[nvec+nsub_syst],'Lz',routine_name)
      else
-       CALL alloc_NParray(Lz,(/nvec/),'Lz',routine_name)
+       CALL alloc_NParray(Lz,[nvec],'Lz',routine_name)
      end if
      CALL alloc_NParray(Pi_BF,     shape(P_Euler),'Pi_BF',routine_name)
      CALL alloc_NParray(Pi_dag_BF, shape(P_Euler),'Pi_dag_BF',routine_name)
@@ -2414,7 +2414,7 @@
 
      nvec_parent = count( .NOT. F_system_parent%tab_BFTransfo(:)%frame )
      IF (nvec_parent >= 1 ) THEN
-       CALL alloc_NParray(Liz_parent,(/nvec_parent/),'Liz_parent',routine_name)
+       CALL alloc_NParray(Liz_parent,[nvec_parent],'Liz_parent',routine_name)
        CALL get_Lz_F_system_parent(F_system_parent, Liz_parent)
      END IF
 
@@ -2424,14 +2424,14 @@
        Ja_sum =     get_Jz(F_system_parent%QEuler(3))
        Ja_sum_dag = get_Jz(F_system_parent%QEuler(3))
 
-     else if(compare_tab(F_system_parent%euler, (/.true., .true., .true./)) .OR. &
-            compare_tab(F_system_parent%euler, (/.false., .true., .true./))) then
+     else if(compare_tab(F_system_parent%euler, [.true., .true., .true.]) .OR. &
+            compare_tab(F_system_parent%euler, [.false., .true., .true.])) then
 
         Ja_sum     = get_Pq(    F_system_parent%QEuler(3))
         Ja_sum_dag = get_Pq_dag(F_system_parent%QEuler(3))
 
 
-     else if(compare_tab(F_system_parent%euler, (/.true., .true., .false./))) then
+     else if(compare_tab(F_system_parent%euler, [.true., .true., .false.])) then
        write(out_unitp,*) 'Case not possible'
        stop
      end if
@@ -3016,7 +3016,7 @@
        alfa_loc = 1
      END IF
 
-     IF ( compare_tab(F_system%euler, (/.FALSE., .FALSE., .FALSE./)) ) THEN ! true BF
+     IF ( compare_tab(F_system%euler, [.FALSE., .FALSE., .FALSE.]) ) THEN ! true BF
        rho = get_rho_OF_Q(F_system%QVec(1),alfa_loc) *                 &
              get_rho_OF_Q(F_system%QVec(2),alfa_loc) *                 &
              get_rho_OF_Q(F_system%QVec(3),alfa_loc)
@@ -3054,7 +3054,7 @@
        alfa_loc = 1
      END IF
 
-     IF ( compare_tab(F_system%euler, (/.FALSE., .FALSE., .FALSE./)) ) THEN
+     IF ( compare_tab(F_system%euler, [.FALSE., .FALSE., .FALSE.]) ) THEN
        Jac = get_Jac_OF_Q(F_system%QVec(1),alfa_loc) *                 &
              get_Jac_OF_Q(F_system%QVec(2),alfa_loc) *                 &
              get_Jac_OF_Q(F_system%QVec(3),alfa_loc)
@@ -3176,7 +3176,7 @@
      END IF
 
      ! first extract G(ij)
-     CALL alloc_NParray(Gana,(/nb_act+3,nb_act+3/),'Gana',routine_name)
+     CALL alloc_NParray(Gana,[nb_act+3,nb_act+3],'Gana',routine_name)
      CALL C_TO_Mat_OF_sum_opnd(Gana,CZERO)
 
      DO i = 1, size(TWOxKEO%sum_prod_op1d)
@@ -3261,7 +3261,7 @@
 
 
      ! 2d the 1st derivative of G(ij), just for the deformation
-     CALL alloc_NParray(d1Gana,(/nb_act+3,nb_act+3/),'Gana',routine_name)
+     CALL alloc_NParray(d1Gana,[nb_act+3,nb_act+3],'Gana',routine_name)
      CALL C_TO_Mat_OF_sum_opnd(d1Gana,CZERO)
 
      DO iG=1,nb_act
@@ -3278,7 +3278,7 @@
      write(out_unitp,*) '=========== d1lnrho ============================'
      write(out_unitp,*) '================================================'
 
-     CALL alloc_NParray(d1lnrho,(/nb_act/),'d1lnrho',routine_name)
+     CALL alloc_NParray(d1lnrho,[nb_act],'d1lnrho',routine_name)
      DO i=1,size(d1lnrho)
        d1lnrho(i) = CZERO
      END DO

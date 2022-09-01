@@ -284,7 +284,7 @@ SGType2_1%nb_SG            = SGType2_2%nb_SG
 SGType2_1%nb0              = SGType2_2%nb0
 
 IF (allocated(SGType2_2%nDind_DPG)) THEN
-  CALL alloc_NParray(SGType2_1%nDind_DPG,(/ SGType2_1%nb_SG /),            &
+  CALL alloc_NParray(SGType2_1%nDind_DPG,[SGType2_1%nb_SG],            &
                     'SGType2_1%nDind_DPG',name_sub)
   DO i=1,SGType2_1%nb_SG
     SGType2_1%nDind_DPG(i) = SGType2_2%nDind_DPG(i)
@@ -292,7 +292,7 @@ IF (allocated(SGType2_2%nDind_DPG)) THEN
 END IF
 
 IF (allocated(SGType2_2%nDind_DPB)) THEN
-  CALL alloc_NParray(SGType2_1%nDind_DPB,(/ SGType2_1%nb_SG /),            &
+  CALL alloc_NParray(SGType2_1%nDind_DPB,[SGType2_1%nb_SG],            &
                     'SGType2_1%nDind_DPB',name_sub)
   DO i=1,SGType2_1%nb_SG
     SGType2_1%nDind_DPB(i) = SGType2_2%nDind_DPB(i)
@@ -484,15 +484,15 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
 
 
-      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,SGType2%nb_tasks /),&
+      CALL alloc_NParray(SGType2%nDval_init,[ndim,SGType2%nb_tasks],&
                         'SGType2%nDval_init',name_sub)
       SGType2%nDval_init(:,:) = 0
 
-      CALL alloc_NParray(SGType2%iG_th,(/ SGType2%nb_tasks /),  &
+      CALL alloc_NParray(SGType2%iG_th,[SGType2%nb_tasks],  &
                         'SGType2%iG_th',name_sub)
       SGType2%iG_th(:) = 0
 
-      CALL alloc_NParray(SGType2%fG_th,(/ SGType2%nb_tasks /),  &
+      CALL alloc_NParray(SGType2%fG_th,[SGType2%nb_tasks],  &
                         'SGType2%fG_th',name_sub)
       SGType2%fG_th(:) = 0
 
@@ -572,15 +572,15 @@ END SUBROUTINE SGType2_2TOSGType2_1
       SGType2%nb_tasks   = nb_threads
 
 
-      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,SGType2%nb_tasks /),&
+      CALL alloc_NParray(SGType2%nDval_init,[ndim,SGType2%nb_tasks],&
                         'SGType2%nDval_init',name_sub)
       SGType2%nDval_init(:,:) = 0
 
-      CALL alloc_NParray(SGType2%iG_th,(/ SGType2%nb_tasks /),  &
+      CALL alloc_NParray(SGType2%iG_th,[SGType2%nb_tasks],  &
                         'SGType2%iG_th',name_sub)
       SGType2%iG_th(:) = 0
 
-      CALL alloc_NParray(SGType2%fG_th,(/ SGType2%nb_tasks /),  &
+      CALL alloc_NParray(SGType2%fG_th,[SGType2%nb_tasks],  &
                         'SGType2%fG_th',name_sub)
       SGType2%fG_th(:) = 0
 
@@ -699,15 +699,15 @@ END SUBROUTINE SGType2_2TOSGType2_1
       END IF
 
 
-      CALL alloc_NParray(SGType2%nDval_init,(/ ndim,SGType2%nb_tasks /),&
+      CALL alloc_NParray(SGType2%nDval_init,[ndim,SGType2%nb_tasks],&
                         'SGType2%nDval_init',name_sub)
       SGType2%nDval_init(:,:) = 0
 
-      CALL alloc_NParray(SGType2%iG_th,(/ SGType2%nb_tasks /),  &
+      CALL alloc_NParray(SGType2%iG_th,[SGType2%nb_tasks],  &
                         'SGType2%iG_th',name_sub)
       SGType2%iG_th(:) = 0
 
-      CALL alloc_NParray(SGType2%fG_th,(/ SGType2%nb_tasks /),  &
+      CALL alloc_NParray(SGType2%fG_th,[SGType2%nb_tasks],  &
                         'SGType2%fG_th',name_sub)
       SGType2%fG_th(:) = 0
 

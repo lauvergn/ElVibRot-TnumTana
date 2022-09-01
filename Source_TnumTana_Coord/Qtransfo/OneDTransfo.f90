@@ -75,13 +75,13 @@
       END IF
       IF (nb_transfo < 1) RETURN
 
-      CALL alloc_array(oneDTransfo,(/nb_transfo/),"oneDTransfo",name_sub)
+      CALL alloc_array(oneDTransfo,[nb_transfo],"oneDTransfo",name_sub)
 
       DO it=1,nb_transfo
-        CALL alloc_array(oneDTransfo(it)%cte,(/20/),                    &
+        CALL alloc_array(oneDTransfo(it)%cte,[20],                    &
                         "oneDTransfo(it)%cte",name_sub)
 
-        CALL alloc_array(oneDTransfo(it)%opt_cte,(/20/),                &
+        CALL alloc_array(oneDTransfo(it)%opt_cte,[20],                &
                         "oneDTransfo(it)%opt_cte",name_sub)
       END DO
 

@@ -587,8 +587,8 @@ subroutine hermite_abscissa ( dim_num, point_num, grid_index, grid_base, &
   integer ( kind=Ikind ) level
   integer ( kind=Ikind ) point
   integer ( kind=Ikind ) pointer
-  integer ( kind=Ikind ), dimension ( 0:7 ) :: skip = (/ 0, 1, 4, 11, 26, 57, 120, 247 /)
-  real    ( kind=Rkind ), dimension ( 247 ) :: x = (/ &
+  integer ( kind=Ikind ), dimension ( 0:7 ) :: skip = [0, 1, 4, 11, 26, 57, 120, 247]
+  real    ( kind=Rkind ), dimension ( 247 ) :: x = [&
     ZERO, &
    -0.122474487139158904909864203735_Rkind * TEN, &
     ZERO, &
@@ -836,7 +836,7 @@ subroutine hermite_abscissa ( dim_num, point_num, grid_index, grid_base, &
     14.209085995284870755168244250887_Rkind, &
     14.669595158833972632746354112896_Rkind, &
     15.228338148167350978246954433464_Rkind  &
-         /)
+        ]
 
   if ( any ( grid_base(1:dim_num) < 0 ) ) then
     write ( *, '(a)' ) ' '
@@ -2710,10 +2710,10 @@ subroutine timestamp ( )
   integer h
   integer m
   integer mm
-  character ( len = 9 ), parameter, dimension(12) :: month = (/ &
+  character ( len = 9 ), parameter, dimension(12) :: month = [&
     'January  ', 'February ', 'March    ', 'April    ', &
     'May      ', 'June     ', 'July     ', 'August   ', &
-    'September', 'October  ', 'November ', 'December ' /)
+    'September', 'October  ', 'November ', 'December ']
   integer n
   integer s
   integer values(8)
@@ -2791,10 +2791,10 @@ subroutine timestring ( string )
   integer h
   integer m
   integer mm
-  character ( len = 9 ), parameter, dimension(12) :: month = (/ &
+  character ( len = 9 ), parameter, dimension(12) :: month = [&
     'January  ', 'February ', 'March    ', 'April    ', &
     'May      ', 'June     ', 'July     ', 'August   ', &
-    'September', 'October  ', 'November ', 'December ' /)
+    'September', 'October  ', 'November ', 'December ']
   integer n
   integer s
   character ( len = * ) string

@@ -251,7 +251,7 @@ subroutine check_allocate_opnd(F_nd)
 
    CALL delete_opnd(F_nd)
 
-   CALL alloc_NParray(F_nd%prod_op1d,(/ndim/),'F_nd%prod_op1d',routine_name)
+   CALL alloc_NParray(F_nd%prod_op1d,[ndim],'F_nd%prod_op1d',routine_name)
 
  end subroutine allocate_opnd
 
@@ -1883,7 +1883,7 @@ subroutine Expand_OpnD_TO_SumOpnD(FOpnD,SumOpnD)
 
   !2) Differente cases in function of ip and jp values
   IF (ip == 0 .AND. jp == 0) THEN
-    CALL alloc_NParray(SumOpnD,(/1/),'SumOpnD',routine_name)
+    CALL alloc_NParray(SumOpnD,[1],'SumOpnD',routine_name)
     SumOpnD(1) = FOpnD
   ELSE IF (ip > 0 .AND. jp == 0) THEN
     temp_OpnD = FOpnD
@@ -1905,7 +1905,7 @@ subroutine Expand_OpnD_TO_SumOpnD(FOpnD,SumOpnD)
     END IF
 
     ndim_i = size(temp_SumOp1D_i%Sum_op1D)
-    CALL alloc_NParray(SumOpnD,(/ndim_i/),'SumOpnD',routine_name)
+    CALL alloc_NParray(SumOpnD,[ndim_i],'SumOpnD',routine_name)
     DO i=1,ndim_i
       CALL get_F1_times_F2_to_F_nd(temp_OpnD,temp_SumOp1D_i%Sum_op1D(i),SumOpnD(i))
     END DO
@@ -1920,7 +1920,7 @@ subroutine Expand_OpnD_TO_SumOpnD(FOpnD,SumOpnD)
     ndim_i = size(temp_SumOp1D_i%Sum_op1D)
     ndim_j = size(temp_SumOp1D_j%Sum_op1D)
 
-    CALL alloc_NParray(SumOpnD,(/ndim_i*ndim_j/),'SumOpnD',routine_name)
+    CALL alloc_NParray(SumOpnD,[ndim_i*ndim_j],'SumOpnD',routine_name)
     ij = 0
     DO i=1,ndim_i
     DO j=1,ndim_j

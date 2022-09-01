@@ -80,7 +80,7 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) ' BEGINNING ',routine_name
       CALL flush_perso(out_unitp)
       nullify(Gana)
-      CALL alloc_array(Gana,(/mole%ndimG,mole%ndimG/),'Gana',routine_name)
+      CALL alloc_array(Gana,[mole%ndimG,mole%ndimG],'Gana',routine_name)
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,2)
       CALL alloc_dnSVM(dng,mole%ndimG,mole%ndimG,mole%nb_act,2)
 
@@ -112,19 +112,19 @@ MODULE mod_Tana_Tnum
 
       nullify(f2_ana)
       nullify(f1_ana)
-      CALL alloc_array(f2_ana,(/mole%nb_act,mole%nb_act/),'f2_ana',routine_name)
-      CALL alloc_array(f1_ana,(/mole%nb_act/),'f1_ana',routine_name)
+      CALL alloc_array(f2_ana,[mole%nb_act,mole%nb_act],'f2_ana',routine_name)
+      CALL alloc_array(f1_ana,[mole%nb_act],'f1_ana',routine_name)
 
       nullify(Tdef2)
       nullify(Tdef1)
       nullify(Tcor2)
       nullify(Tcor1)
       nullify(Trot)
-      CALL alloc_array(Tdef2,(/ mole%nb_act,mole%nb_act /),'Tdef2',routine_name)
-      CALL alloc_array(Tdef1,(/ mole%nb_act /),            'Tdef1',routine_name)
-      CALL alloc_array(Tcor2,(/ mole%nb_act,3 /),          'Tcor2',routine_name)
-      CALL alloc_array(Tcor1,(/ 3 /),                      'Tcor1',routine_name)
-      CALL alloc_array(Trot, (/ 3,3 /),                    'Trot', routine_name)
+      CALL alloc_array(Tdef2,[mole%nb_act,mole%nb_act],'Tdef2',routine_name)
+      CALL alloc_array(Tdef1,[mole%nb_act],            'Tdef1',routine_name)
+      CALL alloc_array(Tcor2,[mole%nb_act,3],          'Tcor2',routine_name)
+      CALL alloc_array(Tcor1,[3],                      'Tcor1',routine_name)
+      CALL alloc_array(Trot, [3,3],                    'Trot', routine_name)
 
       para_Tnum%Tana = .FALSE.
       CALL   calc3_f2_f1Q_num(Qact,Tdef2,Tdef1,vep,rho,Tcor2,Tcor1,Trot,&
@@ -259,7 +259,7 @@ MODULE mod_Tana_Tnum
       CALL flush_perso(out_unitp)
 
       nullify(Gana)
-      CALL alloc_array(Gana,(/mole%ndimG,mole%ndimG/),'Gana',routine_name)
+      CALL alloc_array(Gana,[mole%ndimG,mole%ndimG],'Gana',routine_name)
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,2)
       CALL alloc_dnSVM(dng,mole%ndimG,mole%ndimG,mole%nb_act,2)
 
@@ -297,19 +297,19 @@ MODULE mod_Tana_Tnum
 
       nullify(f2_ana)
       nullify(f1_ana)
-      CALL alloc_array(f2_ana,(/mole%nb_act,mole%nb_act/),'f2_ana',routine_name)
-      CALL alloc_array(f1_ana,(/mole%nb_act/),'f1_ana',routine_name)
+      CALL alloc_array(f2_ana,[mole%nb_act,mole%nb_act],'f2_ana',routine_name)
+      CALL alloc_array(f1_ana,[mole%nb_act],'f1_ana',routine_name)
 
       nullify(Tdef2)
       nullify(Tdef1)
       nullify(Tcor2)
       nullify(Tcor1)
       nullify(Trot)
-      CALL alloc_array(Tdef2,(/ mole%nb_act,mole%nb_act /),'Tdef2',routine_name)
-      CALL alloc_array(Tdef1,(/ mole%nb_act /),            'Tdef1',routine_name)
-      CALL alloc_array(Tcor2,(/ mole%nb_act,3 /),          'Tcor2',routine_name)
-      CALL alloc_array(Tcor1,(/ 3 /),                      'Tcor1',routine_name)
-      CALL alloc_array(Trot, (/ 3,3 /),                    'Trot', routine_name)
+      CALL alloc_array(Tdef2,[mole%nb_act,mole%nb_act],'Tdef2',routine_name)
+      CALL alloc_array(Tdef1,[mole%nb_act],            'Tdef1',routine_name)
+      CALL alloc_array(Tcor2,[mole%nb_act,3],          'Tcor2',routine_name)
+      CALL alloc_array(Tcor1,[3],                      'Tcor1',routine_name)
+      CALL alloc_array(Trot, [3,3],                    'Trot', routine_name)
 
       para_Tnum%Tana = .FALSE.
       CALL   calc3_f2_f1Q_num(Qact,Tdef2,Tdef1,vep,rho,Tcor2,Tcor1,Trot,&

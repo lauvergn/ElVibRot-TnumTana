@@ -65,11 +65,11 @@
              STOP
           END IF
           para_cart%nb_at = nb_at
-          CALL alloc_array(para_cart%masses,(/nb_at/),                  &
+          CALL alloc_array(para_cart%masses,[nb_at],                  &
                           "para_cart%masses","alloc_Type_cart")
           para_cart%masses(:) = ZERO
 
-          CALL alloc_array(para_cart%dnAt,(/nb_at/),                    &
+          CALL alloc_array(para_cart%dnAt,[nb_at],                    &
                           "para_cart%dnAt","alloc_Type_cart")
           DO i=1,nb_at
             CALL alloc_dnSVM(para_cart%dnAt(i),nb_var_vec=3,nderiv=0)
@@ -84,7 +84,7 @@
           END IF
           para_cart%nb_vect = nb_vect
 
-          CALL alloc_array(para_cart%dnVect,(/nb_vect/),                &
+          CALL alloc_array(para_cart%dnVect,[nb_vect],                &
                           "para_cart%dnVect","alloc_Type_cart")
           DO i=1,nb_vect
             CALL alloc_dnSVM(para_cart%dnVect(i),nb_var_vec=3,nderiv=0)

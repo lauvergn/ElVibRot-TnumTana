@@ -421,9 +421,9 @@ module mod_Tana_Sum_OpnD
 
    CALL delete_sum_opnd(F_sum_nd)
 
-   CALL alloc_NParray(F_sum_nd%sum_prod_op1d,(/ndim/),'F_sum_nd%sum_prod_op1d',routine_name)
+   CALL alloc_NParray(F_sum_nd%sum_prod_op1d,[ndim],'F_sum_nd%sum_prod_op1d',routine_name)
 
-   CALL alloc_NParray(F_sum_nd%Cn,(/ndim/),'F_sum_nd%Cn',routine_name)
+   CALL alloc_NParray(F_sum_nd%Cn,[ndim],'F_sum_nd%Cn',routine_name)
    F_sum_nd%Cn = CONE
 
  end subroutine allocate_sum_opnd
@@ -1463,7 +1463,7 @@ subroutine Expand_Sin2_IN_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD)
      CALL flush_perso(out_unitp)
    END IF
 
-   CALL alloc_NParray(Temp_ExpandF_Sum_nD,(/ size(F_sum_nd%sum_prod_op1d) /), &
+   CALL alloc_NParray(Temp_ExpandF_Sum_nD,[size(F_sum_nd%sum_prod_op1d)], &
                      'Temp_ExpandF_Sum_nD',routine_name)
 
    ndim = 0
@@ -1526,7 +1526,7 @@ subroutine Expand_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD,With_Vep)
      With_Vep_loc = .TRUE.
    END IF
 
-   CALL alloc_NParray(Temp_ExpandF_Sum_nD,(/ size(F_sum_nd%sum_prod_op1d) /), &
+   CALL alloc_NParray(Temp_ExpandF_Sum_nD,[size(F_sum_nd%sum_prod_op1d)], &
                      'Temp_ExpandF_Sum_nD',routine_name)
 
    ndim = 0
@@ -1537,7 +1537,7 @@ subroutine Expand_Sum_OpnD_TO_Sum_OpnD(F_Sum_nD,ExpandF_Sum_nD,With_Vep)
      CALL Expand_OpnD_TO_SumOpnD(F_sum_nd%sum_prod_op1d(i),             &
                                  Temp_ExpandF_Sum_nD(i)%sum_prod_op1d)
      ndimi = size(Temp_ExpandF_Sum_nD(i)%sum_prod_op1d)
-     CALL alloc_NParray(Temp_ExpandF_Sum_nD(i)%Cn,(/ ndimi /),'Cn',routine_name)
+     CALL alloc_NParray(Temp_ExpandF_Sum_nD(i)%Cn,[ndimi],'Cn',routine_name)
      Temp_ExpandF_Sum_nD(i)%Cn = CONE
      !write(out_unitp,*) 'Expansion',i
      !CALL write_op(Temp_ExpandF_Sum_nD(i))
@@ -1691,7 +1691,7 @@ subroutine Der1_OF_Sum_OpnD_TO_Sum_OpnD(F_SumnD,ider,Der1_SumnD)
 
      ndim1 = size(M(:,1))
      ndim2 = size(M(1,:))
-     CALL alloc_NParray(Mt,(/ndim2,ndim1/),'M',routine_name)
+     CALL alloc_NParray(Mt,[ndim2,ndim1],'M',routine_name)
 
      do i = 1,ndim1
      do j = 1,ndim2

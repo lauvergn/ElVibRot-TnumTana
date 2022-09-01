@@ -383,7 +383,7 @@
           END DO
           write(out_unitp,*) 'coord_list',nDFitAna%coord_list(:)
         ELSE
-          nDFitAna%coord_list(:) = (/ (i,i=1,ndim) /)
+          nDFitAna%coord_list(:) = [(i,i=1,ndim)]
         END IF
 
         read(in_unitp,*) name_dum,nDFitAna%nq(:)
@@ -736,19 +736,19 @@
           END IF
 
           IF (.NOT. allocated(para_nDFit%Q0)) THEN
-            CALL alloc_NParray(para_nDFit%Q0,(/ndim/),                  &
+            CALL alloc_NParray(para_nDFit%Q0,[ndim],                  &
                               'para_nDFit%Q0',name_sub)
           END IF
           IF (.NOT. allocated(para_nDFit%nDweight)) THEN
-            CALL alloc_NParray(para_nDFit%nDweight,(/ndim/),            &
+            CALL alloc_NParray(para_nDFit%nDweight,[ndim],            &
                               'para_nDFit%nDweight',name_sub)
           END IF
           IF (.NOT. allocated(para_nDFit%nDsize)) THEN
-            CALL alloc_NParray(para_nDFit%nDsize,(/ndim/),              &
+            CALL alloc_NParray(para_nDFit%nDsize,[ndim],              &
                               'para_nDFit%nDsize',name_sub)
           END IF
           IF (.NOT. allocated(para_nDFit%ntyp)) THEN
-            CALL alloc_NParray(para_nDFit%ntyp,(/ndim/),                &
+            CALL alloc_NParray(para_nDFit%ntyp,[ndim],                &
                               'para_nDFit%ntyp',name_sub)
           END IF
 
@@ -781,9 +781,9 @@
 
           CALL flush_perso(out_unitp)
 
-          CALL alloc_NParray(para_nDFit%B,(/nb_WB/),                    &
+          CALL alloc_NParray(para_nDFit%B,[nb_WB],                    &
                             'para_nDFit%B',name_sub)
-          CALL alloc_NParray(para_nDFit%nDvalB,(/ndim,nb_WB/),          &
+          CALL alloc_NParray(para_nDFit%nDvalB,[ndim,nb_WB],          &
                             'para_nDFit%nDvalB',name_sub)
 
           DO iB=1,nb_WB
@@ -1291,19 +1291,19 @@
         para_nDFit2%Scal_FOR_WeightOFFit = para_nDFit1%Scal_FOR_WeightOFFit
 
 
-        CALL alloc_NParray(para_nDFit2%Q0,(/para_nDFit2%ndim/),         &
+        CALL alloc_NParray(para_nDFit2%Q0,[para_nDFit2%ndim],         &
                           'para_nDFit2%Q0',name_sub)
         para_nDFit2%Q0(:) = para_nDFit1%Q0(:)
-        CALL alloc_NParray(nDinit,(/para_nDFit2%ndim/),'nDinit',name_sub)
+        CALL alloc_NParray(nDinit,[para_nDFit2%ndim],'nDinit',name_sub)
         nDinit(:) = 1
-        CALL alloc_NParray(list_Qact,(/para_nDFit2%ndim/),'list_Qact',name_sub)
+        CALL alloc_NParray(list_Qact,[para_nDFit2%ndim],'list_Qact',name_sub)
         list_Qact(:) = 0
 
-        CALL alloc_NParray(para_nDFit2%nDweight,(/para_nDFit2%ndim/),   &
+        CALL alloc_NParray(para_nDFit2%nDweight,[para_nDFit2%ndim],   &
                           'para_nDFit2%nDweight',name_sub)
-        CALL alloc_NParray(para_nDFit2%nDsize,(/para_nDFit2%ndim/),     &
+        CALL alloc_NParray(para_nDFit2%nDsize,[para_nDFit2%ndim],     &
                           'para_nDFit2%nDsize',name_sub)
-        CALL alloc_NParray(para_nDFit2%ntyp,(/para_nDFit2%ndim/),       &
+        CALL alloc_NParray(para_nDFit2%ntyp,[para_nDFit2%ndim],       &
                           'para_nDFit2%ntyp',name_sub)
         para_nDFit2%ntyp(:) = para_nDFit1%ntyp(:)
 

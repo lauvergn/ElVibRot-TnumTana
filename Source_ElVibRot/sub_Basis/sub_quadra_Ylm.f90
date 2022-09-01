@@ -234,10 +234,10 @@
       CALL alloc_xw_OF_basis(base)
 
       IF (lebedev < 0) THEN
-        CALL alloc_NParray(xm,(/ max_qm /),'xm',name_sub)
-        CALL alloc_NParray(wm,(/ max_qm /),'wm',name_sub)
-        CALL alloc_NParray(xl,(/ max_qm /),'xl',name_sub)
-        CALL alloc_NParray(wl,(/ max_qm /),'wl',name_sub)
+        CALL alloc_NParray(xm,[max_qm],'xm',name_sub)
+        CALL alloc_NParray(wm,[max_qm],'wm',name_sub)
+        CALL alloc_NParray(xl,[max_qm],'xl',name_sub)
+        CALL alloc_NParray(wl,[max_qm],'wl',name_sub)
 
         !--------------------------------------------------------------
         !----- grid and weight calculation ----------------------------
@@ -315,7 +315,7 @@
       base%nDindB%packed = .TRUE.
 
       IF (base%With_L) THEN
-          CALL init_nDindexPrim(base%nDindB,1,(/ base%nb /))
+          CALL init_nDindexPrim(base%nDindB,1,[base%nb])
           base%nDindB%With_L      = .TRUE.
           base%nDindB%Tab_L(:)    = -1
           base%nDindB%Tab_Norm(:) = -ONE
@@ -340,8 +340,8 @@
           !write(out_unitp,*) 'base%nDindB%Tab_L',base%nDindB%Tab_L
           !STOP 'With_L'
       ELSE
-        CALL init_nDindexPrim(base%nDindB,ndim=1,nDsize=(/ base%nb /),  &
-                              nDweight=(/ base%weight_OF_nDindB /)     )
+        CALL init_nDindexPrim(base%nDindB,ndim=1,nDsize=[base%nb],  &
+                              nDweight=[base%weight_OF_nDindB]     )
       END IF
 
       ib  = 0
@@ -351,7 +351,7 @@
         ibb = ibb + 1
         IF (isyml >= 0 .AND. mod(ibl,2) /= isyml) CYCLE
         ib = ib + 1  ! for the symmetry
-        base%tab_ndim_index(:,ib) = (/ ibl,ibm /)
+        base%tab_ndim_index(:,ib) = [ibl,ibm]
 
         ! for symab (test)
         !m              = ibm/2
@@ -516,12 +516,12 @@
 
       CALL alloc_xw_OF_basis(base)
 
-      CALL alloc_NParray(xm, (/ max_qm /),'xm', name_sub)
-      CALL alloc_NParray(wm, (/ max_qm /),'wm', name_sub)
-      CALL alloc_NParray(xl1,(/ max_qm /),'xl1',name_sub)
-      CALL alloc_NParray(wl1,(/ max_qm /),'wl1',name_sub)
-      CALL alloc_NParray(xl2,(/ max_qm /),'xl2',name_sub)
-      CALL alloc_NParray(wl2,(/ max_qm /),'wl2',name_sub)
+      CALL alloc_NParray(xm, [max_qm],'xm', name_sub)
+      CALL alloc_NParray(wm, [max_qm],'wm', name_sub)
+      CALL alloc_NParray(xl1,[max_qm],'xl1',name_sub)
+      CALL alloc_NParray(wl1,[max_qm],'wl1',name_sub)
+      CALL alloc_NParray(xl2,[max_qm],'xl2',name_sub)
+      CALL alloc_NParray(wl2,[max_qm],'wl2',name_sub)
 
 !----------------------------------------------------------------------------
 !----- grid and weight calculation ------------------------------------------

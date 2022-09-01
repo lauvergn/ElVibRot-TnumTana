@@ -126,20 +126,20 @@
       IF (paire == 0) THEN
         IF (base%print_info_OF_basisDP .AND. print_level > -1)          &
                        write(out_unitp,*) '     even Legendre polynomia'
-        base%tab_ndim_index(1,:) = (/ (2*i-1,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i-1,i=1,base%nb)]
         CALL d0d1d2Plm_0_grid(base%x(1,:),base%dnRGB%d0,base%dnRGB%d1,base%dnRGB%d2,   &
                               base%nb,nq,deriv,num,step)
 
       ELSE IF (paire == 1) THEN
         IF (base%print_info_OF_basisDP .AND. print_level > -1)          &
                         write(out_unitp,*) '     odd Legendre polynomia'
-        base%tab_ndim_index(1,:) = (/ (2*i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(2*i,i=1,base%nb)]
         CALL d0d1d2Plm_1_grid(base%x(1,:),base%dnRGB%d0,base%dnRGB%d1,base%dnRGB%d2,   &
                               base%nb,nq,deriv,num,step)
       ELSE
         IF (base%print_info_OF_basisDP .AND. print_level > -1)          &
                         write(out_unitp,*) '     All Legendre polynomia'
-        base%tab_ndim_index(1,:) = (/ (i,i=1,base%nb) /)
+        base%tab_ndim_index(1,:) = [(i,i=1,base%nb)]
         CALL d0d1d2Plm_grid(base%x(1,:),base%dnRGB%d0,base%dnRGB%d1,base%dnRGB%d2,     &
                             base%nb,nq,deriv,num,step)
       END IF

@@ -256,8 +256,8 @@
 #if __LAPACK == 1
         lwork = (5+1)*n ! max(1,2*n-1)
 
-        CALL alloc_NParray(work,(/ lwork /),'work',name_sub)
-        CALL alloc_NParray(rwork,(/ max(1, 3*n-2) /),'rwork',name_sub)
+        CALL alloc_NParray(work,[lwork],'work',name_sub)
+        CALL alloc_NParray(rwork,[max(1, 3*n-2)],'rwork',name_sub)
 
 
         Vec(:,:) = Mat(:,:)

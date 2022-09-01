@@ -267,7 +267,7 @@
       IF (psi%BasisRep) THEN ! allocate psi%BasisRep
         IF (psi%cplx) THEN
           IF ( .NOT. allocated(psi%CvecB) ) THEN
-            IF(keep_MPI) CALL alloc_NParray(psi%CvecB,(/psi%nb_tot/),'psi%CvecB','alloc_psi')
+            IF(keep_MPI) CALL alloc_NParray(psi%CvecB,[psi%nb_tot],'psi%CvecB','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: CvecB'
             IF(keep_MPI) psi%CvecB(:) = CZERO
           END IF
@@ -277,7 +277,7 @@
           END IF
         ELSE
           IF ( .NOT. allocated(psi%RvecB) ) THEN
-            IF(keep_MPI) CALL alloc_NParray(psi%RvecB,(/psi%nb_tot/),'psi%RvecB','alloc_psi')
+            IF(keep_MPI) CALL alloc_NParray(psi%RvecB,[psi%nb_tot],'psi%RvecB','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: RvecB'
             IF(keep_MPI) psi%RvecB(:) = ZERO
           END IF
@@ -301,7 +301,7 @@
       IF (psi%GridRep) THEN ! allocate psi%GridRep
         IF (psi%cplx) THEN
           IF ( .NOT. allocated(psi%CvecG) ) THEN
-            IF(keep_MPI) CALL alloc_NParray(psi%CvecG,(/psi%nb_qaie/),'psi%CvecG','alloc_psi')
+            IF(keep_MPI) CALL alloc_NParray(psi%CvecG,[psi%nb_qaie],'psi%CvecG','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: CvecG'
             IF(keep_MPI) psi%CvecG(:) = CZERO
           END IF
@@ -311,7 +311,7 @@
           END IF
         ELSE
           IF ( .NOT. allocated(psi%RvecG) ) THEN
-            IF(keep_MPI) CALL alloc_NParray(psi%RvecG,(/psi%nb_qaie/),'psi%RvecG','alloc_psi')
+            IF(keep_MPI) CALL alloc_NParray(psi%RvecG,[psi%nb_qaie],'psi%RvecG','alloc_psi')
             IF (debug) write(out_unitp,*) 'alloc: RvecG'
             IF(keep_MPI) psi%RvecG(:) = ZERO
           END IF
@@ -346,10 +346,10 @@
 
         IF (.NOT. allocated(psi%SR_G)) THEN
           IF(psi%cplx) THEN
-            CALL alloc_NParray(psi%SR_G,(/psi%SR_G_length(MPI_id),2/),'psi%SR_G','alloc_psi')
+            CALL alloc_NParray(psi%SR_G,[psi%SR_G_length(MPI_id),2],'psi%SR_G','alloc_psi')
             !CALL allocate_array(psi%SR_G,1,psi%SR_G_length(MPI_id),1,2)
           ELSE
-            CALL alloc_NParray(psi%SR_G,(/psi%SR_G_length(MPI_id),1/),'psi%SR_G','alloc_psi')
+            CALL alloc_NParray(psi%SR_G,[psi%SR_G_length(MPI_id),1],'psi%SR_G','alloc_psi')
             !CALL allocate_array(psi%SR_G,1,psi%SR_G_length(MPI_id),1,1)
           ENDIF
         ENDIF
@@ -367,9 +367,9 @@
 
         IF (.NOT. allocated(psi%SR_B)) THEN
           IF(psi%cplx) THEN
-            CALL alloc_NParray(psi%SR_B,(/psi%SR_B_length(MPI_id),2/),'psi%SR_B','alloc_psi')
+            CALL alloc_NParray(psi%SR_B,[psi%SR_B_length(MPI_id),2],'psi%SR_B','alloc_psi')
           ELSE
-            CALL alloc_NParray(psi%SR_B,(/psi%SR_B_length(MPI_id),1/),'psi%SR_B','alloc_psi')
+            CALL alloc_NParray(psi%SR_B,[psi%SR_B_length(MPI_id),1],'psi%SR_B','alloc_psi')
           ENDIF
         ENDIF
         ! consider deallocate RvecB,RvecG ...
@@ -427,7 +427,7 @@
 
       IF (psi%cplx) THEN
         IF ( .NOT. allocated(psi%CvecB) ) THEN
-          CALL alloc_NParray(psi%CvecB,(/psi%nb_tot/),'psi%CvecB',name_sub)
+          CALL alloc_NParray(psi%CvecB,[psi%nb_tot],'psi%CvecB',name_sub)
           IF (debug) write(out_unitp,*) 'alloc: CvecB'
           psi%CvecB(:) = CZERO
         END IF
@@ -437,7 +437,7 @@
         END IF
       ELSE
         IF ( .NOT. allocated(psi%RvecB) ) THEN
-          CALL alloc_NParray(psi%RvecB,(/psi%nb_tot/),'psi%RvecB',name_sub)
+          CALL alloc_NParray(psi%RvecB,[psi%nb_tot],'psi%RvecB',name_sub)
           IF (debug) write(out_unitp,*) 'alloc: RvecB'
           psi%RvecB(:) = ZERO
         END IF
@@ -3695,16 +3695,16 @@
           ni = 1+psi%nb_act1
           IF (loc_ecri_psi2) THEN
             ni = ni + nb_ei
-            CALL alloc_NParray(psiQchannel,(/nb_ei/),"psiQchannel","ecri_psi")
+            CALL alloc_NParray(psiQchannel,[nb_ei],"psiQchannel","ecri_psi")
           ELSE
             ni = ni + 2*nb_ei
-            CALL alloc_NParray(psiQchannel,(/2*nb_ei/),"psiQchannel","ecri_psi")
+            CALL alloc_NParray(psiQchannel,[2*nb_ei],"psiQchannel","ecri_psi")
           END IF
 
           IF (psi%cplx) THEN
-            CALL alloc_NParray(CVec,(/psi%nb_bi*psi%nb_be/),"CVec","ecri_psi")
+            CALL alloc_NParray(CVec,[psi%nb_bi*psi%nb_be],"CVec","ecri_psi")
           ELSE
-            CALL alloc_NParray(RVec,(/psi%nb_bi*psi%nb_be/),"RVec","ecri_psi")
+            CALL alloc_NParray(RVec,[psi%nb_bi*psi%nb_be],"RVec","ecri_psi")
           END IF
 
           DO i_qa=1,psi%nb_qa

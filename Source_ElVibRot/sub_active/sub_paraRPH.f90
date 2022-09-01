@@ -248,7 +248,7 @@ CONTAINS
       CALL time_perso('Grid RPH')
       write(out_unitp,*) 'Grid RPH'
 
-      CALL alloc_NParray(Qact1_fromBasisnD,(/ nb_act1_RPH /),'Qact1_fromBasisnD',name_sub)
+      CALL alloc_NParray(Qact1_fromBasisnD,[nb_act1_RPH],'Qact1_fromBasisnD',name_sub)
 
       iqLoop_end = .FALSE.
       iq = 1
@@ -296,7 +296,7 @@ CONTAINS
 
 
         IF (.NOT. allocated(List_Qact1)) THEN ! first point
-          CALL alloc_NParray(List_Qact1,(/ nb_act1_RPH, 1 /),'List_tmp_Qact1',name_sub)
+          CALL alloc_NParray(List_Qact1,[nb_act1_RPH, 1],'List_tmp_Qact1',name_sub)
           List_Qact1(:,1) = Qact1_fromBasisnD(:)
         ELSE
 
@@ -312,7 +312,7 @@ CONTAINS
 
           IF (.NOT. Find_in_List) THEN ! add the new point in the list
 
-            CALL alloc_NParray(List_tmp_Qact1,(/ nb_act1_RPH, size(List_Qact1,dim=2)+1 /),'List_tmp_Qact1',name_sub)
+            CALL alloc_NParray(List_tmp_Qact1,[nb_act1_RPH, size(List_Qact1,dim=2)+1],'List_tmp_Qact1',name_sub)
 
             ! find the position to add the point
             IF (iq_list_small == 0) THEN ! add in the first point
@@ -466,7 +466,7 @@ CONTAINS
       CALL time_perso('Grid RPH')
       write(out_unitp,*) 'Grid RPH'
 
-      CALL alloc_NParray(Qact1_fromBasisnD,(/ nb_act1_RPH /),'Qact1_fromBasisnD',name_sub)
+      CALL alloc_NParray(Qact1_fromBasisnD,[nb_act1_RPH],'Qact1_fromBasisnD',name_sub)
 
       nq_part = get_nq_FROM_basis(BasisnD)/100
       DO iq=1,get_nq_FROM_basis(BasisnD)
@@ -489,7 +489,7 @@ CONTAINS
 
 
         IF (.NOT. allocated(List_Qact1)) THEN ! first point
-          CALL alloc_NParray(List_Qact1,(/ nb_act1_RPH, 1 /),'List_tmp_Qact1',name_sub)
+          CALL alloc_NParray(List_Qact1,[nb_act1_RPH, 1],'List_tmp_Qact1',name_sub)
           List_Qact1(:,1) = Qact1_fromBasisnD(:)
         ELSE
 
@@ -504,7 +504,7 @@ CONTAINS
 
           IF (.NOT. Find_in_List) THEN ! add the new point in the list
 
-            CALL alloc_NParray(List_tmp_Qact1,(/ nb_act1_RPH, size(List_Qact1,dim=2)+1 /),'List_tmp_Qact1',name_sub)
+            CALL alloc_NParray(List_tmp_Qact1,[nb_act1_RPH, size(List_Qact1,dim=2)+1],'List_tmp_Qact1',name_sub)
 
             ! find the position to add the point
             IF (iq_list_small == 0) THEN ! add in the first point
@@ -539,7 +539,7 @@ CONTAINS
       !----------------------------------------------------------------
       !---- allocation of tab_RPHpara_AT_Qact1 ------------------------
       mole%RPHTransfo%nb_Qa = size(List_Qact1,dim=2)
-      CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,(/ mole%RPHTransfo%nb_Qa /),&
+      CALL alloc_array(mole%RPHTransfo%tab_RPHpara_AT_Qact1,[mole%RPHTransfo%nb_Qa],&
                       'mole%RPHTransfo%tab_RPHpara_AT_Qact1',name_sub)
       !----------------------------------------------------------------
 

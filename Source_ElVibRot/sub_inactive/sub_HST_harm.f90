@@ -128,7 +128,7 @@
       !-----------------------------------------------------------
       !----- New nD-Grid points ----------------------------------
       !-----------------------------------------------------------
-      CALL alloc_NParray(Qact,(/mole%nb_var/),'Qact',name_sub)
+      CALL alloc_NParray(Qact,[mole%nb_var],'Qact',name_sub)
 
       IF (iq > 0 .OR. .NOT. test) THEN
         !calculation of Qact with the inactive coordinates
@@ -209,7 +209,7 @@
 
             IF (.NOT. allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac)) THEN
                 CALL alloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac, &
-                                        (/ para_AllOp%tab_Op(1)%nb_qa /),   &
+                                        [para_AllOp%tab_Op(1)%nb_qa],   &
                                   'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%sqRhoOVERJac',name_sub)
             END IF
             !$OMP  END CRITICAL (sub_HSOp_inact1_CRIT)
@@ -229,7 +229,7 @@
 
             IF (.NOT. allocated(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac)) THEN
                 CALL alloc_NParray(para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac, &
-                                        (/ para_AllOp%tab_Op(1)%nb_qa /),   &
+                                        [para_AllOp%tab_Op(1)%nb_qa],   &
                                   'para_AllOp%tab_Op(1)%para_AllBasis%basis_ext%Jac',name_sub)
             END IF
             !$OMP  END CRITICAL (sub_HSOp_inact2_CRIT)
@@ -271,8 +271,8 @@
         END DO
 
 
-        CALL alloc_NParray(d0ehess,(/ mole%nb_inact2n /),   "d0ehess",name_sub)
-        CALL alloc_NParray(d0Qeq,  (/ mole%nb_inact2n /),   "d0Qeq",  name_sub)
+        CALL alloc_NParray(d0ehess,[mole%nb_inact2n],   "d0ehess",name_sub)
+        CALL alloc_NParray(d0Qeq,  [mole%nb_inact2n],   "d0Qeq",  name_sub)
 
         CALL sub_HST7_bhe(Qact,d0Qeq,d0ehess,                           &
                           d0MatOp,para_AllOp%nb_Op,rho,para_AllOp,      &
@@ -594,26 +594,26 @@
                                 para_AllOp%tab_Op(iOp)%para_ReadOp%nb_elec)
       END DO
 
-      CALL alloc_NParray(f1Q,    (/nb_act/),                    "f1Q",   name_sub)
-      CALL alloc_NParray(f2Q,    (/nb_act, nb_act/),            "f2Q",   name_sub)
-      CALL alloc_NParray(Tcor2,  (/nb_act,3/),                  "Tcor2", name_sub)
-      CALL alloc_NParray(f1Qa,   (/nb_act1/),                   "f1Qa",  name_sub)
-      CALL alloc_NParray(f1Qi,   (/nb_inact2n/),                "f1Qi",  name_sub)
-      CALL alloc_NParray(f2Qaa,  (/nb_act1, nb_act1/),          "f2Qaa", name_sub)
-      CALL alloc_NParray(f2Qii,  (/nb_inact2n, nb_inact2n/),    "f2Qii", name_sub)
-      CALL alloc_NParray(f2Qai,  (/nb_act1, nb_inact2n/),       "f2Qai", name_sub)
-      CALL alloc_NParray(tcor2a, (/nb_act1,3/),                 "tcor2a",name_sub)
-      CALL alloc_NParray(tcor2i, (/nb_inact2n,3/),              "tcor2i",name_sub)
-      CALL alloc_NParray(tcor1a, (/3/),                         "tcor1a",name_sub)
-      CALL alloc_NParray(trota,  (/3,3/),                       "trota", name_sub)
+      CALL alloc_NParray(f1Q,    [nb_act],                    "f1Q",   name_sub)
+      CALL alloc_NParray(f2Q,    [nb_act, nb_act],            "f2Q",   name_sub)
+      CALL alloc_NParray(Tcor2,  [nb_act,3],                  "Tcor2", name_sub)
+      CALL alloc_NParray(f1Qa,   [nb_act1],                   "f1Qa",  name_sub)
+      CALL alloc_NParray(f1Qi,   [nb_inact2n],                "f1Qi",  name_sub)
+      CALL alloc_NParray(f2Qaa,  [nb_act1, nb_act1],          "f2Qaa", name_sub)
+      CALL alloc_NParray(f2Qii,  [nb_inact2n, nb_inact2n],    "f2Qii", name_sub)
+      CALL alloc_NParray(f2Qai,  [nb_act1, nb_inact2n],       "f2Qai", name_sub)
+      CALL alloc_NParray(tcor2a, [nb_act1,3],                 "tcor2a",name_sub)
+      CALL alloc_NParray(tcor2i, [nb_inact2n,3],              "tcor2i",name_sub)
+      CALL alloc_NParray(tcor1a, [3],                         "tcor1a",name_sub)
+      CALL alloc_NParray(trota,  [3,3],                       "trota", name_sub)
 
-      CALL alloc_NParray(d0x,    (/nb_inact2n/),                        "d0x",    name_sub)
-      CALL alloc_NParray(d1x,    (/nb_inact2n, nb_act1/),               "d1x",    name_sub)
-      CALL alloc_NParray(d2x,    (/nb_inact2n, nb_act1, nb_act1/),      "d2x",    name_sub)
-      CALL alloc_NParray(d0cd0c, (/nb_inact2n, nb_inact2n, nb_inact2n/),"d0cd0c", name_sub)
-      CALL alloc_NParray(Qinact, (/nb_inact2n/),                        "Qinact", name_sub)
-      CALL alloc_NParray(deltaQ2,(/nb_inact2n/),                        "deltaQ2",name_sub)
-      CALL alloc_NParray(deltaQ, (/nb_inact2n/),                        "deltaQ", name_sub)
+      CALL alloc_NParray(d0x,    [nb_inact2n],                        "d0x",    name_sub)
+      CALL alloc_NParray(d1x,    [nb_inact2n, nb_act1],               "d1x",    name_sub)
+      CALL alloc_NParray(d2x,    [nb_inact2n, nb_act1, nb_act1],      "d2x",    name_sub)
+      CALL alloc_NParray(d0cd0c, [nb_inact2n, nb_inact2n, nb_inact2n],"d0cd0c", name_sub)
+      CALL alloc_NParray(Qinact, [nb_inact2n],                        "Qinact", name_sub)
+      CALL alloc_NParray(deltaQ2,[nb_inact2n],                        "deltaQ2",name_sub)
+      CALL alloc_NParray(deltaQ, [nb_inact2n],                        "deltaQ", name_sub)
 
 !-----------------------------------------------------------------
 !-----------------------------------------------------------------
@@ -665,7 +665,7 @@
       IF (para_AllOp%tab_Op(1)%T_only)   pot = .FALSE.
 
 
-      CALL alloc_NParray(d0f_bhe,(/nb_bie/),"d0f_bhe",name_sub)
+      CALL alloc_NParray(d0f_bhe,[nb_bie],"d0f_bhe",name_sub)
 
       CALL calc_d0cd0c(d0cd0c,RPHpara_AT_Qact1%dnC%d0,nb_inact2n)
 

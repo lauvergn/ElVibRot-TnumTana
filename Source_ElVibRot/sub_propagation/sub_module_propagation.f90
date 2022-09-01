@@ -290,7 +290,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
         IF (para_poly%max_poly >= 0 .AND.                               &
             .NOT. associated(para_poly%coef_poly)) THEN
 
-          CALL alloc_array(para_poly%coef_poly,(/para_poly%max_poly/),  &
+          CALL alloc_array(para_poly%coef_poly,[para_poly%max_poly],  &
                           "para_poly%coef_poly","alloc_param_poly")
         END IF
 
@@ -702,7 +702,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
    IF (present(para_field)) THEN
      CALL sub_dnE(dnE,0,T,para_field)
    ELSE
-     dnE = (/ZERO,ZERO,ZERO/)
+     dnE = [ZERO,ZERO,ZERO]
    END IF
   !-----------------------------------------------------------
 
@@ -1482,20 +1482,20 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
           para_propa%para_control%cplx_gate       = cplx_gate
           IF (gate) THEN
             CALL alloc_array(para_propa%para_control%tab_WP0,           &
-                                                         (/nb_WPba/),   &
+                                                         [nb_WPba],   &
                             "para_propa%para_control%tab_WP0",name_sub)
             CALL alloc_array(para_propa%para_control%Mgate0,            &
-                                                   (/nb_WP,nb_WPba/),   &
+                                                   [nb_WP,nb_WPba],   &
                             "para_propa%para_control%Mgate0",name_sub)
             CALL alloc_array(para_propa%para_control%Mgatet,            &
-                                                   (/nb_WP,nb_WPba/),   &
+                                                   [nb_WP,nb_WPba],   &
                             "para_propa%para_control%Mgatet",name_sub)
             read(in_unitp,*) para_propa%para_control%tab_WP0
             write(out_unitp,*) 'tab_WP0',para_propa%para_control%tab_WP0
 
             IF (cplx_gate) THEN
               nullify(MCgate)
-              CALL alloc_array(MCgate,(/nb_WP,nb_WPba/),"MCgate",name_sub)
+              CALL alloc_array(MCgate,[nb_WP,nb_WPba],"MCgate",name_sub)
 
               CALL Read_Mat(MCgate,in_unitp,nb_WPba,err)
               IF (err /= 0) THEN
@@ -1516,7 +1516,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
               CALL dealloc_array(MCgate,"MCgate",name_sub)
             ELSE
               nullify(MRgate)
-              CALL alloc_array(MRgate,(/nb_WP,nb_WPba/),"MRgate",name_sub)
+              CALL alloc_array(MRgate,[nb_WP,nb_WPba],"MRgate",name_sub)
 
               CALL Read_Mat(MRgate,in_unitp,nb_WPba,err)
               IF (err /= 0) THEN
@@ -1551,9 +1551,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
                              out_unitp,4,info="#WPt " // int_TO_char(i))
             END DO
           ELSE
-            CALL alloc_array(para_propa%para_control%tab_WP0,(/nb_WP/), &
+            CALL alloc_array(para_propa%para_control%tab_WP0,[nb_WP], &
                             "para_propa%para_control%tab_WP0",name_sub)
-            CALL alloc_array(para_propa%para_control%tab_WPt,(/nb_WP/), &
+            CALL alloc_array(para_propa%para_control%tab_WPt,[nb_WP], &
                             "para_propa%para_control%tab_WPt",name_sub)
 
             read(in_unitp,*) para_propa%para_control%tab_WP0
@@ -2114,20 +2114,20 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
           para_propa%para_control%cplx_gate       = cplx_gate
           IF (gate) THEN
             CALL alloc_array(para_propa%para_control%tab_WP0,           &
-                                                         (/nb_WPba/),   &
+                                                         [nb_WPba],   &
                             "para_propa%para_control%tab_WP0",name_sub)
             CALL alloc_array(para_propa%para_control%Mgate0,            &
-                                                   (/nb_WP,nb_WPba/),   &
+                                                   [nb_WP,nb_WPba],   &
                             "para_propa%para_control%Mgate0",name_sub)
             CALL alloc_array(para_propa%para_control%Mgatet,            &
-                                                   (/nb_WP,nb_WPba/),   &
+                                                   [nb_WP,nb_WPba],   &
                             "para_propa%para_control%Mgatet",name_sub)
             read(in_unitp,*) para_propa%para_control%tab_WP0
             write(out_unitp,*) 'tab_WP0',para_propa%para_control%tab_WP0
 
             IF (cplx_gate) THEN
               nullify(MCgate)
-              CALL alloc_array(MCgate,(/nb_WP,nb_WPba/),"MCgate",name_sub)
+              CALL alloc_array(MCgate,[nb_WP,nb_WPba],"MCgate",name_sub)
 
               CALL Read_Mat(MCgate,in_unitp,nb_WPba,err)
               IF (err /= 0) THEN
@@ -2148,7 +2148,7 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
               CALL dealloc_array(MCgate,"MCgate",name_sub)
             ELSE
               nullify(MRgate)
-              CALL alloc_array(MRgate,(/nb_WP,nb_WPba/),"MRgate",name_sub)
+              CALL alloc_array(MRgate,[nb_WP,nb_WPba],"MRgate",name_sub)
 
               CALL Read_Mat(MRgate,in_unitp,nb_WPba,err)
               IF (err /= 0) THEN
@@ -2183,9 +2183,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
                              out_unitp,4,info="#WPt " // int_TO_char(i))
             END DO
           ELSE
-            CALL alloc_array(para_propa%para_control%tab_WP0,(/nb_WP/), &
+            CALL alloc_array(para_propa%para_control%tab_WP0,[nb_WP], &
                             "para_propa%para_control%tab_WP0",name_sub)
-            CALL alloc_array(para_propa%para_control%tab_WPt,(/nb_WP/), &
+            CALL alloc_array(para_propa%para_control%tab_WPt,[nb_WP], &
                             "para_propa%para_control%tab_WPt",name_sub)
 
             read(in_unitp,*) para_propa%para_control%tab_WP0

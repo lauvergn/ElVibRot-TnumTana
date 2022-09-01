@@ -365,8 +365,8 @@ MODULE mod_psi_Op_MPI
 
     IF(allocated(H_overlap)) deallocate(H_overlap)
     IF(allocated(S_overlap)) deallocate(S_overlap)
-    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H",name_sub)
-    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"S",name_sub)
+    CALL alloc_NParray(H_overlap,[ndim,ndim],"H",name_sub)
+    CALL alloc_NParray(S_overlap,[ndim,ndim],"S",name_sub)
 
     !allocate(H_flat(ndim*ndim))
     !allocate(S_flat(ndim*ndim))
@@ -442,8 +442,8 @@ MODULE mod_psi_Op_MPI
 
     IF(allocated(H_overlap)) deallocate(H_overlap)
     IF(allocated(S_overlap)) deallocate(S_overlap)
-    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H",name_sub)
-    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"S",name_sub)
+    CALL alloc_NParray(H_overlap,[ndim,ndim],"H",name_sub)
+    CALL alloc_NParray(S_overlap,[ndim,ndim],"S",name_sub)
 
     !-------------------------------------------------------------------------------------
     ! calculate on master without MPI
@@ -514,35 +514,35 @@ MODULE mod_psi_Op_MPI
     CALL increase_martix(S_overlap,name_sub,ndim0,ndim)
 
 !  IF(allocated(H_overlap)) THEN
-!!    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
+!!    CALL alloc_NParray(H0_overlap,[ndim,ndim],"H0",name_sub)
 !!    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
 !!    deallocate(H_overlap)
-!!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H0",name_sub)
+!!    CALL alloc_NParray(H_overlap,[ndim,ndim],"H0",name_sub)
 !!    H_overlap(1:ndim0,1:ndim0)=H0_overlap(1:ndim0,1:ndim0)
-!    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
+!    CALL alloc_NParray(H0_overlap,[ndim,ndim],"H0",name_sub)
 !    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
 !    CALL move_alloc(H0_overlap,H_overlap) ! moves the allocation from H0_overlap to ...
 !  ELSE
-!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H",name_sub)
+!    CALL alloc_NParray(H_overlap,[ndim,ndim],"H",name_sub)
 !  ENDIF
 !  
 !  IF(allocated(S_overlap)) THEN
-!!    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
+!!    CALL alloc_NParray(S0_overlap,[ndim,ndim],"S0",name_sub)
 !!    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
 !!    deallocate(S_overlap)
-!!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"S",name_sub)
+!!    CALL alloc_NParray(S_overlap,[ndim,ndim],"S",name_sub)
 !!    S_overlap(1:ndim0,1:ndim0)=S0_overlap(1:ndim0,1:ndim0)
-!    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
+!    CALL alloc_NParray(S0_overlap,[ndim,ndim],"S0",name_sub)
 !    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
 !    CALL move_alloc(S0_overlap,S_overlap) ! moves the allocation from S0_overlap to ...
 !  ELSE
-!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"H",name_sub)
+!    CALL alloc_NParray(S_overlap,[ndim,ndim],"H",name_sub)
 !  ENDIF
 
   !-------------------------------------------------------------------------------------
   ! calculate on master without MPI
-!  CALL alloc_NParray(H_overlapp,(/ ndim,ndim /),"H",name_sub)
-!  CALL alloc_NParray(S_overlapp,(/ ndim,ndim /),"S",name_sub)
+!  CALL alloc_NParray(H_overlapp,[ndim,ndim],"H",name_sub)
+!  CALL alloc_NParray(S_overlapp,[ndim,ndim],"S",name_sub)
 !  IF(MPI_id==0) THEN
 !    DO ii=1,ndim
 !      DO jj=1,ndim
@@ -612,21 +612,21 @@ MODULE mod_psi_Op_MPI
     CALL increase_martix(H_overlap,name_sub,ndim0,ndim)
 
 !  IF(allocated(H_overlap)) THEN
-!!    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
+!!    CALL alloc_NParray(H0_overlap,[ndim,ndim],"H0",name_sub)
 !!    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
 !!    deallocate(H_overlap)
-!!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H0",name_sub)
+!!    CALL alloc_NParray(H_overlap,[ndim,ndim],"H0",name_sub)
 !!    H_overlap(1:ndim0,1:ndim0)=H0_overlap(1:ndim0,1:ndim0)
-!    CALL alloc_NParray(H0_overlap,(/ ndim,ndim /),"H0",name_sub)
+!    CALL alloc_NParray(H0_overlap,[ndim,ndim],"H0",name_sub)
 !    H0_overlap(1:ndim0,1:ndim0)=H_overlap(1:ndim0,1:ndim0)
 !    CALL move_alloc(H0_overlap,H_overlap) ! moves the allocation from H0_overlap to ...
 !  ELSE
-!    CALL alloc_NParray(H_overlap,(/ ndim,ndim /),"H",name_sub)
+!    CALL alloc_NParray(H_overlap,[ndim,ndim],"H",name_sub)
 !  ENDIF
 
   !-------------------------------------------------------------------------------------
   ! calculate on master without MPI
-!  CALL alloc_NParray(H_overlapp,(/ ndim,ndim /),"H",name_sub)
+!  CALL alloc_NParray(H_overlapp,[ndim,ndim],"H",name_sub)
 !  IF(MPI_id==0) THEN
 !    DO ii=1,ndim
 !      DO jj=1,ndim
@@ -689,21 +689,21 @@ MODULE mod_psi_Op_MPI
     CALL increase_martix(S_overlap,name_sub,ndim0,ndim)
     
 !  IF(allocated(S_overlap)) THEN
-!!    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
+!!    CALL alloc_NParray(S0_overlap,[ndim,ndim],"S0",name_sub)
 !!    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
 !!    deallocate(S_overlap)
-!!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"S",name_sub)
+!!    CALL alloc_NParray(S_overlap,[ndim,ndim],"S",name_sub)
 !!    S_overlap(1:ndim0,1:ndim0)=S0_overlap(1:ndim0,1:ndim0)
-!    CALL alloc_NParray(S0_overlap,(/ ndim,ndim /),"S0",name_sub)
+!    CALL alloc_NParray(S0_overlap,[ndim,ndim],"S0",name_sub)
 !    S0_overlap(1:ndim0,1:ndim0)=S_overlap(1:ndim0,1:ndim0)
 !    CALL move_alloc(S0_overlap,S_overlap) ! moves the allocation from S0_overlap to ...
 !  ELSE
-!    CALL alloc_NParray(S_overlap,(/ ndim,ndim /),"H",name_sub)
+!    CALL alloc_NParray(S_overlap,[ndim,ndim],"H",name_sub)
 !  ENDIF
   
   !-------------------------------------------------------------------------------------
   ! calculate on master without MPI
-!  CALL alloc_NParray(S_overlapp,(/ ndim,ndim /),"S",name_sub)
+!  CALL alloc_NParray(S_overlapp,[ndim,ndim],"S",name_sub)
 !  IF(MPI_id==0) THEN
 !    DO ii=1,ndim
 !      DO jj=1,ndim
@@ -1770,41 +1770,41 @@ MODULE mod_psi_Op_MPI
           IF (.NOT. With_Grid_loc) THEN
             IF (psi(i)%cplx) THEN
               IF(.NOT. allocated(Hpsi(i)%CvecB)) CALL alloc_NParray(Hpsi(i)%CvecB,     &
-                                            (/Hpsi(i)%nb_tot/),'Hpsi%CvecB','alloc_psi')
+                                            [Hpsi(i)%nb_tot],'Hpsi%CvecB','alloc_psi')
               CALL MPI_Recv(Hpsi(i)%CvecB,Hpsi(i)%nb_tot,MPI_complex8,root_MPI,MPI_id, &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
               IF(.NOT. allocated(psi(i)%CvecB))  CALL alloc_NParray(psi(i)%CvecB,      &
-                                              (/psi(i)%nb_tot/),'psi%CvecB','alloc_psi')
+                                              [psi(i)%nb_tot],'psi%CvecB','alloc_psi')
               CALL MPI_Recv( psi(i)%CvecB, psi(i)%nb_tot,MPI_Complex8,root_MPI,MPI_id, &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             ELSE
               IF(.NOT. allocated(Hpsi(i)%RvecB)) CALL alloc_NParray(Hpsi(i)%RvecB,     &
-                                            (/Hpsi(i)%nb_tot/),'Hpsi%RvecB','alloc_psi')
+                                            [Hpsi(i)%nb_tot],'Hpsi%RvecB','alloc_psi')
               CALL MPI_Recv(Hpsi(i)%RvecB,Hpsi(i)%nb_tot,MPI_Real8,root_MPI,MPI_id,    &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             
               IF(.NOT. allocated(psi(i)%RvecB))  CALL alloc_NParray(psi(i)%RvecB,      &
-                                              (/psi(i)%nb_tot/),'psi%RvecB','alloc_psi')
+                                              [psi(i)%nb_tot],'psi%RvecB','alloc_psi')
               CALL MPI_Recv( psi(i)%RvecB, psi(i)%nb_tot,MPI_Real8,root_MPI,MPI_id,    &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             ENDIF
           ELSE
             IF (psi(i)%cplx) THEN
               IF(.NOT. allocated(Hpsi(i)%CvecG)) CALL alloc_NParray(Hpsi(i)%CvecG,     &
-                                           (/Hpsi(i)%nb_qaie/),'Hpsi%CvecG','alloc_psi')
+                                           [Hpsi(i)%nb_qaie],'Hpsi%CvecG','alloc_psi')
               CALL MPI_Recv(Hpsi(i)%CvecG,Hpsi(i)%nb_qaie,MPI_complex8,root_MPI,MPI_id,&
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
               IF(.NOT. allocated(psi(i)%CvecG))  CALL alloc_NParray(psi(i)%CvecG,      &
-                                             (/psi(i)%nb_qaie/),'psi%CvecG','alloc_psi')
+                                             [psi(i)%nb_qaie],'psi%CvecG','alloc_psi')
               CALL MPI_Recv( psi(i)%CvecG, psi(i)%nb_qaie,MPI_Complex8,root_MPI,MPI_id,&
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             ELSE
               IF(.NOT. allocated(Hpsi(i)%RvecB)) CALL alloc_NParray(Hpsi(i)%RvecG,     &
-                                            (/Hpsi(i)%nb_tot/),'Hpsi%RvecG','alloc_psi')
+                                            [Hpsi(i)%nb_tot],'Hpsi%RvecG','alloc_psi')
               CALL MPI_Recv(Hpsi(i)%RvecB,Hpsi(i)%nb_tot,MPI_Real8,root_MPI,MPI_id,    &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
               IF(.NOT. allocated(psi(i)%RvecB))  CALL alloc_NParray(psi(i)%RvecG,      &
-                                              (/psi(i)%nb_tot/),'psi%RvecG','alloc_psi')
+                                              [psi(i)%nb_tot],'psi%RvecG','alloc_psi')
               CALL MPI_Recv( psi(i)%RvecB, psi(i)%nb_tot,MPI_Real8,root_MPI,MPI_id,    &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             ENDIF
@@ -1948,23 +1948,23 @@ MODULE mod_psi_Op_MPI
           IF (psi(i)%cplx) THEN
             IF(i>=bound1_MPI .AND. i<=bound2_MPI) THEN
               IF(.NOT. allocated(Hpsi(i)%CvecB)) CALL alloc_NParray(Hpsi(i)%CvecB,     &
-                                            (/Hpsi(i)%nb_tot/),'Hpsi%CvecB','alloc_psi')
+                                            [Hpsi(i)%nb_tot],'Hpsi%CvecB','alloc_psi')
               CALL MPI_Recv(Hpsi(i)%CvecB,Hpsi(i)%nb_tot,MPI_complex8,root_MPI,MPI_id, &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             ENDIF          
             IF(.NOT. allocated(psi(i)%CvecB)) CALL alloc_NParray(psi(i)%CvecB,         &
-                                              (/psi(i)%nb_tot/),'psi%CvecB','alloc_psi')
+                                              [psi(i)%nb_tot],'psi%CvecB','alloc_psi')
             CALL MPI_Recv( psi(i)%CvecB, psi(i)%nb_tot,MPI_Complex8,root_MPI,MPI_id,   &
                           MPI_COMM_WORLD,MPI_stat,MPI_err)
           ELSE
             IF(i>=bound1_MPI .AND. i<=bound2_MPI) THEN
               IF(.NOT. allocated(Hpsi(i)%RvecB)) CALL alloc_NParray(Hpsi(i)%RvecB,     &
-                                            (/Hpsi(i)%nb_tot/),'Hpsi%RvecB','alloc_psi')
+                                            [Hpsi(i)%nb_tot],'Hpsi%RvecB','alloc_psi')
               CALL MPI_Recv(Hpsi(i)%RvecB,Hpsi(i)%nb_tot,MPI_Real8,root_MPI,MPI_id,    &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             ENDIF
             IF(.NOT. allocated(psi(i)%RvecB))  CALL alloc_NParray(psi(i)%RvecB,        &
-                                              (/psi(i)%nb_tot/),'psi%RvecB','alloc_psi')
+                                              [psi(i)%nb_tot],'psi%RvecB','alloc_psi')
             CALL MPI_Recv( psi(i)%RvecB, psi(i)%nb_tot,MPI_Real8,root_MPI,MPI_id,      &
                           MPI_COMM_WORLD,MPI_stat,MPI_err)
           ENDIF
@@ -1972,23 +1972,23 @@ MODULE mod_psi_Op_MPI
           IF (psi(i)%cplx) THEN
             IF(i>=bound1_MPI .AND. i<=bound2_MPI) THEN
               IF(.NOT. allocated(Hpsi(i)%CvecG)) CALL alloc_NParray(Hpsi(i)%CvecG,     &
-                                           (/Hpsi(i)%nb_qaie/),'Hpsi%CvecG','alloc_psi')
+                                           [Hpsi(i)%nb_qaie],'Hpsi%CvecG','alloc_psi')
               CALL MPI_Recv(Hpsi(i)%CvecG,Hpsi(i)%nb_qaie,MPI_complex8,root_MPI,MPI_id,&
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             ENDIF
             IF(.NOT. allocated(psi(i)%CvecG))  CALL alloc_NParray(psi(i)%CvecG,        &
-                                             (/psi(i)%nb_qaie/),'psi%CvecG','alloc_psi')
+                                             [psi(i)%nb_qaie],'psi%CvecG','alloc_psi')
             CALL MPI_Recv( psi(i)%CvecG, psi(i)%nb_qaie,MPI_Complex8,root_MPI,MPI_id,  &
                           MPI_COMM_WORLD,MPI_stat,MPI_err)
           ELSE
             IF(i>=bound1_MPI .AND. i<=bound2_MPI) THEN
               IF(.NOT. allocated(Hpsi(i)%RvecB)) CALL alloc_NParray(Hpsi(i)%RvecB,     &
-                                            (/Hpsi(i)%nb_tot/),'Hpsi%RvecB','alloc_psi')
+                                            [Hpsi(i)%nb_tot],'Hpsi%RvecB','alloc_psi')
               CALL MPI_Recv(Hpsi(i)%RvecB,Hpsi(i)%nb_tot,MPI_Real8,root_MPI,MPI_id,    &
                             MPI_COMM_WORLD,MPI_stat,MPI_err)
             ENDIF
             IF(.NOT. allocated(psi(i)%RvecB))  CALL alloc_NParray(psi(i)%RvecB,        &
-                                              (/psi(i)%nb_tot/),'psi%RvecB','alloc_psi')
+                                              [psi(i)%nb_tot],'psi%RvecB','alloc_psi')
             CALL MPI_Recv( psi(i)%RvecB, psi(i)%nb_tot,MPI_Real8,root_MPI,MPI_id,      &
                           MPI_COMM_WORLD,MPI_stat,MPI_err)
           ENDIF
@@ -2173,7 +2173,7 @@ MODULE mod_psi_Op_MPI
 
     ELSE ! With_Grid_loc
     
-      CALL alloc_NParray(wrho,(/psi1%nb_qa/),"wrho",name_sub)
+      CALL alloc_NParray(wrho,[psi1%nb_qa],"wrho",name_sub)
       DO i_qa=1,psi1%nb_qa
         wrho(i_qa) = Rec_WrhonD(psi1%BasisnD,i_qa)
       ENDDO
@@ -2356,7 +2356,7 @@ MODULE mod_psi_Op_MPI
 !       - initialization ----------------------------------
       Overlap = cmplx(ZERO,ZERO,kind=Rkind)
 
-      CALL alloc_NParray(wrho,(/ psi1%nb_qa/),"wrho",name_sub)
+      CALL alloc_NParray(wrho,[psi1%nb_qa],"wrho",name_sub)
       DO i_qa=1,psi1%nb_qa
         wrho(i_qa) = Rec_WrhonD(psi1%BasisnD,i_qa)
       END DO

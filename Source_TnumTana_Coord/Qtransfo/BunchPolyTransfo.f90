@@ -108,7 +108,7 @@
           logical                  :: cart                   = .FALSE.
           character (len=6)        :: Spherical_convention   = 'zxy'
           logical                  :: Li                     = .FALSE.
-          logical                  :: Euler(3)               = (/ .FALSE., .FALSE., .FALSE. /)
+          logical                  :: Euler(3)               = [.FALSE., .FALSE., .FALSE.]
                               ! F,F,F => for the true BF or F1
                               ! T,T,T => when a new BF is defined with 2 vectors
                               ! F,T,T => when a new BF is defined with ONE vector
@@ -170,23 +170,23 @@
 
       IF (nb_vect > 1) THEN
 
-        CALL alloc_array(BFTransfo%Coef_Vect_FOR_xFrame,(/nb_vect/),    &
+        CALL alloc_array(BFTransfo%Coef_Vect_FOR_xFrame,[nb_vect],    &
                         "BFTransfo%Coef_Vect_FOR_xFrame",name_sub)
         BFTransfo%Coef_Vect_FOR_xFrame(:) = 0
 
-        CALL alloc_array(BFTransfo%Coef_Vect_FOR_yFrame,(/nb_vect/),    &
+        CALL alloc_array(BFTransfo%Coef_Vect_FOR_yFrame,[nb_vect],    &
                         "BFTransfo%Coef_Vect_FOR_yFrame",name_sub)
         BFTransfo%Coef_Vect_FOR_yFrame(:) = 0
 
-        CALL alloc_array(BFTransfo%Coef_Vect_FOR_zFrame,(/nb_vect/),    &
+        CALL alloc_array(BFTransfo%Coef_Vect_FOR_zFrame,[nb_vect],    &
                         "BFTransfo%Coef_Vect_FOR_zFrame",name_sub)
         BFTransfo%Coef_Vect_FOR_zFrame(:) = 0
 
-        CALL alloc_array(BFTransfo%Coef_OF_Vect1,(/nb_vect/),           &
+        CALL alloc_array(BFTransfo%Coef_OF_Vect1,[nb_vect],           &
                         "BFTransfo%Coef_OF_Vect1",name_sub)
         BFTransfo%Coef_OF_Vect1(:) = 0
 
-        CALL alloc_array(BFTransfo%Coef_OF_Vect2,(/nb_vect/),           &
+        CALL alloc_array(BFTransfo%Coef_OF_Vect2,[nb_vect],           &
                         "BFTransfo%Coef_OF_Vect2",name_sub)
         BFTransfo%Coef_OF_Vect2(:) = 0
       END IF
@@ -707,7 +707,7 @@
       BFTransfo%Frame_type             = 0
       BFTransfo%cart                   = .FALSE.
       BFTransfo%Li                     = .FALSE.
-      BFTransfo%Euler(:)               = (/ .FALSE., .FALSE., .FALSE. /)
+      BFTransfo%Euler(:)               = [.FALSE., .FALSE., .FALSE.]
 
       BFTransfo%cos_th                 = .TRUE.
       BFTransfo%Def_cos_th             = .TRUE.
@@ -889,11 +889,11 @@
 
       IF (iv_tot == 0) THEN
         nb_Qin = size(BFTransfo%type_Qin)
-        CALL alloc_array(BFTransfo%list_Qpoly_TO_Qprim,(/nb_Qin/),      &
+        CALL alloc_array(BFTransfo%list_Qpoly_TO_Qprim,[nb_Qin],      &
                         "BFTransfo%list_Qpoly_TO_Qprim",name_sub)
         BFTransfo%list_Qpoly_TO_Qprim(:) = 0
 
-        CALL alloc_array(BFTransfo%list_Qprim_TO_Qpoly,(/nb_Qin/),      &
+        CALL alloc_array(BFTransfo%list_Qprim_TO_Qpoly,[nb_Qin],      &
                         "BFTransfo%list_Qprim_TO_Qpoly",name_sub)
       END IF
 
@@ -1056,7 +1056,7 @@
 
         IF (.NOT. associated(BFTransfo%tab_num_Frame)) THEN ! rec_level MUST 1
           IF (rec_level /= 1) STOP 'WRONG rec_level'
-          CALL alloc_array(BFTransfo%tab_num_Frame,(/rec_level/),       &
+          CALL alloc_array(BFTransfo%tab_num_Frame,[rec_level],       &
                           "BFTransfo%tab_num_Frame",name_sub)
           BFTransfo%tab_num_Frame(:) = 0
           BFTransfo%tab_num_Frame(rec_level) = 1
@@ -1064,7 +1064,7 @@
           IF (size(BFTransfo%tab_num_Frame) /= rec_level-1) STOP 'PROBLEM with rec_level'
 
           nullify(tab_num_Frame)
-          CALL alloc_array(tab_num_Frame,(/rec_level-1/),               &
+          CALL alloc_array(tab_num_Frame,[rec_level-1],               &
                           "tab_num_Frame",name_sub)
           ! save BFTransfo%tab_num_Frame
           tab_num_Frame(:) = BFTransfo%tab_num_Frame(:)
@@ -1074,7 +1074,7 @@
                             "BFTransfo%tab_num_Frame",name_sub)
 
           ! alloc BFTransfo%tab_num_Frame with the new size
-          CALL alloc_array(BFTransfo%tab_num_Frame,(/rec_level/),       &
+          CALL alloc_array(BFTransfo%tab_num_Frame,[rec_level],       &
                           "BFTransfo%tab_num_Frame",name_sub)
 
           ! set the new BFTransfo%tab_num_Frame
@@ -1151,7 +1151,7 @@
           STOP
         END IF
         IF (nb_vect > 0) THEN
-          CALL alloc_array(BFTransfo%tab_BFTransfo,(/nb_vect/),         &
+          CALL alloc_array(BFTransfo%tab_BFTransfo,[nb_vect],         &
                           "BFTransfo%tab_BFTransfo",name_sub)
           num_Frame_in_Container_rec = 0
 
@@ -1167,7 +1167,7 @@
             BFTransfo%tab_BFTransfo(iv)%euler(:)          = .TRUE.
 
             CALL alloc_array(BFTransfo%tab_BFTransfo(iv)%tab_num_Frame, &
-                                                        (/rec_level/),  &
+                                                        [rec_level],  &
                             "BFTransfo%tab_BFTransfo(iv)%tab_num_Frame",name_sub)
             BFTransfo%tab_BFTransfo(iv)%tab_num_Frame(:) = BFTransfo%tab_num_Frame(:)
 
@@ -2624,7 +2624,7 @@
 
       IF (associated(BFTransfo1%tab_num_Frame)) THEN
         n = size(BFTransfo1%tab_num_Frame)
-        CALL alloc_array(BFTransfo2%tab_num_Frame,(/n/),                &
+        CALL alloc_array(BFTransfo2%tab_num_Frame,[n],                &
                         "BFTransfo2%tab_num_Frame",name_sub)
         BFTransfo2%tab_num_Frame(:) = BFTransfo1%tab_num_Frame(:)
       END IF
@@ -2633,11 +2633,11 @@
         ! the lists are copied only for the BF frame.
         n = size(BFTransfo1%list_Qpoly_TO_Qprim)
 
-        CALL alloc_array(BFTransfo2%list_Qpoly_TO_Qprim,(/n/),          &
+        CALL alloc_array(BFTransfo2%list_Qpoly_TO_Qprim,[n],          &
                         "BFTransfo2%list_Qpoly_TO_Qprim",name_sub)
         BFTransfo2%list_Qpoly_TO_Qprim(:) = BFTransfo1%list_Qpoly_TO_Qprim(:)
 
-        CALL alloc_array(BFTransfo2%list_Qprim_TO_Qpoly,(/n/),          &
+        CALL alloc_array(BFTransfo2%list_Qprim_TO_Qpoly,[n],          &
                         "BFTransfo2%list_Qprim_TO_Qpoly",name_sub)
         BFTransfo2%list_Qprim_TO_Qpoly(:) = BFTransfo1%list_Qprim_TO_Qpoly(:)
       END IF
@@ -2649,7 +2649,7 @@
 
       IF (BFTransfo2%Frame .AND. associated(BFTransfo1%tab_BFTransfo)) THEN
         n = size(BFTransfo1%tab_BFTransfo)
-        CALL alloc_array(BFTransfo2%tab_BFTransfo,(/n/),                &
+        CALL alloc_array(BFTransfo2%tab_BFTransfo,[n],                &
                         "BFTransfo2%tab_BFTransfo",name_sub)
         DO i=1,n
           !CALL RecWrite_BFTransfo(BFTransfo1%tab_BFTransfo(i),.FALSE.)
@@ -2696,36 +2696,36 @@
        END IF
 
 
-       CALL alloc_array(BunchTransfo%ind_vect,(/5,BunchTransfo%nb_vect/),&
+       CALL alloc_array(BunchTransfo%ind_vect,[5,BunchTransfo%nb_vect],&
                        "BunchTransfo%ind_vect",name_sub)
        BunchTransfo%ind_vect(:,:) = 0
 
        CALL alloc_array(BunchTransfo%Mat_At_TO_centers,                 &
-                           (/BunchTransfo%nat_act,BunchTransfo%nat/),   &
+                           [BunchTransfo%nat_act,BunchTransfo%nat],   &
                        "BunchTransfo%Mat_At_TO_centers",name_sub)
        BunchTransfo%Mat_At_TO_centers(:,:) = 0
 
        CALL alloc_array(BunchTransfo%COM,                               &
-                           (/BunchTransfo%nat_act,BunchTransfo%nat/),   &
+                           [BunchTransfo%nat_act,BunchTransfo%nat],   &
                        "BunchTransfo%COM",name_sub)
        BunchTransfo%COM(:,:) = 0
 
        CALL alloc_array(BunchTransfo%A,                                 &
-                     (/BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1/), &
+                     [BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1], &
                        "BunchTransfo%A",name_sub)
        BunchTransfo%A(:,:) = ZERO
 
        CALL alloc_array(BunchTransfo%A_inv,                             &
-                   (/BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1/),   &
+                   [BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1],   &
                        "BunchTransfo%A_inv",name_sub)
        BunchTransfo%A_inv(:,:) = ZERO
 
        CALL alloc_array(BunchTransfo%M_Tana,                            &
-                       (/BunchTransfo%nb_vect,BunchTransfo%nb_vect/),   &
+                       [BunchTransfo%nb_vect,BunchTransfo%nb_vect],   &
                        "BunchTransfo%M_Tana",name_sub)
        BunchTransfo%M_Tana(:,:) = ZERO
 
-       CALL alloc_array(BunchTransfo%masses,(/BunchTransfo%ncart/),     &
+       CALL alloc_array(BunchTransfo%masses,[BunchTransfo%ncart],     &
                        "BunchTransfo%masses",name_sub)
        BunchTransfo%masses(:) = ZERO
 
@@ -2733,7 +2733,7 @@
          CALL dealloc_array(BunchTransfo%Z,                             &
                            "BunchTransfo%Z",name_sub)
        END IF
-       CALL alloc_array(BunchTransfo%Z,(/BunchTransfo%nat/),        &
+       CALL alloc_array(BunchTransfo%Z,[BunchTransfo%nat],        &
                        "BunchTransfo%Z",name_sub)
        BunchTransfo%Z(:) = 0
 
@@ -2742,11 +2742,11 @@
          CALL dealloc_array(BunchTransfo%symbole,                       &
                            "BunchTransfo%symbole",name_sub)
        END IF
-       CALL alloc_array(BunchTransfo%symbole,(/BunchTransfo%nat/),  &
+       CALL alloc_array(BunchTransfo%symbole,[BunchTransfo%nat],  &
                        "BunchTransfo%symbole",name_sub)
        BunchTransfo%symbole(:) = ""
 
-       CALL alloc_array(BunchTransfo%masses_OF_At,(/BunchTransfo%nat_act/),&
+       CALL alloc_array(BunchTransfo%masses_OF_At,[BunchTransfo%nat_act],&
                        "BunchTransfo%masses_OF_At",name_sub)
        BunchTransfo%masses_OF_At(:) = ZERO
 
@@ -2884,29 +2884,29 @@
       CALL alloc_BunchTransfo(BunchTransfo)
 
       nullify(tab_iAtTOiCart)
-      CALL alloc_array(tab_iAtTOiCart,(/BunchTransfo%nat/),             &
+      CALL alloc_array(tab_iAtTOiCart,[BunchTransfo%nat],             &
                       "tab_iAtTOiCart",name_sub)
       tab_iAtTOiCart(:) = 0
 
       nullify(weight_vect)
-      CALL alloc_array(weight_vect,(/BunchTransfo%nb_vect/),            &
+      CALL alloc_array(weight_vect,[BunchTransfo%nb_vect],            &
                       "weight_vect",name_sub)
       weight_vect(:) = ZERO
 
       !--------------------------------------------------------
       CALL alloc_NParray(M_Tana,                                        &
-                     (/BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1/), &
+                     [BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1], &
                       "M_Tana",name_sub)
       CALL alloc_NParray(BB,                                            &
-                  (/BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1/),    &
+                  [BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1],    &
                       "BB",name_sub)
       CALL alloc_NParray(A,                                             &
-                  (/BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1/),    &
+                  [BunchTransfo%nb_vect+1,BunchTransfo%nb_vect+1],    &
                       "A",name_sub)
-      CALL alloc_NParray(B,(/BunchTransfo%nat,BunchTransfo%nb_vect+1/), &
+      CALL alloc_NParray(B,[BunchTransfo%nat,BunchTransfo%nb_vect+1], &
                       "B",name_sub)
-      CALL alloc_NParray(BG,(/BunchTransfo%nb_vect+1/),"BG",name_sub)
-      CALL alloc_NParray(masses,(/BunchTransfo%nat/),"masses",name_sub)
+      CALL alloc_NParray(BG,[BunchTransfo%nb_vect+1],"BG",name_sub)
+      CALL alloc_NParray(masses,[BunchTransfo%nat],"masses",name_sub)
       B(:,:) = ZERO
       masses(:) = ZERO
       !---------------------- Tana -------------------------------------
@@ -3259,7 +3259,7 @@
         nb_at = BunchTransfo%nat_act + BunchTransfo%nb_G + BunchTransfo%nb_X
         write(out_unitp,*) '  nat_act',BunchTransfo%nat_act
         nullify(name_at)
-        CALL alloc_array(name_at,(/nb_at/),"name_at",name_sub)
+        CALL alloc_array(name_at,[nb_at],"name_at",name_sub)
 
         read(in_unitp,*,IOSTAT=err_io) (name_at(i),i=1,BunchTransfo%nat_act)
 
@@ -3690,15 +3690,15 @@
        END IF
       !--------------------------------------------------------
 
-      CALL alloc_NParray(A,(/BunchTransfo%nat_act,BunchTransfo%nat_act/), &
+      CALL alloc_NParray(A,[BunchTransfo%nat_act,BunchTransfo%nat_act], &
                         "A",name_sub)
       CALL alloc_NParray(Asave,                                         &
-                         (/BunchTransfo%nat_act,BunchTransfo%nat_act/), &
+                         [BunchTransfo%nat_act,BunchTransfo%nat_act], &
                         "Asave",name_sub)
       CALL alloc_NParray(M_Tana,                                        &
-                        (/BunchTransfo%nat_act,BunchTransfo%nat_act/),  &
+                        [BunchTransfo%nat_act,BunchTransfo%nat_act],  &
                         "M_Tana",name_sub)
-      CALL alloc_NParray(BB,(/BunchTransfo%nat_act,BunchTransfo%nat_act/),&
+      CALL alloc_NParray(BB,[BunchTransfo%nat_act,BunchTransfo%nat_act],&
                         "BB",name_sub)
 
       Mtot = sum(BunchTransfo%masses(1:BunchTransfo%ncart_act:3))

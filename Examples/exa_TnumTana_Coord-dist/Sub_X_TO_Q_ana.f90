@@ -12,8 +12,8 @@ SUBROUTINE Q_TO_X_ana(Q,nb_Q,X,nb_X,inTOout)
   IF (inTOout) THEN
 
     X(:) = ZERO
-    X(4:6) = (/ ZERO                  , ZERO, Q(1)      /)
-    X(7:9) = (/ sqrt(ONE-Q(3)**2)*Q(2), ZERO, Q(3)*Q(2) /)
+    X(4:6) = [ZERO                  , ZERO, Q(1)     ]
+    X(7:9) = [sqrt(ONE-Q(3)**2)*Q(2), ZERO, Q(3)*Q(2)]
 
   ELSE
 

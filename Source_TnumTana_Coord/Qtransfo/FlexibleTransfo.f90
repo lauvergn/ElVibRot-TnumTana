@@ -68,10 +68,10 @@
       CALL dealloc_FlexibleTransfo(FlexibleTransfo)
 
 
-      CALL alloc_NParray(FlexibleTransfo%list_act,(/nb_Qin/),           &
+      CALL alloc_NParray(FlexibleTransfo%list_act,[nb_Qin],           &
                         "FlexibleTransfo%list_act","alloc_FlexibleTransfo")
       FlexibleTransfo%list_act(:) = 0
-      CALL alloc_NParray(FlexibleTransfo%list_flex,(/nb_Qin/),          &
+      CALL alloc_NParray(FlexibleTransfo%list_flex,[nb_Qin],          &
                         "FlexibleTransfo%list_flex","alloc_FlexibleTransfo")
       FlexibleTransfo%list_flex(:) = 0
 

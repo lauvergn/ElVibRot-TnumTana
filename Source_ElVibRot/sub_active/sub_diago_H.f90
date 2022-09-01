@@ -80,8 +80,8 @@
 
   IF(keep_MPI) THEN
     IF (residual) THEN
-      CALL alloc_NParray(Hsave,(/ n,n /),'Hsave',name_sub)
-      CALL alloc_NParray(r,(/ n /),'r',name_sub)
+      CALL alloc_NParray(Hsave,[n,n],'Hsave',name_sub)
+      CALL alloc_NParray(r,[n],'r',name_sub)
       Hsave(:,:) = H(:,:)
     END IF
   ENDIF

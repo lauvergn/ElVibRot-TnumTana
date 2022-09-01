@@ -148,7 +148,7 @@
         iq = iq + ndim
       END DO
 
-      CALL alloc_NParray(tab_nq,(/ nb_basis /),"tab_nq",name_sub)
+      CALL alloc_NParray(tab_nq,[nb_basis],"tab_nq",name_sub)
       DO i=1,basis_DP%nb_basis
         tab_nq(i) = get_nq_FROM_basis(basis_DP%tab_Pbasis(i)%Pbasis)
       END DO
@@ -196,11 +196,11 @@
 
       !-------------------------------------------------
       !- wrho ------------
-      !CALL alloc_NParray(wrho,(/ nq /),"wrho",name_sub)
+      !CALL alloc_NParray(wrho,[nq],"wrho",name_sub)
       !DO iq=1,nq
       !  wrho(iq) = Rec_WrhonD(basis_DP,iq)
       !END DO
-      !CALL alloc_NParray(basis_DP%wrho,(/ nq /),"basis_DP%wrho",name_sub)
+      !CALL alloc_NParray(basis_DP%wrho,[nq],"basis_DP%wrho",name_sub)
       !basis_DP%wrho(:) = wrho(:)
       !CALL dealloc_NParray(wrho,"wrho",name_sub)
 
@@ -265,7 +265,7 @@
       CALL alloc_nDindex(basis_DP%nDindB,ndim=nb_basis)
 
       IF (basis_DP%Type_OF_nDindB == 0) THEN
-        CALL alloc_array(basis_DP%nDindB%tab_nDNorm,(/ nb_basis /),     &
+        CALL alloc_array(basis_DP%nDindB%tab_nDNorm,[nb_basis],     &
                         'basis_DP%nDindB%tab_nDNorm',name_sub)
 
         DO ib=1,nb_basis
@@ -331,8 +331,8 @@
             nnb = sum(basis_DP%Tab_OF_Tabnb2(ibasis-1)%vec(:))
             CALL alloc_IntVec(basis_DP%Tab_OF_Tabnb2(ibasis),nnb)
 
-            CALL alloc_NParray(nDval,    (/ ibasis-1 /),"nDval",    name_sub)
-            CALL alloc_NParray(nDval_ref,(/ ibasis-1 /),"nDval_ref",name_sub)
+            CALL alloc_NParray(nDval,    [ibasis-1],"nDval",    name_sub)
+            CALL alloc_NParray(nDval_ref,[ibasis-1],"nDval_ref",name_sub)
 
             ivec    = 1
             !val_vec = basis_DP%nDindB%Tab_nDval(ibasis-1,1)

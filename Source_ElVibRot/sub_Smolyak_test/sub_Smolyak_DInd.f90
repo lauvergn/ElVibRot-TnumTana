@@ -224,7 +224,7 @@ DO id=2,D+1
     END DO
   END DO
   CALL alloc_TypeDInd(nDind(id),ndim=id-1,MaxnD=nG)
-  nDind(id)%tab_q(:) = (/ (i,i=1,id-1) /)
+  nDind(id)%tab_q(:) = [(i,i=1,id-1)]
 
 
   iG = 0
@@ -304,7 +304,7 @@ DO id=D-1,0,-1
     END DO
   END DO
   CALL alloc_TypeDInd(nDind(id),ndim=D-id,MaxnD=nG)
-  nDind(id)%tab_q(:) = (/ (i,i=id+1,D) /)
+  nDind(id)%tab_q(:) = [(i,i=id+1,D)]
 
 
   iG      = 0
