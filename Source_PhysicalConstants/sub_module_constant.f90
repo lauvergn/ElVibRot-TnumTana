@@ -193,6 +193,7 @@
 
   real (kind=Rkind) :: auTOcm_inv,auTOenergy,auTOeV,auTOGHz,auTOkJmol_inv,auTOkcalmol_inv
   character(len=Name_len)  :: ene_unit
+  character(len=Name_len)  :: Time_unit
 
   character(len=Name_len)  :: mass_unit  !  the energy unit (default : au)
   real (kind=Rkind)        :: auTOmass          !  au => g/mol (1/1822...)
@@ -241,9 +242,13 @@
   auTOmass   = -ONE
   inv_Name   = -ONE
 
+  time_unit  = "au"
+
+
   IF (Read_Namelist_loc) THEN
     CALL sub_ReadNMLconstantes(auTOcm_inv,ene_unit,auTOenergy,          &
                                inv_Name,mass_unit,auTOmass,             &
+                               time_unit,                               &
                                mass_version_loc,version_loc)
   END IF
 
@@ -537,11 +542,12 @@
   END SUBROUTINE sub_constantes
   SUBROUTINE sub_ReadNMLconstantes(auTOcm_inv1,ene_unit1,auTOenergy1,   &
                                    inv_Name1,mass_unit1,auTOmass1,      &
+                                   time_unit1,                          &
                                    mass_version1,version1)
   IMPLICIT NONE
 
   real (kind=Rkind),       intent(inout)   :: auTOcm_inv1,auTOenergy1,auTOmass1,inv_Name1
-  character(len=Name_len), intent(inout)   :: ene_unit1,mass_unit1
+  character(len=Name_len), intent(inout)   :: ene_unit1,mass_unit1,time_unit1
   character(len=Name_len), intent(inout)   :: version1,mass_version1
 
 
@@ -551,13 +557,14 @@
   real (kind=Rkind)        :: inv_Name,auTOmass
   real (kind=Rkind)        :: auTOcm_inv,auTOenergy
   character(len=Name_len)  :: ene_unit
+  character(len=Name_len)  :: time_unit
   character(len=Name_len)  :: mass_unit  !  the energy unit (default : au)
   character(len=Name_len)  :: version,mass_version
 
 
   NAMELIST /constantes/ auTOcm_inv,inv_Name,mass_unit,auTOmass,     &
                         mass_version,version,EVRT_path,             &
-                        ene_unit,auTOenergy
+                        ene_unit,auTOenergy,time_unit
 
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_ReadNMLconstantes'
@@ -580,6 +587,8 @@
   mass_unit    = mass_unit1
   auTOmass     = auTOmass1
   inv_Name     = inv_Name1
+
+  time_unit    = time_unit1
 
   read(in_unitp,constantes,IOSTAT=err_read)
   IF (err_read < 0) THEN
@@ -608,6 +617,8 @@
   mass_unit1    = mass_unit
   auTOmass1     = auTOmass
   inv_Name1     = inv_Name
+
+  time_unit1    = time_unit
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub

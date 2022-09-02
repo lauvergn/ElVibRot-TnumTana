@@ -476,8 +476,8 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
       END DO
 
       para_propa%ana_psi%T = ZERO
-      CALL sub_analyze_tab_psi(tab_WP0,para_propa%ana_psi,adia=.FALSE.)
-      CALL sub_analyze_tab_psi(tab_WPt,para_propa%ana_psi,adia=.FALSE.)
+      CALL sub_analyze_tab_psi(tab_WP0,para_propa%ana_psi,adia=.FALSE.,Write_psi=.FALSE.)
+      CALL sub_analyze_tab_psi(tab_WPt,para_propa%ana_psi,adia=.FALSE.,Write_psi=.FALSE.)
 
 !     --------------------------------------------------
 
@@ -1056,4 +1056,3 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
 !-----------------------------------------------------------
       end subroutine calc_fidelity
 END MODULE mod_FullControl
-

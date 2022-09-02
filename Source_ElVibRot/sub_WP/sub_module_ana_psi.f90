@@ -62,7 +62,7 @@ CONTAINS
 !     Rho1D, Rho2D
 !
 !================================================================
-SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia)
+SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia,Write_psi)
   USE mod_system
   USE mod_psi_set_alloc
   IMPLICIT NONE
@@ -70,6 +70,7 @@ SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia)
   TYPE (param_psi),     intent(inout)        :: tab_psi(:)
   TYPE (param_ana_psi), intent(inout)        :: ana_psi
   logical,              intent(in)           :: adia
+  logical,              intent(in), optional :: Write_psi
 
 
 !-- working parameters --------------------------------
@@ -78,7 +79,7 @@ SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia)
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_analyze_tab_Psi'
   logical, parameter :: debug=.FALSE.
-! logical, parameter :: debug=.TRUE.
+  !logical, parameter :: debug=.TRUE.
 !-------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
@@ -87,11 +88,19 @@ SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia)
    END IF
 !-------------------------------------------------------
 
-  DO i=1,size(tab_psi)
-    ana_psi%num_psi = i
-    ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
-    CALL sub_analyze_psi(tab_psi(i),ana_psi,adia=adia)
-  END DO
+  IF (present(Write_psi)) THEN
+    DO i=1,size(tab_psi)
+      ana_psi%num_psi = i
+      ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
+      CALL sub_analyze_psi(tab_psi(i),ana_psi,adia=adia,Write_psi=Write_psi)
+    END DO
+  ELSE
+    DO i=1,size(tab_psi)
+      ana_psi%num_psi = i
+      ana_psi%Ene     = real(tab_psi(i)%CAvOp,kind=Rkind)
+      CALL sub_analyze_psi(tab_psi(i),ana_psi,adia=adia)
+    END DO
+  END IF
 
 
 !----------------------------------------------------------
@@ -102,22 +111,23 @@ SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia)
 !----------------------------------------------------------
 END SUBROUTINE sub_analyze_tab_Psi
 
-SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
+SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
   USE mod_system
   USE mod_psi_set_alloc
   USE mod_psi_B_TO_G
   IMPLICIT NONE
 
   !----- variables for the WP -------------------------------
-  TYPE (param_psi),     intent(inout)         :: psi
-  TYPE (param_ana_psi), intent(inout)         :: ana_psi
-  logical,              intent(in)            :: adia
+  TYPE (param_psi),     intent(inout)        :: psi
+  TYPE (param_ana_psi), intent(inout)        :: ana_psi
+  logical,              intent(in)           :: adia
+  logical,              intent(in), optional :: Write_psi
 
 
   integer                           :: iE,i,j,i_be,i_bi
   real (kind=Rkind)                 :: pop,Etemp
   character(len=:), allocatable     :: lformat
-  TYPE(REAL_WU)                     :: RWU_Temp,RWU_E,RWU_DE
+  TYPE(REAL_WU)                     :: RWU_Temp,RWU_E,RWU_DE,RWU_T
   real (kind=Rkind)                 :: E,DE
 
   real (kind=Rkind), allocatable    :: tab_WeightChannels(:,:)
@@ -130,7 +140,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   integer                           :: nioPsi
   character (len=Line_len)          :: name_filePsi      = " "     ! name of the file
 
-  logical :: Grid,Basis
+  logical :: Grid,Basis,Write_psi_loc
 
   !----- dynamic allocation memory ------------------------------------
   real (kind=Rkind), allocatable :: moy_Qba(:)
@@ -158,6 +168,12 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     ana_psi%AvQ = .FALSE.
   END IF
 
+  IF (present(Write_psi)) THEN
+    Write_psi_loc = Write_psi .AND. ana_psi%Write_psi
+  ELSE
+    Write_psi_loc = ana_psi%Write_psi
+  END IF
+
   !----------------------------------------------------------------------
   ! Boltzmann population
   IF (ana_psi%Boltzmann_pop .AND. ana_psi%Temp > ZERO .AND. ana_psi%Part_func > ZERO) THEN
@@ -173,32 +189,27 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
     RWU_E  = REAL_WU(ana_psi%Ene,'au','E')
     E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
 
+    RWU_T  = REAL_WU(ana_psi%T,'au','t')
+
     IF (adia) THEN
-      CALL Channel_weight(tab_WeightChannels,psi,                       &
-                                        GridRep=.TRUE.,BasisRep=.FALSE.)
+      CALL Channel_weight(tab_WeightChannels,psi,GridRep=.TRUE.,BasisRep=.FALSE.)
       info = '#WPadia ' // int_TO_char(ana_psi%num_psi)
     ELSE
-      CALL Channel_weight(tab_WeightChannels,psi,                       &
-                                        GridRep=.FALSE.,BasisRep=.TRUE.)
-      !IF (.NOT. ana_psi%GridDone) CALL sub_PsiBasisRep_TO_GridRep(psi)
-      !CALL Channel_weight(tab_WeightChannels,psi,                       &
-      !                                  GridRep=.TRUE.,BasisRep=.FALSE.)
+      CALL Channel_weight(tab_WeightChannels,psi,GridRep=.FALSE.,BasisRep=.TRUE.)
       info = '#WP ' // int_TO_char(ana_psi%num_psi)
     END IF
     Psi_norm2 = sum(tab_WeightChannels)
 
-    ! add the psi number + the time
-    psi_line = 'norm^2-WP ' // info // ' ' // real_TO_char(ana_psi%T,Rformat=ana_psi%Tformat)
+    psi_line = 'norm^2-WP ' // info // ' ' //                                   &
+                            RWU_Write(RWU_T,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
 
     ! add the energy
     iE = int(log10(abs(E)+ONETENTH**8)) ! to avoid zero
-    IF (iE < 0 .AND. iE > -6) THEN
-      !write(6,*) E,iE,'EFormat: ','f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE)
-      CALL modif_ana_psi(ana_psi,                                               &
-                  EFormat='f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE) )
-    END IF
+    CALL modif_ana_psi(ana_psi,                                                 &
+                 EFormat='f' // int_TO_char(15-iE) // '.' // int_TO_char(7-iE) )
+    !write(6,*) E,iE,'ana_psi%Eformat: ',ana_psi%Eformat
+
     psi_line = psi_line // ' ' // real_TO_char(E,Rformat=ana_psi%Eformat)
-    !psi_line = psi_line // ' ' // real_TO_char(E,Rformat='f30.20')
 
     ! add the field (if necessary)
     IF (ana_psi%With_field) THEN
@@ -309,7 +320,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia)
   END IF
 
   !---------------------------------------------------------------------------
-  IF (ana_psi%Write_psi) THEN
+  IF (Write_psi_loc) THEN
 
     IF (string_IS_empty(ana_psi%file_Psi%name)) THEN
       write(out_unitp,*) ' ERROR in ',name_sub

@@ -686,18 +686,6 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
   IF (.NOT. para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done) adia_loc = .FALSE.
 
   !-----------------------------------------------------------
-  ! => the WPs on the Grid
-!  IF (.NOT. para_propa%ana_psi%GridDone) THEN
-!    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep ini')
-!    DO i=1,nb_WP
-!      IF(keep_MPI) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
-!    END DO
-!    IF(openmpi) CALL time_perso('sub_PsiBasisRep_TO_GridRep end')
-!  END IF
-!  para_propa%ana_psi%GridDone = .TRUE.
-  !-----------------------------------------------------------
-
-  !-----------------------------------------------------------
    With_field = present(para_field)
    IF (present(para_field)) THEN
      CALL sub_dnE(dnE,0,T,para_field)
@@ -727,6 +715,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
     CALL sub_PsiOpPsi(ET,w1,w2,para_H)
     IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(ET,size1_MPI,root_MPI)
 
+
     IF (para_H%spectral_done) THEN
       w2 = WP(i) ! save Spectral rep
       ! WP is back to the initial basis to be able to make the analysis
@@ -738,7 +727,6 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
     END IF
 
     IF(keep_MPI) CALL sub_PsiBasisRep_TO_GridRep(WP(i))
-
 
     IF(keep_MPI) THEN
       WP(i)%CAvOp = ET/w1%norm2
@@ -808,6 +796,7 @@ END SUBROUTINE sub_analyze_WP_OpWP
 
 SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,ana_psi,adia,para_field)
   USE mod_system
+  USE mod_RealWithUnit
   USE mod_Op,    ONLY : param_Op,sub_PsiOpPsi,sub_PsiDia_TO_PsiAdia_WITH_MemGrid
   USE mod_field, ONLY : param_field,sub_dnE
 
@@ -841,6 +830,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,ana_psi,adia,para_field)
   real (kind=Rkind)                 :: E
   TYPE(REAL_WU)                     :: RWU_E
   character(len=:), allocatable     :: psi_line
+  TYPE(REAL_WU)                     :: RWU_T
 
 
   real (kind=Rkind), allocatable    :: tab_WeightChannels(:,:)
@@ -855,7 +845,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,ana_psi,adia,para_field)
 !- for debuging --------------------------------------------------
   character (len=*), parameter :: name_sub='sub_analyze_mini_WP_OpWP'
   logical, parameter :: debug=.FALSE.
-! logical, parameter :: debug=.TRUE.
+  !logical, parameter :: debug=.TRUE.
 !-------------------------------------------------------
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
@@ -897,7 +887,12 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,ana_psi,adia,para_field)
     IF(openmpi) CALL MPI_Bcast_(Psi_norm2,size1_MPI,root_MPI)
 
     ! add the psi number + the time
-    psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat=ana_psi%Tformat)
+    RWU_T = REAL_WU(T,'au','t')
+
+    !psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat=ana_psi%Tformat)
+    psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' //                     &
+                  RWU_Write(RWU_T,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
+
 
     IF (With_ENE) THEN
       ! =>first the energy
@@ -909,12 +904,10 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,ana_psi,adia,para_field)
       E      = convRWU_TO_R_WITH_WritingUnit(RWU_E)
 
       ! add the energy
-      iE = int(log10(abs(E)+ONETENTH**8))  ! to avoid zero
-      IF (iE < 0 .AND. iE > -6) THEN
-        !write(6,*) E,iE,'EFormat: ','f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE)
-        CALL modif_ana_psi(ana_psi,                                  &
-                  EFormat='f' // int_TO_char(10-iE) // '.' // int_TO_char(7-iE) )
-      END IF
+      iE = int(log10(abs(E)+ONETENTH**8)) ! to avoid zero
+      CALL modif_ana_psi(ana_psi,                                               &
+                EFormat='f' // int_TO_char(15-iE) // '.' // int_TO_char(7-iE) )
+      !write(6,*) E,iE,'ana_psi%Eformat: ',ana_psi%Eformat
       psi_line = psi_line // ' ' // real_TO_char(E,Rformat=ana_psi%Eformat)
     ELSE
       ! add the energy

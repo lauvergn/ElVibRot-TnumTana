@@ -333,7 +333,7 @@
 
               ana_WP0%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
 
-              CALL sub_analyze_tab_psi(WP0(:),ana_WP0,adia=.FALSE.)
+              CALL sub_analyze_tab_psi(WP0(:),ana_WP0,adia=.FALSE.,Write_psi=.FALSE.)
               CALL dealloc_ana_psi(ana_WP0)
             END IF
             ! spectral tranformation cannot be done here,

@@ -12,7 +12,7 @@
 parallel_make=0
 
 ## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+OPT = 0
 #
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
@@ -955,11 +955,6 @@ clean_UT:
 	@echo "UnitTests cleaned"
 
 # clean
-#	@cd sub_pot ; cp sub_system_save.f sub_system.f
-#	@cd sub_pot ; cp sub_system_save.f90 sub_system.f90
-#	@cd Source_TnumTana_Coord/sub_operator_T ; cp calc_f2_f1Q_save.f90      calc_f2_f1Q.f90
-#	@cd Source_TnumTana_Coord/sub_operator_T ; cp Calc_Tab_dnQflex_save.f90 Calc_Tab_dnQflex.f90
-#	@cd Source_TnumTana_Coord/sub_operator_T ; cp Sub_X_TO_Q_ana_save.f90   Sub_X_TO_Q_ana.f90
 .PHONY: clean
 clean: clean_example clean_dnS
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
@@ -1514,7 +1509,7 @@ $(OBJ)/sub_Smolyak_test.o:$(DIRSmolyak)/sub_Smolyak_test.f90
 #===============================================================================
 #
 #===============================================================================
-# potentiel et fonctions dependant du systeme
+# system (molecule) dependent subroutines and fonctions (potential ....)
 # sub_system.o
 $(OBJ)/sub_system.o:$(DirPot)/sub_system.$(extf)
 	sed "s/zmatrix/CoordType/" $(DirPot)/sub_system.$(extf) > $(DirPot)/sub_system.i

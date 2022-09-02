@@ -816,6 +816,11 @@ CONTAINS
       character (len=Name_len) :: name_dum
       real (kind=Rkind) :: T      ! time
 
+      TYPE(REAL_WU)                  :: RWU_T
+
+
+      real (kind=Rkind) :: RealTime
+      TYPE (param_time) :: PropaTime
       integer  ::   nioWP
       logical :: BasisRep,GridRep,test
 
@@ -862,6 +867,8 @@ CONTAINS
 !------- propagation loop ---------------------------------
 
       T = ZERO
+      RWU_T = REAL_WU(T,'au','t')
+
       IF (para_propa%restart) THEN
         CALL ReadWP_restart(T,psi,para_propa%file_WP_restart)
 
@@ -874,6 +881,9 @@ CONTAINS
 
       it            = 0
       itmax         = (para_propa%WPTmax-T)/para_propa%WPdeltaT
+
+      RealTime = Delta_RealTime(PropaTime) ! for the timing
+
 
       DO WHILE ( (T - (para_propa%WPTmax-para_propa%WPdeltaT) <         &
                  para_propa%WPdeltaT/TEN**5) .AND. psi(1)%norm2 < para_propa%max_norm2)
@@ -892,6 +902,19 @@ CONTAINS
          CALL march_gene(T,psi(1:1),psi0(1:1),1,.FALSE.,para_H,para_propa)
          it = it + 1
          T  = T + para_propa%WPdeltaT
+         RWU_T = REAL_WU(T,'au','t')
+
+         RealTime = Delta_RealTime(PropaTime)
+         IF (RealTime < TEN) THEN
+           write(out_unitp,'(a,a,a,i0)') 'At T: ',                              &
+                          RWU_Write(RWU_T,WithUnit=.TRUE.,WorkingUnit=.FALSE.), &
+                          ', Delta Real time (ms): ',int(10**3*RealTime)
+         ELSE
+           write(out_unitp,'(a,a,a,i0)') 'At T: ',                              &
+                          RWU_Write(RWU_T,WithUnit=.TRUE.,WorkingUnit=.FALSE.), &
+                          ', Delta Real time (s): ',int(RealTime)
+         END IF
+         CALL flush_perso(out_unitp)
 
       END DO
 
