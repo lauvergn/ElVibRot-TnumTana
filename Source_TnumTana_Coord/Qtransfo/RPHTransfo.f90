@@ -92,6 +92,9 @@
         integer, pointer :: list_QactTOQdyn(:)  => null() ! from the analysis of list_act_OF_Qdyn
         integer, pointer :: list_QdynTOQact(:)  => null() ! from the analysis of list_act_OF_Qdyn
 
+        integer, allocatable :: list_QMLMapping(:) ! mapping ifunc of QML and list_act_OF_Qdyn
+
+
         integer          :: nb_Qa       = 0 ! number of active grid points
         real(kind=Rkind), pointer :: C_ini(:,:) => null() ! Calculation dnC... at Qact1
 
@@ -177,7 +180,7 @@
       integer :: iv_act1,iv_inact21,iv_rest
 
       integer :: list_act_OF_Qdyn(nb_Qin)
-      integer, allocatable :: Qinact2n_sym(:),Qinact2n_eq(:,:)
+      integer, allocatable :: Qinact2n_sym(:),Qinact2n_eq(:,:),list_QMLMapping(:)
 
 
       character (len=Name_len) :: name0
@@ -236,6 +239,31 @@
 
        nb_inact21 = count(list_act_OF_Qdyn(:) == 21)
 
+
+       CALL alloc_NParray(list_QMLMapping,[nb_Qin],"list_QMLMapping",name_sub)
+       list_QMLMapping(:) = 0
+       IF (QMLib) THEN
+         read(in_unitp,*,IOSTAT=err_read) list_QMLMapping(:)
+         IF (err_read /= 0) THEN
+           write(out_unitp,*) ' ERROR in ',name_sub
+           write(out_unitp,*) '  while reading "list_QMLMapping"'
+           write(out_unitp,*) '  end of file or end of record'
+           write(out_unitp,*) ' Check your data !!'
+           STOP
+         END IF
+         DO i=1,nb_Qin
+           IF (list_act_OF_Qdyn(i) == 21 .AND.                       &
+               list_QMLMapping(i) == 0) THEN
+             write(out_unitp,*) ' ERROR in ',name_sub
+             write(out_unitp,*) '  list_QMLMapping(i)=0, for flexible coordinate i',i
+             write(out_unitp,*) '  list_QMLMapping(i) MUST be greater than 0'
+             write(out_unitp,*) ' Check your data !!'
+             STOP
+           END IF
+         END DO
+
+       END IF
+
        IF (purify_hess) THEN
          CALL alloc_NParray(Qinact2n_sym,[nb_inact21],'Qinact2n_sym',name_sub)
          CALL alloc_NParray(Qinact2n_eq,[nb_inact21,nb_inact21],'Qinact2n_eq',name_sub)
@@ -269,7 +297,7 @@
          CALL Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,                       &
                              gradTOpot0,diabatic_freq,step,                     &
                              purify_hess,eq_hess,Qinact2n_sym,Qinact2n_eq,      &
-                             QMLib=QMLib)
+                             QMLib=QMLib,list_QMLMapping=list_QMLMapping)
 
          CALL dealloc_NParray(Qinact2n_sym,'Qinact2n_sym',name_sub)
          CALL dealloc_NParray(Qinact2n_eq, 'Qinact2n_eq', name_sub)
@@ -277,7 +305,7 @@
        ELSE
          CALL Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,                       &
                              gradTOpot0,diabatic_freq,step,purify_hess,eq_hess, &
-                             QMLib=QMLib)
+                             QMLib=QMLib,list_QMLMapping=list_QMLMapping)
 
        END IF
        IF (read_degen_freq) then
@@ -295,14 +323,14 @@
 
       SUBROUTINE Set_RPHTransfo(RPHTransfo,list_act_OF_Qdyn,                    &
                                 gradTOpot0,diabatic_freq,step,                  &
-                           purify_hess,eq_hess,Qinact2n_sym,Qinact2n_eq,QMLib)
+                                purify_hess,eq_hess,Qinact2n_sym,Qinact2n_eq,   &
+                                QMLib,list_QMLMapping)
       IMPLICIT NONE
 
       TYPE (Type_RPHTransfo), intent(inout)         :: RPHTransfo
       integer,                intent(in), optional  :: list_act_OF_Qdyn(:)
 
       logical,                intent(in), optional  :: gradTOpot0,diabatic_freq
-      logical,                intent(in), optional  :: QMLib
       real (kind=Rkind),      intent(in), optional  :: step
 
       logical,                intent(in), optional  :: purify_hess,eq_hess
@@ -310,6 +338,8 @@
       integer,                intent(in), optional  :: Qinact2n_sym(:)
       integer,                intent(in), optional  :: Qinact2n_eq(:,:)
 
+      logical,                intent(in), optional  :: QMLib
+      integer,                intent(in), optional  :: list_QMLMapping(:)
 
       integer                   :: nb_var,nb_act1,nb_inact21
       integer                   :: i,k,iv_act1,iv_inact21,iv_rest
@@ -318,11 +348,23 @@
 !---------------------------------------------------------------------
       integer :: err_mem,memory,err_read
       character (len=*), parameter :: name_sub='Set_RPHTransfo'
-      !logical, parameter :: debug=.TRUE.
-      logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) ' BEGINNING ',name_sub
+        write(out_unitp,*) ' present:  list_act_OF_Qdyn',present(list_act_OF_Qdyn)
+
+        write(out_unitp,*) ' present:  gradTOpot0',present(gradTOpot0)
+        write(out_unitp,*) ' present:  diabatic_freq',present(diabatic_freq)
+        write(out_unitp,*) ' present:  step',present(step)
+
+        write(out_unitp,*) ' present:  purify_hess',present(purify_hess)
+        write(out_unitp,*) ' present:  eq_hess',present(eq_hess)
+        write(out_unitp,*) ' present:  Qinact2n_sym',present(Qinact2n_sym)
+        write(out_unitp,*) ' present:  Qinact2n_eq',present(Qinact2n_eq)
+        write(out_unitp,*) ' present:  QMLib',present(QMLib)
+        write(out_unitp,*) ' present:  list_QMLMapping',present(list_QMLMapping)
       END IF
 !---------------------------------------------------------------------
 
@@ -512,6 +554,16 @@
       RPHTransfo%QMLib = .FALSE.
       IF (present(QMLib)) RPHTransfo%QMLib = QMLib
 
+      IF (allocated(RPHTransfo%list_QMLMapping)) THEN
+        CALL dealloc_NParray(RPHTransfo%list_QMLMapping,                        &
+                            "RPHTransfo%list_QMLMapping",name_sub)
+      END IF
+      CALL alloc_NParray(RPHTransfo%list_QMLMapping,[nb_var],                   &
+                        "RPHTransfo%list_QMLMapping",name_sub)
+      RPHTransfo%list_QMLMapping(:)  = 0
+      IF (present(list_QMLMapping)) RPHTransfo%list_QMLMapping = list_QMLMapping
+
+
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'Set_RPHTransfo'
@@ -562,6 +614,12 @@
         CALL dealloc_array(RPHTransfo%list_QdynTOQact,                  &
                           'RPHTransfo%list_QdynTOQact',name_sub)
       END IF
+
+      IF (allocated(RPHTransfo%list_QMLMapping) ) THEN
+        CALL dealloc_NParray(RPHTransfo%list_QMLMapping,                 &
+                            "RPHTransfo%list_QMLMapping",name_sub)
+      END IF
+
 
       IF (associated(RPHTransfo%C_ini))  THEN
         CALL dealloc_array(RPHTransfo%C_ini,'RPHTransfo%C_ini',name_sub)
@@ -791,7 +849,9 @@
 
       write(out_unitp,*) 'option',RPHTransfo%option
       write(out_unitp,*) 'QMLib',RPHTransfo%QMLib
-
+      IF (allocated(RPHTransfo%list_QMLMapping)) THEN
+        write(out_unitp,*) 'list_QMLMapping',RPHTransfo%list_QMLMapping(:)
+      END IF
       write(out_unitp,*) 'nb_var',RPHTransfo%nb_var
 
       write(out_unitp,*) 'nb_act1,nb_inact21',RPHTransfo%nb_act1,RPHTransfo%nb_inact21
@@ -922,6 +982,11 @@
                         'RPHTransfo2%list_QdynTOQact',name_sub)
         RPHTransfo2%list_QdynTOQact(:) = RPHTransfo1%list_QdynTOQact(:)
       END IF
+
+      CALL alloc_NParray(RPHTransfo2%list_QMLMapping,[RPHTransfo2%nb_var],      &
+                        "RPHTransfo2%list_QMLMapping",name_sub)
+      RPHTransfo2%list_QMLMapping  = RPHTransfo1%list_QMLMapping
+
 
       IF (associated(RPHTransfo1%C_ini)) THEN
         CALL alloc_array(RPHTransfo2%C_ini,[nb_inact21,nb_inact21], &

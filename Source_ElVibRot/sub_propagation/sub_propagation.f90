@@ -110,7 +110,7 @@ CONTAINS
 !----- for debuging --------------------------------------------------
       character (len=*), parameter :: name_sub='sub_propagation'
       logical, parameter :: debug = .FALSE.
-!     logical, parameter :: debug = .TRUE.
+      !logical, parameter :: debug = .TRUE.
 !-----------------------------------------------------------
       para_H => para_AllOp%tab_Op(1)
       IF (debug) THEN
@@ -1164,7 +1164,7 @@ CONTAINS
 
 !----- for debuging --------------------------------------------------
       logical, parameter :: debug=.FALSE.
-!     logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING sub_propagation100'
@@ -1180,34 +1180,29 @@ CONTAINS
         CALL ecri_psi(T=ZERO,psi=WP(1))
        END IF
 !-----------------------------------------------------------
-      cplx = .FALSE.
+
+
+      cplx = .TRUE.
       CALL init_psi(w1,para_AllOp%tab_Op(1),cplx)
       CALL alloc_psi(w1)
-      w1%RvecB(:) = [(i,i=1,w1%nb_tot)]
-      w2 = w1
-
-      write(6,*) 'init w1',w1%init
-      write(6,*) 'init w2',w2%init
-
-      !w1 = w1 + w2
-      !CALL w1%pluseq(w2)
-      CALL w1%pluseq(w2)
+      w1%CvecB(1) = CONE
+      write(out_unitp,*) 'WP'
+      CALL ecri_psi(T=ZERO,psi=w1)
 
 
-      RETURN
+      CALL init_psi(w2,para_AllOp%tab_Op(1),cplx)
+      CALL alloc_psi(w2)
 
+      CALL sub_OpPsi(w1,w2,para_AllOp%tab_Op(1))
 
-      write(out_unitp,*) 'debut'
-      DO i=1,1
-         !write(out_unitp,*) 'i',i ; CALL flush_perso(out_unitp)
-         CALL sub_OpPsi(w1,w2,para_AllOp%tab_Op(1))
-         !CALL sub_d0d1d2PsiBasisRep_TO_GridRep(w1,[1,2])
-         !CALL sub_PsiBasisRep_TO_GridRep(w1)
-         !CALL sub_PsiGridRep_TO_BasisRep(w1)
-      END DO
-      write(out_unitp,*) 'end'
+      write(out_unitp,*) 'H.WP'
+      CALL ecri_psi(T=ZERO,psi=w2)
 
+      CALL Overlap_psi1_psi2(ET,w1,w2)
 
+      write(out_unitp,*) 'E',ET
+
+      STOP 'propa100'
 
 
 

@@ -44,7 +44,8 @@ do
   then
     echo "ElVibRot execution: ERROR"
   else
-    nr2=`grep norm^2 $RES | tail -1 | awk '{print $4" "$5" "$6" "$7" "$8" "$9}'`
+    #nr2=`grep norm^2 $RES | tail -1 | awk '{print $4" "$5" "$6" "$7" "$8" "$9}'`
+    nr2=`grep norm^2 $RES | tail -1 | awk '{print $4" "$6" "$7" "$8" "$9" "$10}'`
     echo $nr2  $propa
 
     cp RES_ref/Norm2_Spectral_T100 Norm2_temp

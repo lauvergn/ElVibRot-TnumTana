@@ -51,6 +51,8 @@ sym  cos(a)      R     r    x    pi   dh
 6      0.        0.  0.     0.   0.   1.
 
  1  0   0    0 0 0
+ 2 3 ! QML mapping
+
  &minimum pot0=-0.499465823200 QMLib=t /
 .999d0
 3.187

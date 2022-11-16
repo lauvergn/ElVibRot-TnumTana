@@ -90,8 +90,8 @@ endif
 #
 #===============================================================================
 # Quantum Model Lib (ECAM)
-#QMLibDIR := /Users/lauvergn/git/QuantumModelLib
-QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
+QMLibDIR := /Users/lauvergn/git/QuantumModelLib
+#QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
 QMLIB := -L$(QMLibDIR) -lQMLib
 QMLibDIR_full := $(QMLibDIR)/libQMLib.a
 

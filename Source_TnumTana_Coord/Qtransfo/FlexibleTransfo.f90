@@ -40,6 +40,7 @@
       TYPE Type_FlexibleTransfo
         integer              :: nb_flex_act  = 0
         integer, allocatable :: list_flex(:)
+        integer, allocatable :: list_QMLMapping(:) ! mapping ifunc of QML and list_flex
         integer, allocatable :: list_act(:)
 
         logical              :: With_Tab_dnQflex    = .FALSE.
@@ -75,6 +76,10 @@
                         "FlexibleTransfo%list_flex","alloc_FlexibleTransfo")
       FlexibleTransfo%list_flex(:) = 0
 
+      CALL alloc_NParray(FlexibleTransfo%list_QMLMapping,[nb_Qin],          &
+                        "FlexibleTransfo%list_QMLMapping","alloc_FlexibleTransfo")
+      FlexibleTransfo%list_QMLMapping(:) = 0
+
       END SUBROUTINE alloc_FlexibleTransfo
 
       SUBROUTINE dealloc_FlexibleTransfo(FlexibleTransfo)
@@ -91,6 +96,11 @@
       IF (allocated(FlexibleTransfo%list_flex) ) THEN
         CALL dealloc_NParray(FlexibleTransfo%list_flex,                 &
                             "FlexibleTransfo%list_flex","dealloc_FlexibleTransfo")
+      END IF
+
+      IF (allocated(FlexibleTransfo%list_QMLMapping) ) THEN
+        CALL dealloc_NParray(FlexibleTransfo%list_QMLMapping,                 &
+                            "FlexibleTransfo%list_QMLMapping","dealloc_FlexibleTransfo")
       END IF
 
       END SUBROUTINE dealloc_FlexibleTransfo
@@ -110,6 +120,7 @@
 
       FlexibleTransfo2%nb_flex_act      = FlexibleTransfo1%nb_flex_act
       FlexibleTransfo2%list_flex        = FlexibleTransfo1%list_flex
+      FlexibleTransfo2%list_QMLMapping  = FlexibleTransfo1%list_QMLMapping
       FlexibleTransfo2%list_act         = FlexibleTransfo1%list_act
 
       FlexibleTransfo2%With_Tab_dnQflex = FlexibleTransfo1%With_Tab_dnQflex
@@ -118,7 +129,8 @@
       END SUBROUTINE FlexibleTransfo1TOFlexibleTransfo2
 
       SUBROUTINE Read_FlexibleTransfo(FlexibleTransfo,nb_Qin,                   &
-                                      With_Tab_dnQflex,QMLib,list_flex)
+                                      With_Tab_dnQflex,QMLib,list_flex,         &
+                                      list_QMLMapping)
 
       !TYPE (Type_FlexibleTransfo), intent(inout) :: FlexibleTransfo
       CLASS (Type_FlexibleTransfo), intent(inout) :: FlexibleTransfo
@@ -126,6 +138,7 @@
       integer, intent(in)           :: nb_Qin
       logical, intent(in)           :: With_Tab_dnQflex,QMLib
       integer, intent(in), optional :: list_flex(:)
+      integer, intent(in), optional :: list_QMLMapping(:)
 
 
       integer :: i,it,nb_flex_act,err,nbcol
@@ -180,6 +193,35 @@
       FlexibleTransfo%With_Tab_dnQflex = With_Tab_dnQflex
       FlexibleTransfo%QMLib            = QMLib
       write(out_unitp,*) 'With_Tab_dnQflex,QMLib: ',With_Tab_dnQflex,QMLib
+
+      IF (QMLib) THEN
+        IF (present(list_QMLMapping)) THEN
+          FlexibleTransfo%list_QMLMapping(:) = list_QMLMapping
+        ELSE
+
+          read(in_unitp,*,IOSTAT=err) FlexibleTransfo%list_QMLMapping(:)
+          IF (err /= 0) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) '  while reading "list_QMLMapping"'
+            write(out_unitp,*) '  end of file or end of record'
+            write(out_unitp,*) ' Check your data !!'
+            STOP
+          END IF
+
+        END IF
+
+        DO i=1,nb_Qin
+          IF (FlexibleTransfo%list_flex(i) == 20 .AND.                          &
+              FlexibleTransfo%list_QMLMapping(i) == 0) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) '  list_QMLMapping(i)=0, for flexible coordinate i',i
+            write(out_unitp,*) '  list_QMLMapping(i) MUST be greater than 0'
+            write(out_unitp,*) ' Check your data !!'
+            STOP
+          END IF
+        END DO
+
+      END IF
 
       END SUBROUTINE Read_FlexibleTransfo
 
@@ -246,6 +288,7 @@
          CALL calc_Tab_dnQflex_gene(Tab_dnQflex,dnQin%nb_var_vec,               &
                                     Qact_flex,nb_flex_act,nderiv_loc,-1,        &
                                     FlexibleTransfo%list_flex,                  &
+                                    FlexibleTransfo%list_QMLMapping,            &
                                     QMlib=FlexibleTransfo%QMLib,                &
                                     With_Tab_dnQflex=FlexibleTransfo%With_Tab_dnQflex)
        END IF

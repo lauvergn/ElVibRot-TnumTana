@@ -63,6 +63,9 @@ MODULE mod_ActiveTransfo
           integer,           pointer  :: list_QactTOQdyn(:)  => null() ! "active" transfo
           integer,           pointer  :: list_QdynTOQact(:)  => null() ! "active" transfo
 
+          integer, allocatable :: list_QMLMapping(:) ! mapping ifunc of QML and list_act_OF_Qdyn
+
+
       END TYPE Type_ActiveTransfo
 
       INTERFACE alloc_array
@@ -125,6 +128,10 @@ MODULE mod_ActiveTransfo
                       "ActiveTransfo%Qact0",name_sub)
       ActiveTransfo%Qact0(:) = ZERO
 
+      CALL alloc_NParray(ActiveTransfo%list_QMLMapping,[nb_var],          &
+                        "ActiveTransfo%list_QMLMapping",name_sub)
+      ActiveTransfo%list_QMLMapping(:) = 0
+
       END SUBROUTINE alloc_ActiveTransfo
       !-----------------------------------------------------------------------
 
@@ -158,6 +165,11 @@ MODULE mod_ActiveTransfo
       IF (associated(ActiveTransfo%Qact0))  THEN
         CALL dealloc_array(ActiveTransfo%Qact0,                         &
                           "ActiveTransfo%Qact0",name_sub)
+      END IF
+
+      IF (allocated(ActiveTransfo%list_QMLMapping) ) THEN
+        CALL dealloc_NParray(ActiveTransfo%list_QMLMapping,                 &
+                            "ActiveTransfo%list_QMLMapping",name_sub)
       END IF
 
       ActiveTransfo%nb_var      = 0
@@ -234,7 +246,8 @@ MODULE mod_ActiveTransfo
       TYPE (Type_ActiveTransfo),  intent(inout) :: ActiveTransfo
       integer,                    intent(in)    :: nb_Qin
 
-      integer :: err
+      logical :: flex
+      integer :: i,err
       character (len=*), parameter :: name_sub='Read_ActiveTransfo'
 
       CALL alloc_ActiveTransfo(ActiveTransfo,nb_Qin)
@@ -250,6 +263,38 @@ MODULE mod_ActiveTransfo
         STOP
       END IF
 
+      DO i=1,nb_Qin
+        flex = ActiveTransfo%list_act_OF_Qdyn(i) == 20  .OR.                  &
+               ActiveTransfo%list_act_OF_Qdyn(i) == 200 .OR.                  &
+               ActiveTransfo%list_act_OF_Qdyn(i) == 21
+        IF (flex) EXIT
+      END DO
+
+      !write(6,*) 'ActiveTransfo%QMLib,flex',ActiveTransfo%QMLib,flex
+      IF (ActiveTransfo%QMLib .AND. flex) THEN
+        read(in_unitp,*,IOSTAT=err) ActiveTransfo%list_QMLMapping(:)
+        IF (err /= 0) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '  while reading "list_QMLMapping"'
+          write(out_unitp,*) '  end of file or end of record'
+          write(out_unitp,*) ' Check your data !!'
+          STOP
+        END IF
+        IF(MPI_id==0) write(out_unitp,*) '  list_QMLMapping(:)',ActiveTransfo%list_QMLMapping
+        DO i=1,nb_Qin
+          flex = ActiveTransfo%list_act_OF_Qdyn(i) == 20  .OR.                  &
+                 ActiveTransfo%list_act_OF_Qdyn(i) == 200 .OR.                  &
+                 ActiveTransfo%list_act_OF_Qdyn(i) == 21
+          IF (flex .AND. ActiveTransfo%list_QMLMapping(i) == 0) THEN
+            write(out_unitp,*) ' ERROR in ',name_sub
+            write(out_unitp,*) '  list_QMLMapping(i)=0, for flexible coordinate i',i
+            write(out_unitp,*) '  list_QMLMapping(i) MUST be greater than 0'
+            write(out_unitp,*) ' Check your data !!'
+            STOP
+          END IF
+        END DO
+
+      END IF
 
       CALL flush_perso(out_unitp)
 
@@ -322,6 +367,12 @@ MODULE mod_ActiveTransfo
 
       CALL dealloc_array(list_Qact,'list_Qact',name_sub)
 
+      IF (ActiveTransfo%QMLib) THEN
+          write(out_unitp,*) ' ERROR in ',name_sub
+          write(out_unitp,*) '  Do not use Read2_ActiveTransfo with QMLib=t '
+          write(out_unitp,*) ' Check your data !!'
+          STOP
+      END IF
 
       CALL flush_perso(out_unitp)
 
@@ -385,6 +436,13 @@ MODULE mod_ActiveTransfo
           write(out_unitp,*) 'asso Qact0?   F'
         END IF
 
+        IF (allocated(ActiveTransfo%list_QMLMapping)) THEN
+          write(out_unitp,*) 'list_QMLMapping: ',ActiveTransfo%list_QMLMapping(:)
+        ELSE
+          write(out_unitp,*) 'allocated list_QMLMapping?   F'
+        END IF
+
+
       END IF
       write(out_unitp,*) 'END ',name_sub
 
@@ -406,7 +464,7 @@ MODULE mod_ActiveTransfo
 
 
 !      -----------------------------------------------------------------
-!       logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
        logical, parameter :: debug=.FALSE.
        character (len=*), parameter :: name_sub='calc_ActiveTransfo'
 !      -----------------------------------------------------------------
@@ -443,6 +501,7 @@ MODULE mod_ActiveTransfo
           CALL calc_Tab_dnQflex_gene(Tab_dnQflex,ActiveTransfo%nb_var,          &
                                      dnQact%d0(1:nb_act1),nb_act1,nderiv,-1,    &
                                      ActiveTransfo%list_act_OF_Qdyn,            &
+                                     ActiveTransfo%list_QMLMapping,             &
                                      QMlib=ActiveTransfo%QMLib,                 &
                                      With_Tab_dnQflex=ActiveTransfo%With_Tab_dnQflex)
         END IF
@@ -606,6 +665,7 @@ IMPLICIT NONE
     CALL calc_Tab_dnQflex_gene(Tab_dnQflex,ActiveTransfo%nb_var,                &
                                Qact(1:nb_act1),nb_act1,0,-1,                    &
                                ActiveTransfo%list_act_OF_Qdyn,                  &
+                               ActiveTransfo%list_QMLMapping,                   &
                                QMlib=ActiveTransfo%QMlib,                       &
                                With_Tab_dnQflex=ActiveTransfo%With_Tab_dnQflex)
 
@@ -781,6 +841,9 @@ END SUBROUTINE get_Qact0
 
       IF (associated(ActiveTransfo1%Qact0))                              &
         ActiveTransfo2%Qact0(:)   = ActiveTransfo1%Qact0(:)
+
+      ActiveTransfo2%list_QMLMapping  = ActiveTransfo1%list_QMLMapping
+
 
 !     write(out_unitp,*) 'END ActiveTransfo1TOActiveTransfo2'
 

@@ -779,6 +779,7 @@
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
+         CALL Write_RPHTransfo(RPHTransfo)
          CALL flush_perso(out_unitp)
        END IF
 !-----------------------------------------------------------
@@ -848,7 +849,8 @@
       allocate(tab_dnQflex(mole%nb_var))
 
       CALL calc_Tab_dnQflex_gene(Tab_dnQflex,mole_loc%nb_var,Qact,nb_act1,nderiv,-1,     &
-                                 RPHTransfo%list_act_OF_Qdyn,RPHTransfo%QMlib,.FALSE.)
+                                 RPHTransfo%list_act_OF_Qdyn,                   &
+                                 RPHTransfo%list_QMLMapping,RPHTransfo%QMlib,.FALSE.)
 
       i_Q21 = 0
       DO i_Qdyn=1,RPHTransfo%nb_var

@@ -1365,12 +1365,15 @@ END SUBROUTINE sub_OpBasis_OneCBF
         IF (.NOT. With_Grid) THEN
           nb_mult_OpPsi = 0
           CALL sub_PsiBasisRep_TO_GridRep(Psi)
+          IF (debug) write(out_unitp,*) 'PsiGridRep'
+          IF (debug) CALL ecri_psi(Psi=Psi)
+
           nb_mult_OpPsi = nb_mult_OpPsi + nb_mult_BTOG
           IF (debug) THEN
             write(out_unitp,*) 'PsiGridRep done'
             write(out_unitp,*) 'PsiBasisRep'
-            CALL ecri_init_psi(Psi=Psi)
-            !CALL ecri_psi(Psi=Psi)
+            !CALL ecri_init_psi(Psi=Psi)
+            CALL ecri_psi(Psi=Psi)
             CALL flush_perso(out_unitp)
           END IF
         END IF

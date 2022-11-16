@@ -42,6 +42,7 @@ MODULE mod_RPHQMLTransfo
     integer, allocatable :: list_act_OF_Qout(:) ! This list is read
     integer, allocatable :: list_QinTOQout(:)   ! from the analysis of list_act_OF_Qout
     integer, allocatable :: list_QoutTOQin(:)   ! from the analysis of list_act_OF_Qout
+    integer, allocatable :: list_QMLMapping(:)  ! from the analysis of list_act_OF_Qout
 
     ! The Qin(:) ordering are: the active ones (Qact1 or s),
     !   then the inactive ones (Qinact21) and finally the other ones (rigid, flexible ?).
@@ -88,6 +89,7 @@ SUBROUTINE Read_RPHQMLTransfo(RPHQMLTransfo,nb_Qin,option)
   CALL alloc_NParray(RPHQMLTransfo%list_act_OF_Qout,[nb_Qin],'RPHQMLTransfo%list_act_OF_Qout',name_sub)
   CALL alloc_NParray(RPHQMLTransfo%list_QinTOQout,  [nb_Qin],'RPHQMLTransfo%list_QinTOQout',  name_sub)
   CALL alloc_NParray(RPHQMLTransfo%list_QoutTOQin,  [nb_Qin],'RPHQMLTransfo%list_QoutTOQin',  name_sub)
+  CALL alloc_NParray(RPHQMLTransfo%list_QMLMapping, [nb_Qin],'RPHQMLTransfo%list_QMLMapping', name_sub)
 
   nb_act1 = 0
   read(in_unitp,RPH_QML,IOSTAT=err_read)
@@ -118,13 +120,31 @@ SUBROUTINE Read_RPHQMLTransfo(RPHQMLTransfo,nb_Qin,option)
     write(out_unitp,*) ' Check your data !!'
     STOP 'ERROR in Read_RPHQMLTransfo: while reading "list_act_OF_Qout".'
   END IF
+
+  read(in_unitp,*,IOSTAT=err_read) RPHQMLTransfo%list_QMLMapping(:)
+  IF (err_read /= 0) THEN
+    write(out_unitp,*) ' ERROR in ',name_sub
+    write(out_unitp,*) '  while reading "list_QMLMapping"'
+    write(out_unitp,*) '  end of file or end of record'
+    write(out_unitp,*) ' Check your data !!'
+    STOP
+  END IF
+  DO i=1,nb_Qin
+    IF (RPHQMLTransfo%list_act_OF_Qout(i) == 21 .AND.                          &
+        RPHQMLTransfo%list_QMLMapping(i)  == 0) THEN
+      write(out_unitp,*) ' ERROR in ',name_sub
+      write(out_unitp,*) '  list_QMLMapping(i)=0, for flexible coordinate i',i
+      write(out_unitp,*) '  list_QMLMapping(i) MUST be greater than 0'
+      write(out_unitp,*) ' Check your data !!'
+      STOP
+    END IF
+  END DO
   CALL flush_perso(out_unitp)
 
   RPHQMLTransfo%nb_inact21_out  = count(RPHQMLTransfo%list_act_OF_Qout(:) == 21)
   RPHQMLTransfo%nb_act1_in      = nb_act1
   RPHQMLTransfo%nb_inact21_in   = RPHQMLTransfo%nb_inact21_out - nb_act1
   RPHQMLTransfo%nb_var          = nb_Qin
-
 
   !--------------------------------------------------------------
   !----- variable list in order: active (Qact1), inactive Qinact21 ...
@@ -185,7 +205,9 @@ SUBROUTINE dealloc_RPHQMLTransfo(RPHQMLTransfo)
   IF (allocated(RPHQMLTransfo%list_QoutTOQin)) THEN
     CALL dealloc_NParray(RPHQMLTransfo%list_QoutTOQin,'RPHQMLTransfo%list_QoutTOQin',  name_sub)
   END IF
-
+  IF (allocated(RPHQMLTransfo%list_QMLMapping)) THEN
+    CALL dealloc_NParray(RPHQMLTransfo%list_QMLMapping,'RPHQMLTransfo%list_QMLMapping',name_sub)
+  END IF
 END SUBROUTINE dealloc_RPHQMLTransfo
 
 SUBROUTINE alloc_array_OF_RPHQMLTransfodim0(tab,name_var,name_sub)
@@ -261,7 +283,9 @@ IMPLICIT NONE
   IF (allocated(RPHQMLTransfo%list_QoutTOQin)) THEN
     write(out_unitp,*) 'list_QoutTOQin',RPHQMLTransfo%list_QoutTOQin(:)
   END IF
-
+  IF (allocated(RPHQMLTransfo%list_QMLMapping)) THEN
+    write(out_unitp,*) 'list_QoutTOQin',RPHQMLTransfo%list_QMLMapping(:)
+  END IF
   write(out_unitp,*) 'END ',name_sub
   CALL flush_perso(out_unitp)
 END SUBROUTINE Write_RPHQMLTransfo
@@ -309,6 +333,12 @@ IMPLICIT NONE
     CALL alloc_NParray(RPHQMLTransfo2%list_QoutTOQin,[RPHQMLTransfo2%nb_var],       &
                     'RPHQMLTransfo2%list_QoutTOQin',name_sub)
     RPHQMLTransfo2%list_QoutTOQin(:) = RPHQMLTransfo1%list_QoutTOQin(:)
+  END IF
+
+  IF (allocated(RPHQMLTransfo1%list_QMLMapping))  THEN
+    CALL alloc_NParray(RPHQMLTransfo2%list_QMLMapping,[RPHQMLTransfo2%nb_var],       &
+                      'RPHQMLTransfo2%list_QMLMapping',name_sub)
+    RPHQMLTransfo2%list_QMLMapping(:) = RPHQMLTransfo1%list_QMLMapping(:)
   END IF
 
   !---------------------------------------------------------------------
@@ -412,7 +442,7 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
 
     iFunc = 1 ! potential (IRC)
     DO i=1,RPHQMLTransfo%nb_inact21_out
-      iFunc = iFunc + 1
+      iFunc = RPHQMLTransfo%list_QMLMapping(i)
       dnQinact21_optout(i) = dnFunc(iFunc)
       IF (debug) CALL Write_dnS(dnQinact21_optout(i),info='dnQinact21_optout(' // int_TO_char(i) // ')')
     END DO

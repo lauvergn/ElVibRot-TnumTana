@@ -486,14 +486,15 @@
         CASE ('active') ! the last read transformation
           Qtransfo%nb_Qin  = nb_Qin
           CALL alloc_array(Qtransfo%ActiveTransfo,'Qtransfo%ActiveTransfo',name_sub)
+          Qtransfo%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
+          Qtransfo%ActiveTransfo%QMLib            = QMLib
+
           IF (Qtransfo%opt_transfo == 1) THEN
             CALL Read2_ActiveTransfo(Qtransfo%ActiveTransfo,nb_Qin)
           ELSE
             CALL Read_ActiveTransfo(Qtransfo%ActiveTransfo,nb_Qin)
           END IF
           ! the set of type_Qin and name_Qin are done in type_var_analysis
-          Qtransfo%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
-          Qtransfo%ActiveTransfo%QMLib            = QMLib
 
         CASE ('zmat') ! It should be one of the first transfo read
           IF (nat < 2) THEN

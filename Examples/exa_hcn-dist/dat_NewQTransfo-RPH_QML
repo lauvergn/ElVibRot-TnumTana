@@ -36,6 +36,7 @@ sym  cos(a)      R     r    x    pi   dh
  &Coord_transfo name_transfo='RPH' /
    &RPH step=1.e-5 /
  1 21 21  0 0 0
+ 0  2  3  0 0 0
 
  &Coord_transfo name_transfo='active' /
  1 1 1    0 0 0

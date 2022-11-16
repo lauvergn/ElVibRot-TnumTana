@@ -1321,6 +1321,7 @@ MODULE mod_Tnum
 
         CALL alloc_array(mole%tab_Qtransfo(it)%ActiveTransfo,           &
                         "mole%tab_Qtransfo(it)%ActiveTransfo",name_sub)
+        mole%tab_Qtransfo(it)%ActiveTransfo%QMLib            = QMLib
         CALL Read_ActiveTransfo(mole%tab_Qtransfo(it)%ActiveTransfo,    &
                                 mole%nb_var)
 
@@ -2503,7 +2504,8 @@ MODULE mod_Tnum
       mole%tab_Qtransfo(mole%itRPH)%name_transfo = 'flexible'
 
       CALL Read_FlexibleTransfo(mole%tab_Qtransfo(mole%itRPH)%FlexibleTransfo,  &
-                                nb_Qin,.FALSE.,mole%RPHTransfo%QMLib,list_flex)
+                                nb_Qin,.FALSE.,mole%RPHTransfo%QMLib,list_flex, &
+                                mole%RPHTransfo%list_QMLMapping)
 
       IF (debug) write(out_unitp,*) 'FlexibleTransfo%QMLib',mole%tab_Qtransfo(mole%itRPH)%FlexibleTransfo%QMLib
 

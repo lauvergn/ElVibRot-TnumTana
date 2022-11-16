@@ -769,7 +769,11 @@ MODULE mod_basis
 
 !---------------------------------------------------------------------
       IF (debug) THEN
-        CALL RecWrite_basis(basis_primi)
+        IF (print_level > 1) THEN
+          CALL RecWrite_basis(basis_primi,write_all=.TRUE.)
+        ELSE
+          CALL RecWrite_basis(basis_primi)
+        END IF
         write(out_unitp,*) 'END ',name_sub
         CALL flush_perso(out_unitp)
       END IF

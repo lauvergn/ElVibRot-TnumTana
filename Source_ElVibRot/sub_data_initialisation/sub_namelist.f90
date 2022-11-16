@@ -265,13 +265,15 @@
                         'mole%RPHTransfo_inact2n',name_sub)
 
         CALL Set_RPHTransfo(mole%RPHTransfo_inact2n,                    &
-                                mole%ActiveTransfo%list_act_OF_Qdyn,    &
-                                       gradTOpot0,diabatic_freq,step,   &
-                             H0_sym,H0_sym,Qinact2n_sym(1:nb_inact21),  &
-                             Qinact2n_eq(1:nb_inact21,1:nb_inact21),    &
-                             QMLib=QMLib)
+                            mole%ActiveTransfo%list_act_OF_Qdyn,        &
+                            gradTOpot0,diabatic_freq,step,              &
+                            H0_sym,H0_sym,Qinact2n_sym(1:nb_inact21),   &
+                            Qinact2n_eq(1:nb_inact21,1:nb_inact21),     &
+                            QMLib=QMLib,list_QMLMapping=mole%ActiveTransfo%list_QMLMapping)
 
       ELSE IF (nb_inact21 > 0 .AND. associated(mole%RPHTransfo)) THEN
+        STOP 'In read_inactive: this option is not used anymore ?'
+
         IF (mole%RPHTransfo%option == 0) THEN
           ! here we do not set up the list_act_OF_Qdyn because it is already
           !     done in type_var_analysis
@@ -281,7 +283,7 @@
                                     purify_hess=H0_sym,eq_hess=H0_sym,  &
                               Qinact2n_sym=Qinact2n_sym(1:nb_inact21),  &
                      Qinact2n_eq=Qinact2n_eq(1:nb_inact21,1:nb_inact21),&
-                     QMLib=QMLib)
+                     QMLib=QMLib,list_QMLMapping=mole%ActiveTransfo%list_QMLMapping)
         END IF
       END IF
 

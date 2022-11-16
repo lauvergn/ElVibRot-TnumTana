@@ -1227,7 +1227,7 @@ MODULE mod_Lib_QTransfo
       end function func_iat
 
 SUBROUTINE calc_Tab_dnQflex_gene(Tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it,     &
-                                 list_Type_var,QMlib,With_Tab_dnQflex)
+                                 list_Type_var,list_QMLMapping,QMlib,With_Tab_dnQflex)
   USE mod_system
   USE mod_dnSVM
   IMPLICIT NONE
@@ -1238,6 +1238,7 @@ SUBROUTINE calc_Tab_dnQflex_gene(Tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it,     
   real (kind=Rkind),  intent(in)     :: Qact(:)
   integer,            intent(in)     :: nderiv,it
   integer,            intent(in)     :: list_Type_var(:)
+  integer,            intent(in)     :: list_QMLMapping(:)
   logical,            intent(in)     :: QMlib,With_Tab_dnQflex
 
   integer :: i_Qdyn,type_var
@@ -1264,6 +1265,7 @@ SUBROUTINE calc_Tab_dnQflex_gene(Tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it,     
     write(out_unitp,*) 'nb_var,nb_act1',nb_var,nb_act1
     write(out_unitp,*) 'nderiv,it',nderiv,it
     write(out_unitp,*) 'list_Type_var',list_Type_var
+    write(out_unitp,*) 'list_QMLMapping',list_QMLMapping
     write(out_unitp,*) 'QMLib',QMLib
     write(out_unitp,*) 'With_Tab_dnQflex',With_Tab_dnQflex
     flush(out_unitp)
@@ -1284,14 +1286,32 @@ SUBROUTINE calc_Tab_dnQflex_gene(Tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it,     
     CALL get_Qmodel_nb_Func_ndimFunc(nb_Func,ndimFunc)
     CALL get_Qmodel_IndexesFunc(IndexFunc_Ene,IndexFunc_Qop,IndexFunc_Grad,IndexFunc_Hess)
 
+    IF (debug) THEN
+       write(out_unitp,*) 'IndexFunc_Ene,IndexFunc_Qop',IndexFunc_Ene,IndexFunc_Qop
+       DO i_Qdyn=1,nb_var
+         type_var = list_Type_var(i_Qdyn)
+         !ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+         ifunc = list_QMLMapping(i_Qdyn)
+         IF (type_var == 20 .OR. type_var == 21) THEN
+           write(out_unitp,*) 'type_var,i_Qdyn,ifunc',type_var,i_Qdyn,ifunc
+         ELSE IF (type_var == 200) THEN
+           write(out_unitp,*) 'type_var,i_Qdyn,ifunc',type_var,i_Qdyn,ifunc
+         END IF
+       END DO
+     END IF
+
+
     SELECT CASE (nderiv)
     CASE (0)
       allocate(d0Func(nb_Func))
       CALL get_Qmodel_d0Func(d0Func,Qact,nb_Func,ndimFunc)
 
+      IF (debug) write(out_unitp,*) 'd0Func',d0Func
+
       DO i_Qdyn=1,nb_var
         type_var = list_Type_var(i_Qdyn)
-        ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        !ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        ifunc = list_QMLMapping(i_Qdyn)
         IF (type_var == 20 .OR. type_var == 21) THEN
           Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
         ELSE IF (type_var == 200) THEN
@@ -1306,9 +1326,12 @@ SUBROUTINE calc_Tab_dnQflex_gene(Tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it,     
       allocate(d1Func(ndimFunc,nb_Func))
       CALL get_Qmodel_d0d1Func(d0Func,d1Func,Qact,nb_Func,ndimFunc)
 
+      IF (debug) write(out_unitp,*) 'd0Func',d0Func
+
       DO i_Qdyn=1,nb_var
         type_var = list_Type_var(i_Qdyn)
-          ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        !ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        ifunc = list_QMLMapping(i_Qdyn)
         IF (type_var == 20 .OR. type_var == 21) THEN
           Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
           Tab_dnQflex(i_Qdyn)%d1 = d1Func(:,ifunc)
@@ -1326,9 +1349,12 @@ SUBROUTINE calc_Tab_dnQflex_gene(Tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it,     
       allocate(d2Func(ndimFunc,ndimFunc,nb_Func))
       CALL get_Qmodel_d0d1d2Func(d0Func,d1Func,d2Func,Qact,nb_Func,ndimFunc)
 
+      IF (debug) write(out_unitp,*) 'd0Func',d0Func
+
       DO i_Qdyn=1,nb_var
         type_var = list_Type_var(i_Qdyn)
-        ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        !ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        ifunc = list_QMLMapping(i_Qdyn)
         IF (type_var == 20 .OR. type_var == 21) THEN
           Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
           Tab_dnQflex(i_Qdyn)%d1 = d1Func(:,ifunc)
@@ -1349,9 +1375,12 @@ SUBROUTINE calc_Tab_dnQflex_gene(Tab_dnQflex,nb_var,Qact,nb_act1,nderiv,it,     
       allocate(d3Func(ndimFunc,ndimFunc,ndimFunc,nb_Func))
       CALL get_Qmodel_d0d1d2d3Func(d0Func,d1Func,d2Func,d3Func,Qact,nb_Func,ndimFunc)
 
+      IF (debug) write(out_unitp,*) 'd0Func',d0Func
+
       DO i_Qdyn=1,nb_var
         type_var = list_Type_var(i_Qdyn)
-        ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        !ifunc = IndexFunc_Qop - 1 + i_Qdyn - nb_act1
+        ifunc = list_QMLMapping(i_Qdyn)
         IF (type_var == 20 .OR. type_var == 21) THEN
           Tab_dnQflex(i_Qdyn)%d0 = d0Func(ifunc)
           Tab_dnQflex(i_Qdyn)%d1 = d1Func(:,ifunc)

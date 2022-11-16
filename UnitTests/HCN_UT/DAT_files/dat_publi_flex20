@@ -64,6 +64,7 @@ sym  cos(a)      R     r    x    pi   dh
 6      0.        0.  0.     0.   0.   1.
 
  1 20  20    0 0 0
+ 0  2   3    0 0 0 ! QML mapping for the type20 coordinates
  &minimum pot0=-0.499465823200 QMLib=t /
 .999d0
 3.187

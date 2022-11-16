@@ -75,6 +75,8 @@
 
           integer, allocatable     :: derive_termQact(:,:)      ! derive_termQact(2,nb_term)
           integer, allocatable     :: derive_term_TO_iterm(:,:) ! ...(-3:nb_Qact,-3:nb_Qact)
+          logical, allocatable     :: zero_term(:)              ! zero_term(nb_term). If .true., the term is forced to zero
+
 
           logical                  :: cplx      = .FALSE.
         CONTAINS
@@ -372,6 +374,11 @@
       END SELECT
     END IF
 
+    CALL alloc_NParray(para_TypeOp%zero_term,[nb_term],   &
+                      "para_TypeOp%zero_term",name_sub)
+
+    para_TypeOp%zero_term(:) = .FALSE.
+
     IF (debug) THEN
       CALL Write_TypeOp(para_TypeOp)
       write(out_unitp,*) ' END: ',name_sub
@@ -392,6 +399,10 @@
       IF (allocated(para_TypeOp%derive_term_TO_iterm)) THEN
         CALL dealloc_NParray(para_TypeOp%derive_term_TO_iterm,              &
                             "para_TypeOp%derive_term_TO_iterm",name_sub)
+      END IF
+
+      IF (allocated(para_TypeOp%zero_term)) THEN
+        CALL dealloc_NParray(para_TypeOp%zero_term,"para_TypeOp%zero_term",name_sub)
       END IF
 
       para_TypeOp%direct_KEO          = .FALSE. ! to be used with type_Op=10
@@ -439,9 +450,11 @@
       write(out_unitp,*) ' nb_Qact:                 ',para_TypeOp%nb_Qact
       write(out_unitp,*) ' Jrot:                    ',para_TypeOp%Jrot
       write(out_unitp,*) ' alloc ? derive_termQact: ',allocated(para_TypeOp%derive_termQact)
-      IF (allocated(para_TypeOp%derive_termQact)) THEN
+      write(out_unitp,*) ' alloc ? zero_term:       ',allocated(para_TypeOp%zero_term)
+      IF (allocated(para_TypeOp%derive_termQact) .AND. allocated(para_TypeOp%zero_term)) THEN
         DO iterm=1,para_TypeOp%nb_term
-          write(out_unitp,*) ' iterm ',iterm,' : ',para_TypeOp%derive_termQact(:,iterm)
+          write(out_unitp,*) ' iterm ',iterm,' : ',para_TypeOp%derive_termQact(:,iterm),&
+               ' zero? ',para_TypeOp%zero_term(iterm)
         END DO
       END IF
 
@@ -480,6 +493,9 @@
                para_TypeOp2%nb_Qact,para_TypeOp2%cplx,para_TypeOp2%JRot,&
                para_TypeOp2%direct_KEO,para_TypeOp2%direct_ScalOp,      &
                para_TypeOp2%QML_Vib_adia)
+
+      para_TypeOp1%zero_term(:) = para_TypeOp2%zero_term(:)
+
       IF (debug) THEN
         CALL Write_TypeOp(para_TypeOp1)
         write(out_unitp,*) ' END: ',name_sub

@@ -169,6 +169,11 @@ CONTAINS
             IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
             write(out_unitp,*) 'norm2WP BasisRep',WP0(1)%norm2
 
+            IF (debug) THEN
+              write(out_unitp,*) 'psiBasisRep unnormalized'
+              CALL ecri_psi(ZERO,WP0(1),out_unitp,.FALSE.,.TRUE.)
+            END IF
+
             IF (abs(ONE-WP0(1)%norm2) >= ONETENTH**5) THEN
               write(out_unitp,*) ' WARNNIG in psi0'
               write(out_unitp,*) ' the transformation GridRep to BasisRep is NOT exact'
