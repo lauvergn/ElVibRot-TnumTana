@@ -1,3 +1,4 @@
 rm -f res res_all SH_HADA* file_OpBuilding restart.int spectrum file* fort.* Davidson.log xx.*
 rm -f Eq_KEO.tex mat_f2ij freq.xyz keo.op
+rm -f Taylor_G.keo MidasCpp_KEO.mop Molecule.mmol
 

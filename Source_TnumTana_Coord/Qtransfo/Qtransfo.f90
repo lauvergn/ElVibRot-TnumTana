@@ -119,13 +119,15 @@
       !!@description: TODO
       !!@param: TODO
       SUBROUTINE read_Qtransfo(Qtransfo,nb_Qin,nb_extra_Coord,                  &
-                               With_Tab_dnQflex,QMLib_in,mendeleev)
+                               With_Tab_dnQflex,QMLib_in,mendeleev,             &
+                               Tana_Is_Possible)
         USE mod_MPI
 
         TYPE (Type_Qtransfo), intent(inout)    :: Qtransfo
         integer,              intent(inout)    :: nb_Qin,nb_extra_Coord
         TYPE (table_atom),    intent(in)       :: mendeleev
         logical,              intent(in)       :: With_Tab_dnQflex,QMLib_in
+        logical,              intent(inout)    :: Tana_Is_Possible
 
         character (len=Name_len) :: name_transfo,name_dum
         integer :: nat,nb_vect,nbcol,nb_flex_act,nb_transfo,nb_G,nb_X
@@ -240,12 +242,15 @@
 
         SELECT CASE (name_transfo)
         CASE ('identity')
+          Tana_Is_Possible = Tana_Is_Possible .AND. .TRUE.
           Qtransfo%nb_Qin  = nb_Qin
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qid")
           Qtransfo%type_Qin(:) = Qtransfo%type_Qout(:)
           CONTINUE ! nothing !
 
          CASE ('order')
+          Tana_Is_Possible = .FALSE. ! could be changed
+
           Qtransfo%nb_Qin  = nb_Qin
           CALL sub_Type_Name_OF_Qin(Qtransfo,"Qorder")
 
@@ -279,6 +284,7 @@
 !             STOP
 !          END IF
         CASE ('linear')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           Qtransfo%LinearTransfo%inv = .FALSE.
           Qtransfo%LinearTransfo%transp = .FALSE.
@@ -289,6 +295,7 @@
           CALL Sub_Check_LinearTransfo(Qtransfo)
 
         CASE ('linear_transp')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           Qtransfo%LinearTransfo%inv    = .FALSE.
           Qtransfo%LinearTransfo%transp = .TRUE.
@@ -299,6 +306,7 @@
           CALL Sub_Check_LinearTransfo(Qtransfo)
 
         CASE ('linear_inv')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           Qtransfo%LinearTransfo%inv = .TRUE.
           Qtransfo%LinearTransfo%check_LinearTransfo = check_LinearTransfo
@@ -308,6 +316,7 @@
           CALL Sub_Check_LinearTransfo(Qtransfo)
 
         CASE ('linear_inv_transp','linear_transp_inv')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           Qtransfo%LinearTransfo%inv = .TRUE.
           Qtransfo%LinearTransfo%transp = .TRUE.
@@ -318,6 +327,7 @@
           CALL Sub_Check_LinearTransfo(Qtransfo)
 
         CASE ('lc_projection_inv')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           Qtransfo%LinearTransfo%inv = .TRUE.
           Qtransfo%LinearTransfo%check_LinearTransfo = .FALSE.
@@ -335,6 +345,7 @@
           CALL Sub_Check_LinearTransfo(Qtransfo)
 
         CASE ('nm')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin                     = nb_Qin
           Qtransfo%LinearTransfo%inv          = .FALSE.
           Qtransfo%LinearTransfo%check_LinearTransfo = .FALSE.
@@ -371,6 +382,7 @@
 
 
         CASE ('rph')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           CALL alloc_array(Qtransfo%RPHTransfo,'Qtransfo%RPHTransfo',name_sub)
           CALL Read_RPHTransfo(Qtransfo%RPHTransfo,nb_Qin,Qtransfo%opt_transfo,QMLib)
@@ -379,6 +391,7 @@
           Qtransfo%type_Qin(:) = 0
 
         CASE ('rph_qml')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           CALL alloc_array(Qtransfo%RPHQMLTransfo,'Qtransfo%RPHQMLTransfo',name_sub)
           CALL Read_RPHQMLTransfo(Qtransfo%RPHQMLTransfo,nb_Qin,Qtransfo%opt_transfo)
@@ -387,6 +400,7 @@
           Qtransfo%type_Qin(:) = 0
 
         CASE ('project')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           CALL Read_ProjectTransfo(Qtransfo%ProjectTransfo,nb_Qin,Qtransfo%opt_transfo)
 
@@ -394,6 +408,7 @@
           Qtransfo%type_Qin(:) = 0
 
         CASE ('hyperspherical')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           CALL Read_HyperSpheTransfo(Qtransfo%HyperSpheTransfo,nb_Qin)
 
@@ -405,6 +420,7 @@
           !Qtransfo%type_Qin(:) = 0
 
         CASE ('oned')
+          Tana_Is_Possible = .FALSE. ! could be changed
           Qtransfo%nb_Qin  = nb_Qin
           IF (nb_transfo < 1) THEN
              write(out_unitp,*) ' ERROR in ',name_sub
@@ -428,6 +444,8 @@
           Qtransfo%type_Qin(:) = 0
 
         CASE ('infrange','infiniterange') ! it uses the OneD transfo automatically
+          Tana_Is_Possible = .FALSE. ! could be changed
+
           ! for inTOout=t (Qact -> Qcart direction)
           ! x E ]-inf,inf[ => R E [0,inf[ ->  : "xTOR" or 111 =>
           ! x E ]-inf,inf[ => theta E ]0,Pi[ ->  : "xTOtheta" or 71
@@ -445,6 +463,7 @@
           Qtransfo%type_Qin(:) = 0
 
         CASE ('threed')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
 
           CALL Read_ThreeDTransfo(Qtransfo%ThreeDTransfo,nb_Qin)
@@ -453,6 +472,7 @@
           Qtransfo%type_Qin(:) =0
 
         CASE ('twod')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
 
           CALL Read_TwoDTransfo(Qtransfo%TwoDTransfo,nb_transfo,nb_Qin)
@@ -461,6 +481,8 @@
           Qtransfo%type_Qin(:) =0
 
         CASE ('rot2coord')
+          Tana_Is_Possible = .FALSE.
+
           Qtransfo%nb_Qin  = nb_Qin
 
           CALL Read_Rot2CoordTransfo(Qtransfo%Rot2CoordTransfo,nb_transfo,nb_Qin)
@@ -469,6 +491,7 @@
           Qtransfo%type_Qin(:) = 0
 
         CASE ('flexible')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           !CALL Read_FlexibleTransfo(Qtransfo%FlexibleTransfo,nb_Qin)
           CALL Qtransfo%FlexibleTransfo%QtransfoRead(nb_Qin,With_Tab_dnQflex,QMLib)
@@ -477,6 +500,7 @@
           Qtransfo%type_Qin(:) = Qtransfo%type_Qout(:)
 
         CASE ('gene')
+          Tana_Is_Possible = .FALSE.
           Qtransfo%nb_Qin  = nb_Qin
           CALL Read_GeneTransfo(Qtransfo%GeneTransfo,nb_Qin)
 
@@ -484,6 +508,7 @@
           Qtransfo%type_Qin(:) = 0
 
         CASE ('active') ! the last read transformation
+          Tana_Is_Possible = Tana_Is_Possible .AND. .TRUE.
           Qtransfo%nb_Qin  = nb_Qin
           CALL alloc_array(Qtransfo%ActiveTransfo,'Qtransfo%ActiveTransfo',name_sub)
           Qtransfo%ActiveTransfo%With_Tab_dnQflex = With_Tab_dnQflex
@@ -497,6 +522,7 @@
           ! the set of type_Qin and name_Qin are done in type_var_analysis
 
         CASE ('zmat') ! It should be one of the first transfo read
+          Tana_Is_Possible = .FALSE.
           IF (nat < 2) THEN
               write(out_unitp,*) ' ERROR in ',name_sub
               write(out_unitp,*) ' nat < 2',nat
@@ -523,7 +549,7 @@
           CALL Read_ZmatTransfo(Qtransfo%ZmatTransfo,mendeleev)
 
         CASE ('bunch','bunch_poly') ! It should one of the first transfo
-
+          Tana_Is_Possible = Tana_Is_Possible .AND. .TRUE.
          IF (.NOT. associated(Qtransfo%BunchTransfo)) THEN
            allocate(Qtransfo%BunchTransfo,stat=err_mem)
            memory = 1
@@ -595,6 +621,7 @@
           END IF
 
         CASE ('poly')
+          Tana_Is_Possible = Tana_Is_Possible .AND. .TRUE.
           IF ( .NOT. associated(Qtransfo%BunchTransfo)) THEN
             write(out_unitp,*) ' ERROR in ',name_sub
             write(out_unitp,*) 'For Poly transfo, ... '
@@ -640,6 +667,7 @@
           nullify(Qtransfo%BunchTransfo)
 
         CASE ('qtox_ana')
+          Tana_Is_Possible            = .FALSE.
           Qtransfo%Primitive_Coord    = .TRUE.
           Qtransfo%nb_Qin             = max(1,3*nat-6)+nb_extra_Coord
           Qtransfo%nb_Qout            = 3*nat+3
@@ -668,6 +696,7 @@
           CALL Read_QTOXanaTransfo(Qtransfo%QTOXanaTransfo,mendeleev)
 
         CASE ('cartesian') ! It should be one of the first transfo read
+          Tana_Is_Possible            = .FALSE.
           Qtransfo%nb_Qin             = nb_Qin ! ncart_act
           Qtransfo%nb_Qout            = nb_Qin ! ncart_act
           CALL alloc_array(Qtransfo%type_Qin,[Qtransfo%nb_Qin],       &
@@ -685,7 +714,7 @@
           write(out_unitp,*) ' The transformation is UNKNOWN: ',        &
                                                     trim(name_transfo)
           CALL Write_list_Qtransfo(out_unitp)
-          STOP
+          STOP 'ERROR in read_Qtransfo: wrong coordinate transformation'
 
         END SELECT
 

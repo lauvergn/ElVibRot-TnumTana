@@ -36,7 +36,7 @@ MODULE mod_export_KEO
 
   PRIVATE
 
-  PUBLIC export3_MCTDH_T
+  PUBLIC :: export3_MCTDH_T,export_Taylor_dnG
 
   CONTAINS
 
@@ -82,7 +82,7 @@ MODULE mod_export_KEO
       CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=2)
 
 
-      IF (EVRT) CALL export3_dnG(dnGG,Qact,epsi_MCTDH)
+      IF (EVRT) CALL export_Taylor_dnG(dnGG,Qact,epsi_MCTDH)
 
       write(out_unitp,'(a)') '# =============================================='
       write(out_unitp,'(a)') '# =============================================='
@@ -451,21 +451,17 @@ MODULE mod_export_KEO
 !================================================================
 !      Export second order Taylor expansion of G for EVR
 !================================================================
-      SUBROUTINE export3_dnG(dnGG,Qact,epsi_MCTDH)
+      SUBROUTINE export_Taylor_dnG(dnGG,Qact,epsi_G,file_name)
       IMPLICIT NONE
 
 !     - G,g ... --------------------------------------------
-      TYPE(Type_dnMat) :: dnGG
+      TYPE(Type_dnMat),  intent(in)           :: dnGG
+      real (kind=Rkind), intent(in)           :: Qact(dnGG%nb_var_deriv)
+      real (kind=Rkind), intent(in)           :: epsi_G
+      character(len=*),  intent(in), optional :: file_name
 
-
-      real (kind=Rkind), intent(in) :: Qact(dnGG%nb_var_deriv)
-
-
-
-      real (kind=Rkind) :: epsi_MCTDH
-
-!     - divers ------------------------------------------
-      integer :: i,j,k,l,n0,n1,n2,nb_act
+!     - local variables -------------------------------------
+      integer :: i,j,k,l,n0,n1,n2,nb_act,nio
 
       nb_act = dnGG%nb_var_deriv
       IF (size(Qact) < dnGG%nb_var_deriv) THEN
@@ -473,46 +469,56 @@ MODULE mod_export_KEO
          write(out_unitp,*) ' size(Qact) < dnGG%nb_var_deriv'
          write(out_unitp,*) ' size(Qact),dnGG%nb_var_deriv',            &
                               size(Qact),dnGG%nb_var_deriv
-        STOP
+        STOP 'ERROR in export_Taylor_dnG: wrong Qact size'
+      END IF
+
+      IF (present(file_name)) THEN
+        CALL file_open2(name_file = file_name, iunit=nio)
+      ELSE
+        nio = out_unitp
       END IF
 
 !     For ElVibRot (Tnum.op)
-      write(out_unitp,'(a)') '-------------------------------------------------'
-      write(out_unitp,'(a)') '  For ElVibRot (Tnum.op) '
-      write(out_unitp,'(a)') '-------------------------------------------------'
+      write(nio,'(a)') '-------------------------------------------------'
+      write(nio,'(a)') '  Taylor expansion of G at Qact (Taylor_G.keo)'
+      write(nio,'(a)') '-------------------------------------------------'
+      write(nio,'(" ",a)',advance='no') 'Qact: '
       DO i=1,nb_act
-        write(out_unitp,'(" ",f12.6)',advance='no') Qact(i)
+        write(nio,'(" ",f12.6)',advance='no') Qact(i)
       END DO
-      write(out_unitp,'(a)',advance='yes')
+      write(nio,'(a)',advance='yes')
 
 !     Zero order (cte)
       n0 = 0
       DO i=1,nb_act
       DO j=i,nb_act
-        IF (abs(dnGG%d0(i,j)) > epsi_MCTDH) n0 = n0+1
+        IF (abs(dnGG%d0(i,j)) > epsi_G) n0 = n0+1
       END DO
       END DO
-      write(out_unitp,*) n0
-
+      write(nio,'(a,i0,a)') 'Zero order. ',n0,' terms: '
+      write(nio,'(a)') 'i j G(i,j)'
       DO i=1,nb_act
       DO j=i,nb_act
-        IF (abs(dnGG%d0(i,j)) > epsi_MCTDH) write(out_unitp,*) i,j,dnGG%d0(i,j)
+        IF (abs(dnGG%d0(i,j)) > epsi_G) write(nio,*) i,j,dnGG%d0(i,j)
       END DO
       END DO
-!     First order
+
+      !     First order
       n1 = 0
       DO i=1,nb_act
       DO j=i,nb_act
       DO k=1,nb_act
-        IF (abs(dnGG%d1(i,j,k)) > epsi_MCTDH) n1 = n1+1
+        IF (abs(dnGG%d1(i,j,k)) > epsi_G) n1 = n1+1
       END DO
       END DO
       END DO
-      write(out_unitp,*) n1
+      write(nio,'(a,i0,a)') 'First order. ',n1,' terms: '
+      write(nio,'(a)') 'i j k d G(i,j)/dQ(k)'
+      write(nio,*) n1
+      DO k=1,nb_act
       DO i=1,nb_act
       DO j=i,nb_act
-      DO k=1,nb_act
-        IF (abs(dnGG%d1(i,j,k)) > epsi_MCTDH) write(out_unitp,*) i,j,k,dnGG%d1(i,j,k)
+        IF (abs(dnGG%d1(i,j,k)) > epsi_G) write(nio,*) i,j,k,dnGG%d1(i,j,k)
       END DO
       END DO
       END DO
@@ -522,27 +528,30 @@ MODULE mod_export_KEO
       DO j=i,nb_act
       DO k=1,nb_act
       DO l=k,nb_act
-        IF (abs(dnGG%d2(i,j,k,l)) > epsi_MCTDH) n2 = n2+1
+        IF (abs(dnGG%d2(i,j,k,l)) > epsi_G) n2 = n2+1
       END DO
       END DO
       END DO
       END DO
-      write(out_unitp,*) n2
-      DO i=1,nb_act
-      DO j=i,nb_act
+      write(nio,'(a,i0,a)') 'Second order. ',n2,' terms: '
+      write(nio,'(a)') 'i j k l d^2G(i,j)/dQ(k)dQ(l)'
+      write(nio,*) n2
       DO k=1,nb_act
       DO l=k,nb_act
-        IF (abs(dnGG%d2(i,j,k,l)) > epsi_MCTDH)                            &
-                            write(out_unitp,*) i,j,k,l,dnGG%d2(i,j,k,l)
+      DO i=1,nb_act
+      DO j=i,nb_act
+        IF (abs(dnGG%d2(i,j,k,l)) > epsi_G)                            &
+                            write(nio,*) i,j,k,l,dnGG%d2(i,j,k,l)
       END DO
       END DO
       END DO
       END DO
-      write(out_unitp,'(a)') '-------------------------------------------------'
-      write(out_unitp,'(a)') '  END For ElVibRot (Tnum.op) '
-      write(out_unitp,'(a)') '-------------------------------------------------'
+      write(nio,'(a)') '-------------------------------------------------'
+      write(nio,'(a)') ' END Taylor expansion of G at Qact (Taylor_G.keo)'
+      write(nio,'(a)') '-------------------------------------------------'
+      IF (present(file_name)) close(nio)
 
-      end subroutine export3_dnG
+      end subroutine export_Taylor_dnG
 
       ! The operartor is d./dQi^i * d./dQj^j Qk^k Ql^l
       SUBROUTINE T_Operator_MCTDH(name_Op,i,j,k,l,n)

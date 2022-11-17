@@ -664,6 +664,8 @@ MODULE mod_Tnum
       logical :: New_Orient
       real (kind=Rkind) :: vAt1(3),vAt2(3),vAt3(3)
 
+!     - To be abble to check is Tana is possible ---------------------
+      logical :: Tana_Is_Possible
 
 !     - for the symmetry -------------------------------
 !     sym : .TRUE. if we use the symmetry
@@ -945,8 +947,9 @@ MODULE mod_Tnum
         ENDIF
         CALL alloc_array(mole%tab_Qtransfo,[mole%nb_Qtransfo],        &
                         "mole%tab_Qtransfo",name_sub)
-        nb_Qin          = 0
-        mole%opt_param  = 0
+        nb_Qin           = 0
+        mole%opt_param   = 0
+        Tana_Is_Possible = .TRUE.
         DO it=1,nb_Qtransfo
           IF (debug) write(out_unitp,*) 'New Qtransfo',it
 
@@ -971,7 +974,8 @@ MODULE mod_Tnum
           IF (debug) write(out_unitp,*) 'read Qtransfo',it
 
           CALL read_Qtransfo(mole%tab_Qtransfo(it),nb_Qin,mole%nb_extra_Coord,  &
-                             With_Tab_dnQflex,QMLib,const_phys%mendeleev)
+                             With_Tab_dnQflex,QMLib,const_phys%mendeleev,       &
+                             Tana_Is_Possible)
           mole%tab_Qtransfo(it)%BeforeActive = (it == nb_Qtransfo-1)
 
           mole%opt_param = mole%opt_param + mole%tab_Qtransfo(it)%opt_param
@@ -1042,6 +1046,8 @@ MODULE mod_Tnum
           IF (debug) write(out_unitp,*) 'END: New Qtransfo',it
           CALL flush_perso(out_unitp)
         END DO
+        para_Tnum%Tana = para_Tnum%Tana .AND. Tana_Is_Possible
+        write(out_unitp,*) 'Tana is possible: ',Tana_Is_Possible
         write(out_unitp,*) 'Parameter(s) to be optimized?: ',mole%opt_param
 
         !=======================================================================
@@ -1130,6 +1136,8 @@ MODULE mod_Tnum
 !===== Old Coordinates transformation ==================================
 !=======================================================================
       ELSE IF (zmat) THEN
+        Tana_Is_Possible = .FALSE.
+
         mole%nb_Qtransfo = 2  ! zmat + active
         IF (sym) mole%nb_Qtransfo = mole%nb_Qtransfo + 1
         IF (NM .OR. NM_TO_sym) mole%nb_Qtransfo = mole%nb_Qtransfo + 1
@@ -1365,6 +1373,7 @@ MODULE mod_Tnum
         write(out_unitp,*) '   with calc_f2_f1Q_ana (zmat=f)'
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '================================================='
+        Tana_Is_Possible = .FALSE.
 
         mole%nb_var  = nb_var
         mole%nb_act  = nb_var
@@ -1441,7 +1450,7 @@ MODULE mod_Tnum
         mole%tab_Cart_transfo(1)%num_transfo = 1
         CALL read_Qtransfo(mole%tab_Cart_transfo(1),mole%ncart_act,             &
                            mole%nb_extra_Coord,With_Tab_dnQflex,QMLib,          &
-                           const_phys%mendeleev)
+                           const_phys%mendeleev,Tana_Is_Possible)
 
         IF (print_level > 1) CALL Write_CartesianTransfo(mole%tab_Cart_transfo(1)%CartesianTransfo)
 
@@ -1471,7 +1480,9 @@ MODULE mod_Tnum
 !=======================================================================
 !=======================================================================
 !=======================================================================
-     !check is Tana is possible : nb_Qtransfo = 3
+     para_Tnum%Tana = para_Tnum%Tana .AND. Tana_Is_Possible
+
+      !check is Tana is possible : nb_Qtransfo = 3
      para_Tnum%Tana = para_Tnum%Tana .AND. mole%nb_Qtransfo == 3
      !check is Tana is possible : 2st transfo poly
      name_transfo = mole%tab_Qtransfo(2)%name_transfo

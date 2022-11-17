@@ -34,7 +34,6 @@
       USE mod_PrimOp
       IMPLICIT NONE
 
-
 !     - parameters for para_Tnum -----------------------
       TYPE (constant)  :: const_phys
       TYPE (CoordType) :: mole
@@ -49,8 +48,11 @@
       real (kind=Rkind), allocatable :: Qact(:)
       real (kind=Rkind), allocatable :: Qxyz(:)
 !     - working parameters ------------------------------------------
-      integer :: nada,i,j,n,ndim
-!     ------------------------------------------------------
+      integer           :: nada,i,j,n,ndim
+      real (kind=Rkind) :: epsi_G = ONETENTH**10
+      logical           :: Tana
+
+      !     ------------------------------------------------------
 
 
       NAMELIST /NewQ/ nada
@@ -71,6 +73,7 @@
       !     ------------------------------------------------------------
       CALL Read_CoordType(mole,para_Tnum,const_phys)
       para_Tnum%MidasCppForm = .TRUE.
+      Tana = para_Tnum%Tana
       !     ------------------------------------------------------------
       !-----------------------------------------------------------------
 
@@ -123,7 +126,7 @@
 !-------------------------------------------------
 
 !-------------------------------------------------
-       para_Tnum%Tana =.TRUE.
+       para_Tnum%Tana = Tana
        IF (para_Tnum%Tana .AND. err_io /= 0) THEN
          write(out_unitp,*) "======================================"
          write(out_unitp,*) "======================================"
@@ -147,7 +150,7 @@
 
          write(out_unitp,*) 'Coordinate, value, GQQ'
          DO i=1,mole%nb_act
-           write(out_unitp,*) String_TO_String('Q' // int_TO_char(i-1) ),Qact(i),dnGG%d0(i,i)
+           write(out_unitp,*) 'Q' // int_TO_char(i-1),Qact(i),dnGG%d0(i,i)
          END DO
 
          CALL dealloc_dnSVM(dnGG)
@@ -159,6 +162,25 @@
          write(out_unitp,*) "======================================"
        END IF
 !-------------------------------------------------
+
+
+       write(out_unitp,*) "======================================"
+       write(out_unitp,*) "======================================"
+       write(out_unitp,*) "======================================"
+       write(out_unitp,*) "======================================"
+       CALL time_perso('Taylor expansion of G')
+
+       para_Tnum%WriteT    = .FALSE.
+       CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=2)
+       CALL export_Taylor_dnG(dnGG,Qact,epsi_G,file_name='Taylor_G.keo')
+       !CALL export_Taylor_dnG(dnGG,Qact,ZERO,file_name='Taylor_G.keo')
+
+       CALL dealloc_dnSVM(dnGG)
+       CALL time_perso('Taylor expansion of G')
+       write(out_unitp,*) "======================================"
+       write(out_unitp,*) "======================================"
+       write(out_unitp,*) "======================================"
+       write(out_unitp,*) "======================================"
 
 
        CALL dealloc_CoordType(mole)

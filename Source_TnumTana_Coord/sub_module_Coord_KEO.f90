@@ -28,7 +28,6 @@
 !===========================================================================
 MODULE mod_Coord_KEO
 
-
   USE mod_Lib_QTransfo,    ONLY : Write_dnx
   USE mod_freq,            ONLY : gaussian_width,calc_freq,             &
                                   calc_freq_block,calc_freq_with_d0c,   &
@@ -48,7 +47,7 @@ MODULE mod_Coord_KEO
                                   Find_iQa_OF_RPHpara_AT_Qact1
   USE mod_CartesianTransfo, ONLY: calc_dnteckart,calc_dntxdnxin_to_dnxout,&
                                   calc_eckartrot,dnmwx_multiref
-  USE mod_export_KEO,      ONLY : export3_MCTDH_T
+  USE mod_export_KEO
   USE mod_Tnum,            ONLY : Tnum,param_PES_FromTnum,dealloc_Tnum, &
                                   CoordType,dealloc_coordtype,          &
                                   Read_CoordType,write_coordtype,       &

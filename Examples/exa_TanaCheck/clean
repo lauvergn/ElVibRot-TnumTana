@@ -1,3 +1,4 @@
 rm -f res* freq.xyz keo.op Eq_KEO.tex
 rm -f dat* save_dat_error
 rm -f *.mod *.MOD a.out split_block.exe
+rm -f *log
