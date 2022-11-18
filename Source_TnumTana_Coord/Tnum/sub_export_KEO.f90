@@ -82,7 +82,7 @@ MODULE mod_export_KEO
       CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=2)
 
 
-      IF (EVRT) CALL export_Taylor_dnG(dnGG,Qact,epsi_MCTDH)
+      IF (EVRT) CALL export_Taylor_dnG(dnGG,Qact,epsi_MCTDH,option=1)
 
       write(out_unitp,'(a)') '# =============================================='
       write(out_unitp,'(a)') '# =============================================='
@@ -451,7 +451,7 @@ MODULE mod_export_KEO
 !================================================================
 !      Export second order Taylor expansion of G for EVR
 !================================================================
-      SUBROUTINE export_Taylor_dnG(dnGG,Qact,epsi_G,file_name)
+      SUBROUTINE export_Taylor_dnG(dnGG,Qact,epsi_G,file_name,option)
       IMPLICIT NONE
 
 !     - G,g ... --------------------------------------------
@@ -459,9 +459,37 @@ MODULE mod_export_KEO
       real (kind=Rkind), intent(in)           :: Qact(dnGG%nb_var_deriv)
       real (kind=Rkind), intent(in)           :: epsi_G
       character(len=*),  intent(in), optional :: file_name
+      integer,           intent(in), optional :: option
 
 !     - local variables -------------------------------------
-      integer :: i,j,k,l,n0,n1,n2,nb_act,nio
+      integer :: i,j,k,l,n0,n1,n2,nb_act,nio,option_loc
+
+
+!     -----------------------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub='export_Taylor_dnG'
+!     -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'Qact',Qact
+        write(out_unitp,*) 'epsi_G',epsi_G
+
+        IF (present(file_name)) THEN 
+          write(out_unitp,*) 'file_name',file_name
+        ELSE
+          write(out_unitp,*) 'file_name is not present'
+        END IF
+
+        IF (present(option)) THEN 
+          write(out_unitp,*) 'option',option
+        ELSE
+          write(out_unitp,*) 'option is not present'
+        END IF
+      END IF
+      flush(out_unitp)
+!     -----------------------------------------------------------------
 
       nb_act = dnGG%nb_var_deriv
       IF (size(Qact) < dnGG%nb_var_deriv) THEN
@@ -471,12 +499,21 @@ MODULE mod_export_KEO
                               size(Qact),dnGG%nb_var_deriv
         STOP 'ERROR in export_Taylor_dnG: wrong Qact size'
       END IF
+      IF (debug) write(out_unitp,*) ' nb_act',nb_act
+
+      IF (present(option)) THEN
+        option_loc = option
+      ELSE
+        option_loc = 0
+      END IF
+      IF (debug) write(out_unitp,*) ' option_loc',option_loc
 
       IF (present(file_name)) THEN
         CALL file_open2(name_file = file_name, iunit=nio)
       ELSE
         nio = out_unitp
       END IF
+      IF (debug) write(out_unitp,*) ' nio',nio
 
 !     For ElVibRot (Tnum.op)
       write(nio,'(a)') '-------------------------------------------------'
@@ -488,68 +525,97 @@ MODULE mod_export_KEO
       END DO
       write(nio,'(a)',advance='yes')
 
-!     Zero order (cte)
-      n0 = 0
-      DO i=1,nb_act
-      DO j=i,nb_act
-        IF (abs(dnGG%d0(i,j)) > epsi_G) n0 = n0+1
-      END DO
-      END DO
-      write(nio,'(a,i0,a)') 'Zero order. ',n0,' terms: '
-      write(nio,'(a)') 'i j G(i,j)'
-      DO i=1,nb_act
-      DO j=i,nb_act
-        IF (abs(dnGG%d0(i,j)) > epsi_G) write(nio,*) i,j,dnGG%d0(i,j)
-      END DO
-      END DO
-
-      !     First order
-      n1 = 0
-      DO i=1,nb_act
-      DO j=i,nb_act
-      DO k=1,nb_act
-        IF (abs(dnGG%d1(i,j,k)) > epsi_G) n1 = n1+1
-      END DO
-      END DO
-      END DO
-      write(nio,'(a,i0,a)') 'First order. ',n1,' terms: '
-      write(nio,'(a)') 'i j k d G(i,j)/dQ(k)'
-      write(nio,*) n1
-      DO k=1,nb_act
-      DO i=1,nb_act
-      DO j=i,nb_act
-        IF (abs(dnGG%d1(i,j,k)) > epsi_G) write(nio,*) i,j,k,dnGG%d1(i,j,k)
-      END DO
-      END DO
-      END DO
-!     second order
-      n2 = 0
-      DO i=1,nb_act
-      DO j=i,nb_act
-      DO k=1,nb_act
-      DO l=k,nb_act
-        IF (abs(dnGG%d2(i,j,k,l)) > epsi_G) n2 = n2+1
-      END DO
-      END DO
-      END DO
-      END DO
-      write(nio,'(a,i0,a)') 'Second order. ',n2,' terms: '
-      write(nio,'(a)') 'i j k l d^2G(i,j)/dQ(k)dQ(l)'
-      write(nio,*) n2
-      DO k=1,nb_act
-      DO l=k,nb_act
-      DO i=1,nb_act
-      DO j=i,nb_act
-        IF (abs(dnGG%d2(i,j,k,l)) > epsi_G)                            &
-                            write(nio,*) i,j,k,l,dnGG%d2(i,j,k,l)
-      END DO
-      END DO
-      END DO
-      END DO
+      SELECT CASE (option_loc)
+      CASE (1)
+         ! Zero order (cte)
+        n0 = 0
+        DO i=1,nb_act
+        DO j=i,nb_act
+          IF (abs(dnGG%d0(i,j)) > epsi_G) n0 = n0+1
+        END DO
+        END DO
+        write(nio,'(a,i0,a)') 'Zero order. ',n0,' terms: '
+        write(nio,'(a)') 'i j G(i,j)'
+        DO i=1,nb_act
+        DO j=i,nb_act
+          IF (abs(dnGG%d0(i,j)) > epsi_G) write(nio,*) i,j,dnGG%d0(i,j)
+        END DO
+        END DO
+        !     First order
+        n1 = 0
+        DO i=1,nb_act
+        DO j=i,nb_act
+        DO k=1,nb_act
+          IF (abs(dnGG%d1(i,j,k)) > epsi_G) n1 = n1+1
+        END DO
+        END DO
+        END DO
+        write(nio,'(a,i0,a)') 'First order. ',n1,' terms: '
+        write(nio,'(a)') 'i j k d G(i,j)/dQ(k)'
+        write(nio,*) n1
+        DO k=1,nb_act
+        DO i=1,nb_act
+        DO j=i,nb_act
+          IF (abs(dnGG%d1(i,j,k)) > epsi_G) write(nio,*) i,j,k,dnGG%d1(i,j,k)
+        END DO
+        END DO
+        END DO
+        ! second order
+        n2 = 0
+        DO i=1,nb_act
+        DO j=i,nb_act
+        DO k=1,nb_act
+        DO l=k,nb_act
+          IF (abs(dnGG%d2(i,j,k,l)) > epsi_G) n2 = n2+1
+        END DO
+        END DO
+        END DO
+        END DO
+        write(nio,'(a,i0,a)') 'Second order. ',n2,' terms: '
+        write(nio,'(a)') 'i j k l d^2G(i,j)/dQ(k)dQ(l)'
+        write(nio,*) n2
+        DO k=1,nb_act
+        DO l=k,nb_act
+        DO i=1,nb_act
+        DO j=i,nb_act
+          IF (abs(dnGG%d2(i,j,k,l)) > epsi_G)                            &
+                              write(nio,*) i,j,k,l,dnGG%d2(i,j,k,l)
+        END DO
+        END DO
+        END DO
+        END DO
+      CASE DEFAULT
+       ! Zero order (cte)
+        write(nio,'(a,i0,a)') 'Zero order'
+        write(nio,*) dnGG%d0(:,:)
+        ! First order
+        write(nio,'(a,i0,a)') 'First order'
+        DO k=1,nb_act
+          write(nio,*) k
+          write(nio,*) dnGG%d1(:,:,k)
+        END DO
+        ! second order
+        write(nio,'(a,i0,a)') 'Second order'
+        DO k=1,nb_act
+        DO l=k,nb_act
+          write(nio,*) k,l
+          write(nio,*) dnGG%d2(:,:,k,l)
+        END DO
+        END DO
+      END SELECT
       write(nio,'(a)') '-------------------------------------------------'
       write(nio,'(a)') ' END Taylor expansion of G at Qact (Taylor_G.keo)'
       write(nio,'(a)') '-------------------------------------------------'
+      flush(nio)
       IF (present(file_name)) close(nio)
+
+!     -----------------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*)
+        write(out_unitp,*) 'END ',name_sub
+      END IF
+      flush(out_unitp)
+!     -----------------------------------------------------------------
 
       end subroutine export_Taylor_dnG
 
