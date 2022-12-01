@@ -3566,6 +3566,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
       integer                           :: get_Qmodel_ndim ! function
       integer                           :: i,j,iact,jact,ndim
       real (kind=Rkind), allocatable    :: GGdef_Qmodel(:,:)
+      integer                           :: GTaylor_Order
 
 !----- for debuging --------------------------------------------------
       integer :: err_mem,memory
@@ -3583,6 +3584,8 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
 !-----------------------------------------------------------
 
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
+      GTaylor_Order = para_Tnum%GTaylor_Order
+      para_Tnum%GTaylor_Order = -1
 
       IF (present(Tana)) THEN
         Tana_loc = Tana
@@ -3775,7 +3778,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
     CALL dealloc_NPArray(GGdef,'GGdef',name_sub)
   END IF
 
-      !----- Tana if needed --------------------------------------------
+    !----- Tana if needed --------------------------------------------
       IF (para_Tnum%Tana .AND. Tana_loc) THEN
         write(out_unitp,*)
         write(out_unitp,*) '================================================='
@@ -3857,6 +3860,15 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
 
         write(out_unitp,*) '================================================='
       END IF
+
+      IF (GTaylor_Order > -1) THEN
+        CALL alloc_dnSVM(para_Tnum%dnGGref,mole%ndimG,mole%ndimG,mole%nb_act,GTaylor_Order)
+        CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=para_Tnum%dnGGref,nderiv=GTaylor_Order)
+        !write(out_unitp,*) 'dnGGref'
+        !CALL Write_dnSVM(para_Tnum%dnGGref)
+        IF (debug) CALL export_Taylor_dnG(para_Tnum%dnGGref,Qact,epsi_G=ONETENTH**10,option=1)
+      END IF
+      para_Tnum%GTaylor_Order = GTaylor_Order
 
 !-----------------------------------------------------------
       !IF (debug) THEN

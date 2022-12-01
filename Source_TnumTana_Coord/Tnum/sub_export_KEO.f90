@@ -527,81 +527,94 @@ MODULE mod_export_KEO
 
       SELECT CASE (option_loc)
       CASE (1)
-         ! Zero order (cte)
-        n0 = 0
-        DO i=1,nb_act
-        DO j=i,nb_act
-          IF (abs(dnGG%d0(i,j)) > epsi_G) n0 = n0+1
-        END DO
-        END DO
-        write(nio,'(a,i0,a)') 'Zero order. ',n0,' terms: '
-        write(nio,'(a)') 'i j G(i,j)'
-        DO i=1,nb_act
-        DO j=i,nb_act
-          IF (abs(dnGG%d0(i,j)) > epsi_G) write(nio,*) i,j,dnGG%d0(i,j)
-        END DO
-        END DO
+        ! Zero order (cte)
+        IF (associated(dnGG%d0)) THEN
+          n0 = 0
+          DO i=1,nb_act
+          DO j=i,nb_act
+            IF (abs(dnGG%d0(i,j)) > epsi_G) n0 = n0+1
+          END DO
+          END DO
+          write(nio,'(a,i0,a)') 'Zero order. ',n0,' terms: '
+          write(nio,'(a)') 'i j G(i,j)'
+          DO i=1,nb_act
+          DO j=i,nb_act
+            IF (abs(dnGG%d0(i,j)) > epsi_G) write(nio,*) i,j,dnGG%d0(i,j)
+          END DO
+          END DO
+        END IF
+
         !     First order
-        n1 = 0
-        DO i=1,nb_act
-        DO j=i,nb_act
-        DO k=1,nb_act
-          IF (abs(dnGG%d1(i,j,k)) > epsi_G) n1 = n1+1
-        END DO
-        END DO
-        END DO
-        write(nio,'(a,i0,a)') 'First order. ',n1,' terms: '
-        write(nio,'(a)') 'i j k d G(i,j)/dQ(k)'
-        write(nio,*) n1
-        DO k=1,nb_act
-        DO i=1,nb_act
-        DO j=i,nb_act
-          IF (abs(dnGG%d1(i,j,k)) > epsi_G) write(nio,*) i,j,k,dnGG%d1(i,j,k)
-        END DO
-        END DO
-        END DO
+        IF (associated(dnGG%d1)) THEN
+          n1 = 0
+          DO i=1,nb_act
+          DO j=i,nb_act
+          DO k=1,nb_act
+            IF (abs(dnGG%d1(i,j,k)) > epsi_G) n1 = n1+1
+          END DO
+          END DO
+          END DO
+          write(nio,'(a,i0,a)') 'First order. ',n1,' terms: '
+          write(nio,'(a)') 'i j k d G(i,j)/dQ(k)'
+          write(nio,*) n1
+          DO k=1,nb_act
+          DO i=1,nb_act
+          DO j=i,nb_act
+            IF (abs(dnGG%d1(i,j,k)) > epsi_G) write(nio,*) i,j,k,dnGG%d1(i,j,k)
+          END DO
+          END DO
+          END DO
+        END IF
         ! second order
-        n2 = 0
-        DO i=1,nb_act
-        DO j=i,nb_act
-        DO k=1,nb_act
-        DO l=k,nb_act
-          IF (abs(dnGG%d2(i,j,k,l)) > epsi_G) n2 = n2+1
-        END DO
-        END DO
-        END DO
-        END DO
-        write(nio,'(a,i0,a)') 'Second order. ',n2,' terms: '
-        write(nio,'(a)') 'i j k l d^2G(i,j)/dQ(k)dQ(l)'
-        write(nio,*) n2
-        DO k=1,nb_act
-        DO l=k,nb_act
-        DO i=1,nb_act
-        DO j=i,nb_act
-          IF (abs(dnGG%d2(i,j,k,l)) > epsi_G)                            &
-                              write(nio,*) i,j,k,l,dnGG%d2(i,j,k,l)
-        END DO
-        END DO
-        END DO
-        END DO
+        IF (associated(dnGG%d2)) THEN
+          n2 = 0
+          DO i=1,nb_act
+          DO j=i,nb_act
+          DO k=1,nb_act
+          DO l=k,nb_act
+            IF (abs(dnGG%d2(i,j,k,l)) > epsi_G) n2 = n2+1
+          END DO
+          END DO
+          END DO
+          END DO
+          write(nio,'(a,i0,a)') 'Second order. ',n2,' terms: '
+          write(nio,'(a)') 'i j k l d^2G(i,j)/dQ(k)dQ(l)'
+          write(nio,*) n2
+          DO k=1,nb_act
+          DO l=k,nb_act
+          DO i=1,nb_act
+          DO j=i,nb_act
+            IF (abs(dnGG%d2(i,j,k,l)) > epsi_G)                            &
+                                write(nio,*) i,j,k,l,dnGG%d2(i,j,k,l)
+          END DO
+          END DO
+          END DO
+          END DO
+        END IF
       CASE DEFAULT
-       ! Zero order (cte)
-        write(nio,'(a,i0,a)') 'Zero order'
-        write(nio,*) dnGG%d0(:,:)
-        ! First order
-        write(nio,'(a,i0,a)') 'First order'
-        DO k=1,nb_act
-          write(nio,*) k
-          write(nio,*) dnGG%d1(:,:,k)
-        END DO
-        ! second order
-        write(nio,'(a,i0,a)') 'Second order'
-        DO k=1,nb_act
-        DO l=k,nb_act
-          write(nio,*) k,l
-          write(nio,*) dnGG%d2(:,:,k,l)
-        END DO
-        END DO
+          ! Zero order (cte)
+        IF (associated(dnGG%d0)) THEN
+          write(nio,'(a,i0,a)') 'Zero order'
+          write(nio,*) dnGG%d0(:,:)
+        END IF
+          ! First order
+        IF (associated(dnGG%d1)) THEN
+          write(nio,'(a,i0,a)') 'First order'
+          DO k=1,nb_act
+            write(nio,*) k
+            write(nio,*) dnGG%d1(:,:,k)
+          END DO
+        END IF
+          ! second order
+        IF (associated(dnGG%d2)) THEN
+          write(nio,'(a,i0,a)') 'Second order'
+          DO k=1,nb_act
+          DO l=k,nb_act
+            write(nio,*) k,l
+            write(nio,*) dnGG%d2(:,:,k,l)
+          END DO
+          END DO
+        END IF
       END SELECT
       write(nio,'(a)') '-------------------------------------------------'
       write(nio,'(a)') ' END Taylor expansion of G at Qact (Taylor_G.keo)'

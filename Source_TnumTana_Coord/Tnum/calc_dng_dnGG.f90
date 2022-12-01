@@ -166,6 +166,7 @@ MODULE mod_dnGG_dng
       write(out_unitp,*) 'num_GG,num_g',para_Tnum%num_GG,para_Tnum%num_g
       write(out_unitp,*) 'num_x,nrho',para_Tnum%num_x,para_Tnum%nrho
       write(out_unitp,*) 'JJ',para_Tnum%JJ
+      write(out_unitp,*) 'GTaylor_Order',para_Tnum%GTaylor_Order
       write(out_unitp,*)
       write(out_unitp,*) 'present dnGG',present(dnGG)
       write(out_unitp,*) 'present dng ',present(dng)
@@ -187,7 +188,24 @@ MODULE mod_dnGG_dng
 
     vep_done = .FALSE.
     vep_loc  = ZERO
-    IF (para_Tnum%Gcte .AND. associated(para_Tnum%Gref)) THEN
+    IF (para_Tnum%GTaylor_Order > -1) THEN
+      !-----------------------------------------------------------------
+      ! with constant metric tensor
+      IF (present(dnGG)) THEN
+        IF (present(dng)) THEN
+          CALL get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dng=dng,dnGG=dnGG) ! it doesn't work yet
+        ELSE
+          CALL get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dnGG=dnGG)
+        END IF
+      ELSE
+        IF (present(dng)) THEN
+          CALL get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dng=dng)  ! it doesn't work yet
+        ELSE
+          ! nothing to do !!
+        END IF
+      END IF
+      !-----------------------------------------------------------------
+    ELSE IF (para_Tnum%Gcte .AND. associated(para_Tnum%Gref)) THEN
       !-----------------------------------------------------------------
       ! with constant metric tensor
       IF (present(dnGG)) THEN
@@ -377,6 +395,127 @@ MODULE mod_dnGG_dng
       END IF
 
   END SUBROUTINE get_dng_dnGG_WITH_Gcte
+
+  SUBROUTINE get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dng,dnGG)
+    IMPLICIT NONE
+
+    real (kind=Rkind), intent(in)               :: Qact(:)
+    TYPE(Type_dnMat),  intent(inout), optional  :: dng,dnGG
+
+!----- for the CoordType and Tnum --------------------------------------
+    TYPE (CoordType),  intent(in)               :: mole
+    TYPE (Tnum),       intent(in)               :: para_Tnum
+
+
+    real (kind=Rkind), allocatable    :: DQ(:)
+    integer                           :: i,j
+
+!----- for debuging --------------------------------------------------
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    character (len=*), parameter :: name_sub = 'get_dng_dnGG_WITH_GTaylor'
+!-----------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*)
+      write(out_unitp,*) 'ndimG',mole%ndimG
+      write(out_unitp,*)
+      write(out_unitp,*) 'Qact',Qact
+      write(out_unitp,*) 'Qact0',mole%ActiveTransfo%Qact0
+      write(out_unitp,*)
+      write(out_unitp,*) 'GTaylor_Order',para_Tnum%GTaylor_Order
+      write(out_unitp,*)
+      write(out_unitp,*) 'present dnGG',present(dnGG)
+      write(out_unitp,*) 'present dng ',present(dng)
+      write(out_unitp,*)
+      CALL flush_perso(out_unitp)
+    END IF
+
+    IF (.NOT. present(dnGG) .OR. present(dng)) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) ' This subroutine works ONLY with dnGG, and ...'
+      write(out_unitp,*) ' dnGG is not present or dng is present'
+      write(out_unitp,*) ' present(dnGG)',present(dnGG)
+      write(out_unitp,*) ' present(dng) ',present(dng)
+      write(out_unitp,*) '  check the fortran!!'
+      STOP 'ERROR in get_dng_dnGG_WITH_GTaylor, Problem with dnGG or dng.'
+    END IF
+    IF (.NOT. present(dnGG) .OR. present(dng)) THEN
+      write(out_unitp,*) 'ERROR in ',name_sub
+      write(out_unitp,*) ' This subroutine works ONLY with dnGG, and ...'
+      write(out_unitp,*) ' dnGG is not present or dng is present'
+      write(out_unitp,*) ' present(dnGG)',present(dnGG)
+      write(out_unitp,*) ' present(dng) ',present(dng)
+      write(out_unitp,*) '  check the fortran!!'
+      STOP 'ERROR in get_dng_dnGG_WITH_GTaylor, Problem with dnGG or dng.'
+    END IF
+
+    CALL check_alloc_dnMat(dnGG,'dnGG',name_sub)
+    CALL check_alloc_dnMat(para_Tnum%dnGGref,'para_Tnum%dnGGref',name_sub)
+
+    DQ = Qact - mole%ActiveTransfo%Qact0
+    IF (debug) THEN 
+      write(out_unitp,*) 'DQ',DQ(:)
+      write(out_unitp,*) 'para_Tnum%dnGGref'
+      CALL Write_dnSVM(para_Tnum%dnGGref)
+    END IF
+
+    dnGG%d0 = para_Tnum%dnGGref%d0
+
+    IF (para_Tnum%GTaylor_Order > 0) THEN
+      DO i=1,mole%nb_act
+        dnGG%d0 = dnGG%d0 + para_Tnum%dnGGref%d1(:,:,i)*DQ(i)
+      END DO
+    END IF
+
+    IF (para_Tnum%GTaylor_Order > 1) THEN
+      DO i=1,mole%nb_act
+      DO j=1,mole%nb_act
+        dnGG%d0 = dnGG%d0 + HALF*para_Tnum%dnGGref%d2(:,:,j,i)*DQ(i)*DQ(j)
+      END DO
+      END DO
+    END IF
+
+    IF (dnGG%nderiv > 0) THEN
+      dnGG%d1 = ZERO
+
+      IF (para_Tnum%GTaylor_Order > 0) THEN
+        dnGG%d1 = para_Tnum%dnGGref%d1
+      END IF
+
+      IF (para_Tnum%GTaylor_Order > 1) THEN
+        dnGG%d1 = para_Tnum%dnGGref%d1
+
+        DO i=1,mole%nb_act
+        DO j=1,mole%nb_act
+          dnGG%d1(:,:,i) = dnGG%d1(:,:,i) + para_Tnum%dnGGref%d2(:,:,j,i)*DQ(j)
+        END DO
+        END DO
+
+      END IF
+
+    END IF
+
+    IF (dnGG%nderiv > 1) THEN
+      IF (para_Tnum%GTaylor_Order > 1) THEN
+        dnGG%d2 = para_Tnum%dnGGref%d2
+      ELSE
+        dnGG%d2 = ZERO
+      END IF
+    END IF
+
+    deallocate(DQ)
+
+    IF (debug) THEN
+      write(out_unitp,*) 'dnGG'
+      CALL Write_dnSVM(dnGG)
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+    END IF
+
+  END SUBROUTINE get_dng_dnGG_WITH_GTaylor
+
+
   SUBROUTINE get_dng_dnGG_WITH_f2f1_ana(Qact,para_Tnum,mole,dng,dnGG,vep,nderiv)
   USE mod_ActiveTransfo,    only: qact_to_qdyn_from_activetransfo
   IMPLICIT NONE

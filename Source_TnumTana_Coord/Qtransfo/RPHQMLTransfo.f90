@@ -435,7 +435,7 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
     nb_Func  = QuantumModel%QM%nb_Func
     ndimFunc = QuantumModel%QM%ndimFunc
     allocate(dnFunc(nb_Func))
-    CALL QuantumModel%QM%Eval_QModel_Func(dnFunc,dnQact1_in,nderiv=nderiv)
+    CALL QuantumModel%QM%EvalFunc_QModel(dnFunc,dnQact1_in,nderiv=nderiv)
     !DO i=1,nb_Func
     !  CALL Write_dnS(dnFunc(i),info='dnFunc(' // int_TO_char(i) // ')')
     !END DO
@@ -586,7 +586,7 @@ SUBROUTINE calc_RPHQMLTransfo_v0(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
     nb_Func  = QuantumModel%QM%nb_Func
     ndimFunc = QuantumModel%QM%ndimFunc
     allocate(dnFunc(nb_Func))
-    CALL QuantumModel%QM%Eval_QModel_Func(dnFunc,dnQact1_in,nderiv=nderiv)
+    CALL QuantumModel%QM%EvalFunc_QModel(dnFunc,dnQact1_in,nderiv=nderiv)
     !DO i=1,nb_Func
     !  CALL Write_dnS(dnFunc(i),info='dnFunc(' // int_TO_char(i) // ')')
     !END DO

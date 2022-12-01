@@ -2,7 +2,7 @@
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
- F90 = gfortran
+  F90 = gfortran
 # F90 = nagfor
 # F90 = ifort
 # F90 = pgf90
@@ -92,8 +92,8 @@ endif
 # Quantum Model Lib (ECAM)
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
 #QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
-QMLIB := -L$(QMLibDIR) -lQMLib
-QMLibDIR_full := $(QMLibDIR)/libQMLib.a
+QMLIB := -L$(QMLibDIR) -lQMLib_$(F90)_omp$(OMP)
+QMLibDIR_full := $(QMLibDIR)/libQMLib_$(F90)_omp$(OMP).a
 
 # dnSVM Lib
 #dnSVMLibDIR := /Users/lauvergn/git/AD_dnSVM
@@ -899,7 +899,8 @@ endif
 #===============================================
 #
 # QML
-QMLMODFILE= OBJ/adiachannels_basis_m.mod OBJ/irc_m.mod OBJ/opt_m.mod OBJ/model_m.mod
+QMLObjDIR   :=OBJ/obj_$(F90)_omp$(OMP)
+QMLMODFILE= $(QMLObjDIR)/adiachannels_basis_m.mod $(QMLObjDIR)/irc_m.mod $(QMLObjDIR)/opt_m.mod $(QMLObjDIR)/model_m.mod
 
 .PHONY: qml QML
 qml QML: $(QMLibDIR) $(QMLibDIR_full)
@@ -915,10 +916,10 @@ clean_qml clean_QML:
 #
 # dnS libraries
 #
-#dnSMODFILE= $(dnSVMLibDIR)/OBJ/addnsvm_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dns_m.mod \
-#            $(dnSVMLibDIR)/OBJ/addnsvm_dnmat_m.mod $(dnSVMLibDIR)/OBJ/addnsvm_dnpoly_m.mod
-dnSMODFILE= OBJ/addnsvm_m.mod OBJ/addnsvm_dns_m.mod OBJ/addnsvm_dns_op_m.mod \
-            OBJ/addnsvm_dnmat_m.mod OBJ/addnsvm_dnpoly_m.mod OBJ/addnsvm_dnfunc_m.mod
+dnSVMObjDIR   :=OBJ/obj_$(F90)_omp$(OMP)
+
+dnSMODFILE= $(dnSVMObjDIR)/addnsvm_m.mod $(dnSVMObjDIR)/addnsvm_dns_m.mod \
+            $(dnSVMObjDIR)/addnsvm_dnmat_m.mod $(dnSVMObjDIR)/addnsvm_dnpoly_m.mod
 .PHONY: dns dnS
 dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
 	@echo "make dnS library"
@@ -956,7 +957,7 @@ clean_UT:
 
 # clean
 .PHONY: clean
-clean: clean_example clean_dnS
+clean: clean_example clean_dnS clean_qml
 	rm -f *.lst $(OBJ)/*.o *.mod *.MOD $(OBJ)/*.mod $(OBJ)/*.MOD $(EXE) *.exe $(OBJ)/*.a vib
 	rm -f *.lst $(DIR_EVRT)/obj/*/*.o $(DIR_EVRT)/obj/*/*.mod $(DIR_EVRT)/obj/*/*.MOD $(EXE) *.exe $(DIR_EVRT)/obj/*/*.a vib
 	rm -rf *.dSYM
@@ -964,8 +965,6 @@ clean: clean_example clean_dnS
 	@cd sub_pot                              ; rm -f sub_system.f sub_system.f90
 	@cd Source_TnumTana_Coord/sub_operator_T ; rm -f calc_f2_f1Q.f90 Calc_Tab_dnQflex.f90 Sub_X_TO_Q_ana.f90
 	@echo "  done remove the system dependent files (sub_system.f, calc_f2_f1Q.f90 ...) "
-	@cd Ext_Lib/QuantumModelLib             ; make clean
-	@echo "  done cleaning up the QML directories"
 	@cd Examples/exa_hcn-dist ; ./clean
 	@cd Examples/exa_TnumDriver ; ./clean
 	@cd Examples/exa_direct-dist ; ./clean

@@ -119,7 +119,7 @@ MODULE mod_f2f2Vep
       real (kind=Rkind) :: Qdyn(mole%nb_var)
       TYPE(Type_dnS)    :: dnJac,dnrho
 
-      TYPE(Type_dnMat) :: dng,dnGG
+      TYPE(Type_dnMat) :: dnGG
       integer          :: calc_g,calc_GG
 
 !     ----------------------------------------------------------
@@ -184,11 +184,8 @@ MODULE mod_f2f2Vep
       END IF
 
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
-      CALL alloc_dnSVM(dng,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
 
-      CALL get_dng_dnGG(Qact,para_Tnum,mole,dng,dnGG,vep=vep,nderiv=nderiv)
-      ! write(out_unitp,*) 'dng'
-      ! CALL write_dnSVM(dng)
+      CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,vep=vep,nderiv=nderiv)
       ! write(out_unitp,*) 'dnGG'
       ! CALL write_dnSVM(dnGG)
       ! write(out_unitp,*) 'vep',vep
@@ -196,8 +193,8 @@ MODULE mod_f2f2Vep
       !----- For dnrho -------------------------------------------
       nderiv = 1
       ! for dnrho (because, we need dnrho%d1 in sub_H1def and sub_Tcor1
-      CALL alloc_dnSVM(dnrho,dng%nb_var_deriv,nderiv)
-      CALL alloc_dnSVM(dnJac,dng%nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnrho,dnGG%nb_var_deriv,nderiv)
+      CALL alloc_dnSVM(dnJac,dnGG%nb_var_deriv,nderiv)
 
       IF (para_Tnum%nrho == 0 .AND. .NOT. para_Tnum%Gcte) THEN
         ! dnJac
@@ -254,7 +251,6 @@ MODULE mod_f2f2Vep
       CALL dealloc_dnSVM(dnJac)
       CALL dealloc_dnSVM(dnrho)
       CALL dealloc_dnSVM(dnGG)
-      CALL dealloc_dnSVM(dng)
 
 !-----------------------------------------------------------
       IF (debug .OR. para_Tnum%WriteT) THEN
@@ -267,8 +263,10 @@ MODULE mod_f2f2Vep
       END IF
 !-----------------------------------------------------------
 
-      END SUBROUTINE calc3_f2_f1Q_num_CoordType
-      SUBROUTINE calc3_f2_f1Q_numTay0Qinact2n(Qact,dnQinact2n,          &
+END SUBROUTINE calc3_f2_f1Q_num_CoordType
+
+
+SUBROUTINE calc3_f2_f1Q_numTay0Qinact2n(Qact,dnQinact2n,          &
                                               Tdef2,Tdef1,vep,rho,      &
                                               Tcor2,Tcor1,Trot,         &
                                               para_Tnum,mole)

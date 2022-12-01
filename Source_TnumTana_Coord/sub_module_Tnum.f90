@@ -28,6 +28,7 @@
 !===========================================================================
 MODULE mod_Tnum
       USE mod_system
+      use mod_dnSVM,            only: Type_dnMat
       USE mod_nDFit,            only: param_nDFit
       USE mod_QTransfo,         only: type_qtransfo, write_qtransfo,    &
                                       dealloc_qtransfo, dealloc_array,  &
@@ -204,9 +205,13 @@ MODULE mod_Tnum
 
           logical                    :: Gdiago  = .FALSE.
           logical                    :: Gcte    = .FALSE.
+
           integer                    :: NonGcteRange(2) = 0
           logical                    :: Inertia = .TRUE.
           real (kind=Rkind), pointer :: Gref(:,:) => null() ! reference value if Gcte=.true.
+          integer                    :: GTaylor_Order = -1
+          TYPE(Type_dnMat)           :: dnGGref             ! to be able to use a taylor expansion
+
 
           integer                    :: nrho              = 2
           integer                    :: vep_type          = -1 ! The default depends on the GG metric
@@ -698,6 +703,7 @@ MODULE mod_Tnum
 
       real (kind=Rkind) :: stepT,stepOp
       integer           :: KEO_TalyorOFQinact2n ! taylor epxansion along coordinate 2n (21) types
+      integer           :: GTaylor_Order  ! taylor epxansion of G
 !     - end for the CoordType ----------------------------
 
 
@@ -714,7 +720,7 @@ MODULE mod_Tnum
                      hessian_cart,hessian_onthefly,file_hessian,stepOp,         &
                      stepT,num_GG,num_g,num_x,nrho,vep_type,                    &
                      Tana,Compa_TanaTnum,Tana_Init_Only,                        &
-                     Gdiago,Gcte,NonGcteRange,QMLib_G,                          &
+                     Gdiago,Gcte,NonGcteRange,QMLib_G,GTaylor_Order,            &
                      MidasCppForm,MCTDHForm,LaTeXForm,                          &
                      VSCFForm,FortranForm,                                      &
                      KEO_TalyorOFQinact2n,f2f1_ana,                             &
@@ -767,6 +773,7 @@ MODULE mod_Tnum
       nrho                 = 1
       vep_type             = -1
       KEO_TalyorOFQinact2n = -1
+      GTaylor_Order        = -1
       f2f1_ana             = .FALSE.
 
       With_VecCOM          = .FALSE.
@@ -860,6 +867,7 @@ MODULE mod_Tnum
       para_Tnum%Gdiago               = Gdiago
       para_Tnum%Gcte                 = Gcte
       para_Tnum%para_PES_FromTnum%QMLib_G = QMLib_G
+      para_Tnum%GTaylor_Order        = min(2,GTaylor_Order)
 
       IF ((nrho == 20 .OR. nrho == 10) .AND. vep_type /= -1 .AND. vep_type /= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -2016,8 +2024,12 @@ MODULE mod_Tnum
     Tnum1%Gref(:,:) = Tnum2%Gref
   END IF
 
+  Tnum1%dnGGref       = Tnum2%dnGGref
+  Tnum1%GTaylor_Order = Tnum2%GTaylor_Order
+
   END SUBROUTINE Tnum2_TO_Tnum1
   SUBROUTINE dealloc_Tnum(para_Tnum)
+  use mod_dnSVM
 
   CLASS (Tnum), intent(inout) :: para_Tnum
 
@@ -2062,6 +2074,10 @@ MODULE mod_Tnum
   IF (associated(para_Tnum%Gref)) THEN
     CALL dealloc_array(para_Tnum%Gref,'para_Tnum%Gref','dealloc_Tnum')
   END IF
+
+  CALL dealloc_dnSVM(para_Tnum%dnGGref)
+  para_Tnum%GTaylor_Order = -1
+
 
   END SUBROUTINE dealloc_Tnum
 !================================================================
