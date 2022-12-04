@@ -1,0 +1,18 @@
+#!/bin/bash
+
+ SYSTEM=sub_system_HNO3_ccsdt.f
+
+
+ cp HESS-fit/inter_0-vtz HESS-fit/inter_0
+
+here=`pwd`
+
+DIR_vib=../..
+DIR_pot=$DIR_vib/sub_pot
+
+ cp $SYSTEM $DIR_pot/sub_system.f
+
+cd $DIR_vib
+ make &> $here/comp.log
+cd $here
+

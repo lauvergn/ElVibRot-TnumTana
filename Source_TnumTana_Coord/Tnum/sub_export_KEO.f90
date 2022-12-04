@@ -36,7 +36,7 @@ MODULE mod_export_KEO
 
   PRIVATE
 
-  PUBLIC :: export3_MCTDH_T,export_Taylor_dnG
+  PUBLIC :: export3_MCTDH_T,export_Taylor_dnG,export_Taylor_dnVep
 
   CONTAINS
 
@@ -449,7 +449,7 @@ MODULE mod_export_KEO
 
       end subroutine export3_MCTDH_dnG
 !================================================================
-!      Export second order Taylor expansion of G for EVR
+!      Export second order Taylor expansion of GG and Vep for EVR
 !================================================================
       SUBROUTINE export_Taylor_dnG(dnGG,Qact,epsi_G,file_name,option)
       IMPLICIT NONE
@@ -631,7 +631,160 @@ MODULE mod_export_KEO
 !     -----------------------------------------------------------------
 
       end subroutine export_Taylor_dnG
+      SUBROUTINE export_Taylor_dnVep(dnVepref,Qact,epsi_Vep,file_name,option)
+        use mod_dnSVM,    only: type_dnS
+        IMPLICIT NONE
+  
+  !     - G,g ... --------------------------------------------
+        TYPE(Type_dnS),    intent(in)           :: dnVepref
+        real (kind=Rkind), intent(in)           :: Qact(dnVepref%nb_var_deriv)
+        real (kind=Rkind), intent(in)           :: epsi_Vep
+        character(len=*),  intent(in), optional :: file_name
+        integer,           intent(in), optional :: option
+  
+  !     - local variables -------------------------------------
+        integer :: i,k,l,n0,n1,n2,nb_act,nio,option_loc
+  
+  
+  !     -----------------------------------------------------------------
+        logical, parameter :: debug = .FALSE.
+        !logical, parameter :: debug = .TRUE.
+        character (len=*), parameter :: name_sub='export_Taylor_dnVep'
+  !     -----------------------------------------------------------------
+        IF (debug) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) 'BEGINNING ',name_sub
+          write(out_unitp,*) 'Qact',Qact
+          write(out_unitp,*) 'epsi_Vep',epsi_Vep
+  
+          IF (present(file_name)) THEN 
+            write(out_unitp,*) 'file_name',file_name
+          ELSE
+            write(out_unitp,*) 'file_name is not present'
+          END IF
+  
+          IF (present(option)) THEN 
+            write(out_unitp,*) 'option',option
+          ELSE
+            write(out_unitp,*) 'option is not present'
+          END IF
+        END IF
+        flush(out_unitp)
+  !     -----------------------------------------------------------------
+  
+        nb_act = dnVepref%nb_var_deriv
+        IF (size(Qact) < dnVepref%nb_var_deriv) THEN
+           write(out_unitp,*) ' ERROR in export3_dnG'
+           write(out_unitp,*) ' size(Qact) < dnVepref%nb_var_deriv'
+           write(out_unitp,*) ' size(Qact),dnVepref%nb_var_deriv',            &
+                                size(Qact),dnVepref%nb_var_deriv
+          STOP 'ERROR in export_Taylor_dnVep: wrong Qact size'
+        END IF
+        IF (debug) write(out_unitp,*) ' nb_act',nb_act
+  
+        IF (present(option)) THEN
+          option_loc = option
+        ELSE
+          option_loc = 0
+        END IF
+        IF (debug) write(out_unitp,*) ' option_loc',option_loc
+  
+        IF (present(file_name)) THEN
+          CALL file_open2(name_file = file_name, iunit=nio)
+        ELSE
+          nio = out_unitp
+        END IF
+        IF (debug) write(out_unitp,*) ' nio',nio
+  
+  !     For ElVibRot (Tnum.op)
+        write(nio,'(a)') '-------------------------------------------------'
+        write(nio,'(a)') '  Taylor expansion of the Vep at Qact (Taylor_Vep.keo)'
+        write(nio,'(a)') '-------------------------------------------------'
+        write(nio,'(" ",a)',advance='no') 'Qact: '
+        DO i=1,nb_act
+          write(nio,'(" ",f12.6)',advance='no') Qact(i)
+        END DO
+        write(nio,'(a)',advance='yes')
+  
+        SELECT CASE (option_loc)
+        CASE (1)
+          ! Zero order (cte)
+          n0 = 0
+          IF (abs(dnVepref%d0) > epsi_Vep) n0 = n0+1
+          write(nio,'(a,i0,a)') 'Zero order. ',n0,' terms: '
+          write(nio,'(a)') 'Vep'
+          IF (abs(dnVepref%d0) > epsi_Vep) write(nio,*) dnVepref%d0
+  
+          !     First order
+          IF (associated(dnVepref%d1)) THEN
+            n1 = 0
+            DO k=1,nb_act
+              IF (abs(dnVepref%d1(k)) > epsi_Vep) n1 = n1+1
+            END DO
+            write(nio,'(a,i0,a)') 'First order. ',n1,' terms: '
+            write(nio,'(a)') 'k d Vep/dQ(k)'
+            write(nio,*) n1
+            DO k=1,nb_act
+              IF (abs(dnVepref%d1(k)) > epsi_Vep) write(nio,*) k,dnVepref%d1(k)
+            END DO
+          END IF
 
+          ! second order
+          IF (associated(dnVepref%d2)) THEN
+            n2 = 0
+            DO k=1,nb_act
+            DO l=k,nb_act
+              IF (abs(dnVepref%d2(k,l)) > epsi_Vep) n2 = n2+1
+            END DO
+            END DO
+            write(nio,'(a,i0,a)') 'Second order. ',n2,' terms: '
+            write(nio,'(a)') 'k l d^2Vep/dQ(k)dQ(l)'
+            write(nio,*) n2
+            DO k=1,nb_act
+            DO l=k,nb_act
+              IF (abs(dnVepref%d2(k,l)) > epsi_Vep)                            &
+                                  write(nio,*) k,l,dnVepref%d2(k,l)
+            END DO
+            END DO
+          END IF
+        CASE DEFAULT
+          ! Zero order (cte)
+          write(nio,'(a,i0,a)') 'Zero order'
+          write(nio,*) dnVepref%d0
+          ! First order
+          IF (associated(dnVepref%d1)) THEN
+            write(nio,'(a,i0,a)') 'First order'
+            DO k=1,nb_act
+              write(nio,*) k
+              write(nio,*) dnVepref%d1(k)
+            END DO
+          END IF
+          ! second order
+          IF (associated(dnVepref%d2)) THEN
+            write(nio,'(a,i0,a)') 'Second order'
+            DO k=1,nb_act
+            DO l=k,nb_act
+              write(nio,*) k,l
+              write(nio,*) dnVepref%d2(k,l)
+            END DO
+            END DO
+          END IF
+        END SELECT
+        write(nio,'(a)') '-------------------------------------------------'
+        write(nio,'(a)') ' END Taylor expansion of the Vep at Qact (Taylor_Vep.keo)'
+        write(nio,'(a)') '-------------------------------------------------'
+        flush(nio)
+        IF (present(file_name)) close(nio)
+  
+  !     -----------------------------------------------------------------
+        IF (debug) THEN
+          write(out_unitp,*)
+          write(out_unitp,*) 'END ',name_sub
+        END IF
+        flush(out_unitp)
+  !     -----------------------------------------------------------------
+  
+        end subroutine export_Taylor_dnVep
       ! The operartor is d./dQi^i * d./dQj^j Qk^k Ql^l
       SUBROUTINE T_Operator_MCTDH(name_Op,i,j,k,l,n)
       IMPLICIT NONE

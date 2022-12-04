@@ -1,3 +1,4 @@
+DIR_EVRT:=$(shell pwd)
 #===============================================================================
 #===============================================================================
 ## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
@@ -92,14 +93,16 @@ endif
 # Quantum Model Lib (ECAM)
 QMLibDIR := /Users/lauvergn/git/QuantumModelLib
 #QMLibDIR := $(ExternalLibDIR)/QuantumModelLib
+QMLModDIR := $(QMLibDIR)/OBJ/obj_$(F90)_omp$(OMP)
 QMLIB := -L$(QMLibDIR) -lQMLib_$(F90)_omp$(OMP)
 QMLibDIR_full := $(QMLibDIR)/libQMLib_$(F90)_omp$(OMP).a
 
 # dnSVM Lib
 #dnSVMLibDIR := /Users/lauvergn/git/AD_dnSVM
-dnSVMLibDIR := $(ExternalLibDIR)/dnSVMLib
+dnSVMLibDIR := $(DIR_EVRT)/$(ExternalLibDIR)/dnSVMLib
 dnSVMLIB := -L$(dnSVMLibDIR) -lAD_dnSVM
 dnSVMLibDIR_full := $(dnSVMLibDIR)/libAD_dnSVM.a
+AD_dnSVMModDIR   := $(dnSVMLibDIR)/OBJ/obj_$(F90)_omp$(OMP)
 #===============================================================================
 #
 #===============================================================================
@@ -203,6 +206,7 @@ ifeq ($(F90),ifort)
    ifeq ($(INT),8)
      F90FLAGS := $(F90FLAGS) -i8 -Dint8=1
    endif
+   MOD_FLAGS := -M$(QMLModDIR) -M$(AD_dnSVMModDIR)
 
    F90_VER = $(shell $(F90) --version | head -1 )
 
@@ -300,6 +304,9 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
       F90FLAGS := $(F90FLAGS) -fdefault-integer-8 -Dint8=1
    endif
 
+   MOD_FLAGS := -I $(QMLModDIR) -I $(AD_dnSVMModDIR)
+
+
    F90_VER = $(shell $(F90) --version | head -1 )
 
 endif
@@ -396,9 +403,10 @@ $(info ***********subsystem file:   sub_system.$(extf))
 $(info ***********DIR of potlib.a:  $(ExternalDIR))
 $(info ***********potLib:           $(PESLIB))
 $(info ***********INVHYP:           $(INVHYP))
+$(info ***********MOD_FLAGS:        $(MOD_FLAGS))
 $(info ************************************************************************)
 
-F90_FLAGS = $(F90) $(F90FLAGS)
+F90_FLAGS = $(F90) $(F90FLAGS) $(MOD_FLAGS)
 LYNK90 = $(F90_FLAGS)
 
 #===============================================================================
@@ -906,7 +914,9 @@ QMLMODFILE= $(QMLObjDIR)/adiachannels_basis_m.mod $(QMLObjDIR)/irc_m.mod $(QMLOb
 qml QML: $(QMLibDIR) $(QMLibDIR_full)
 	@echo "make qml library"
 $(QMLibDIR_full): $(QMLibDIR)
-	cd $(QMLibDIR) ; make ; cp $(QMLMODFILE) $(OBJ)
+	cd $(QMLibDIR) ; make lib
+#cd $(QMLibDIR) ; make ; cp $(QMLMODFILE) $(OBJ)
+
 $(QMLibDIR):
 	cd $(ExternalLibDIR) ; ./get_QML.sh
 	test -d $(QMLibDIR) || exit 1
@@ -925,7 +935,8 @@ dns dnS: $(dnSVMLibDIR) $(dnSVMLibDIR_full)
 	@echo "make dnS library"
 $(dnSVMLibDIR_full): $(dnSVMLibDIR)
 	@echo "make dnS library"
-	cd $(dnSVMLibDIR) ; make lib ; cp $(dnSMODFILE) $(OBJ)
+	cd $(dnSVMLibDIR) ; make lib
+#cd $(dnSVMLibDIR) ; make lib ; cp $(dnSMODFILE) $(OBJ)
 $(dnSVMLibDIR):
 	cd $(ExternalLibDIR) ; ./get_dnSVM.sh
 	test -d $(dnSVMLibDIR) || exit 1

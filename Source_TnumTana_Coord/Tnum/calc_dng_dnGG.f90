@@ -48,6 +48,7 @@ MODULE mod_dnGG_dng
 
   PUBLIC :: new_vep,sub_vep_new,sub_vep,Calc_vep_rho_from_dnGG
   PUBLIC :: get_d0g_d0GG,get_d0GG,get_dnGG_vep,get_dng_dnGG
+  PUBLIC :: Set_dnVepTaylor
 
   CONTAINS
 !======================================================================
@@ -188,18 +189,19 @@ MODULE mod_dnGG_dng
 
     vep_done = .FALSE.
     vep_loc  = ZERO
+
     IF (para_Tnum%GTaylor_Order > -1) THEN
       !-----------------------------------------------------------------
       ! with constant metric tensor
       IF (present(dnGG)) THEN
         IF (present(dng)) THEN
-          CALL get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dng=dng,dnGG=dnGG) ! it doesn't work yet
+          CALL get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dng=dng,dnGG=dnGG) ! it doesn't work yet with dng
         ELSE
           CALL get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dnGG=dnGG)
         END IF
       ELSE
         IF (present(dng)) THEN
-          CALL get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dng=dng)  ! it doesn't work yet
+          CALL get_dng_dnGG_WITH_GTaylor(Qact,para_Tnum,mole,dng=dng)  ! it doesn't work yet with dng
         ELSE
           ! nothing to do !!
         END IF
@@ -264,10 +266,19 @@ MODULE mod_dnGG_dng
                                          nderiv=nderiv)
           END IF
         ELSE
-          CALL get_dng_dnGG_WITH_type100(Qact,para_Tnum,mole,           &
+          IF (para_Tnum%vep_type == -100) THEN
+            ! This version has a bug. We keep it to recover published results (HNO3)
+            CALL get_dng_dnGG_WITH_type100_bug_dng(Qact,para_Tnum,mole, &
                                          dnGG=dnGG,                     &
                                          vep=vep_loc,vep_done=vep_done, &
                                          nderiv=nderiv)
+            write(out_unitp,*) 'WARNING vep_type=-100. vep',vep_loc
+          ELSE
+            CALL get_dng_dnGG_WITH_type100(Qact,para_Tnum,mole,         &
+                                         dnGG=dnGG,                     &
+                                         vep=vep_loc,vep_done=vep_done, &
+                                         nderiv=nderiv)
+          END IF
         END IF
       ELSE
         IF (present(dng)) THEN
@@ -279,8 +290,8 @@ MODULE mod_dnGG_dng
           ! nothing to do !!
         END IF
       END IF
-
       !-----------------------------------------------------------------
+      !write(6,*) 'vep_type,vep_done',para_Tnum%vep_type,vep_done
     ELSE
       !-----------------------------------------------------------------
       ! Normal computation ...
@@ -325,18 +336,15 @@ MODULE mod_dnGG_dng
       END DO
     END IF
     !-----------------------------------------------------------------
-
     IF (present(vep)) THEN
       IF (vep_done) THEN
         vep = vep_loc
       ELSE
-        vep = ZERO
         IF (present(dnGG)) THEN
-          CALL Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
+          vep = get_vep_rho(Qact,mole,para_Tnum,dnGG,rho)
+        ELSE
+          vep = get_vep_rho(Qact,mole,para_Tnum,rho=rho)
         END IF
-        !IF (present(dng) .AND. present(dnGG)) THEN
-        !  CALL Calc_vep_rho_from_dng_AND_dnGG(vep,rho,Qact,dng,dnGG,mole,para_Tnum)
-        !END IF
         vep_done = .TRUE.
       END IF
     END IF
@@ -719,7 +727,7 @@ MODULE mod_dnGG_dng
 
     !-----------------------------------------------------------------
     ! local variables
-    TYPE (Type_dnMat) :: dnGG100,dng100
+    TYPE (Type_dnMat) :: dnGG100,dng100,dng_loc
     TYPE (CoordType)  :: mole100
     integer           :: i,j
     real (kind=Rkind) :: rho
@@ -799,6 +807,16 @@ MODULE mod_dnGG_dng
       IF (present(dng) .AND. present(dnGG)) THEN ! here it is wrong. because dng is wrong
         CALL Calc_vep_rho_from_dng_AND_dnGG(vep,rho,Qact,dng,dnGG,mole,para_Tnum)
         vep_done = .TRUE.
+      ELSE IF (present(dnGG)) THEN ! here it is wrong. because dng is wrong
+        CALL alloc_dnSVM(dng_loc,mole%ndimG,mole%ndimG,mole%nb_act,nderiv)
+
+        CALL dngG100_TO_dngG(dng100,dng_loc,mole100,mole) ! here it is wrong. dng MUST be dnGG^-1
+
+        CALL Calc_vep_rho_from_dng_AND_dnGG(vep,rho,Qact,dng_loc,dnGG,mole,para_Tnum)
+
+        CALL dealloc_dnSVM(dng_loc)
+        vep_done = .TRUE.
+
       END IF
       !-----------------------------------------------------------------
 
@@ -1345,8 +1363,9 @@ MODULE mod_dnGG_dng
 !----- some step ----------------------------------------------------
       Gcenter = .TRUE.
       IF (para_Tnum%stepT == ZERO) THEN
-        write(out_unitp,*) ' ERROR : para_Tnum%stepT is zero'
-        STOP
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' para_Tnum%stepT is zero'
+        STOP ' ERROR : para_Tnum%stepT is zero'
       END IF
       step2 = ONE/(para_Tnum%stepT*para_Tnum%stepT)
       step24 = step2/FOUR
@@ -1983,8 +2002,284 @@ END SUBROUTINE sub_d1A
     write(out_unitp,*) 'END sub_d2A'
   END IF
 END SUBROUTINE sub_d2A
+FUNCTION get_vep_rho(Qact,mole,para_Tnum,dnGG,rho,WithTaylor) RESULT (vep)
+  USE mod_dnDetGG_dnDetg, only : sub3_dnDetGG
+  IMPLICIT NONE
 
-  SUBROUTINE Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
+    real (kind=Rkind)                             :: vep
+
+    !-----------------------------------------------------------------
+    real (kind=Rkind), intent(in)               :: Qact(:)
+    TYPE(Type_dnMat),  intent(in),    optional  :: dnGG
+    real (kind=Rkind), intent(inout), optional  :: rho
+    logical,           intent(in),    optional  :: WithTaylor
+
+    !----- for the CoordType and Tnum --------------------------------
+    TYPE (CoordType),  intent(in)               :: mole
+    TYPE (Tnum),       intent(in)               :: para_Tnum
+    !-----------------------------------------------------------------
+
+
+    !-----------------------------------------------------------------
+    ! local variables
+    TYPE(Type_dnS)    :: dnJac,dnrho
+    TYPE(Type_dnMat)  :: dnGG_loc
+
+    integer           :: nderiv_loc
+    logical           :: dnGG_OK,WithTaylor_loc,vep_done,rho_done
+    !-----------------------------------------------------------------
+
+
+    !--- for debuging --------------------------------------------------
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    character (len=*), parameter :: name_sub = 'get_vep_rho'
+    !---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'nrho       ',para_Tnum%nrho
+      write(out_unitp,*) 'vep_type   ',para_Tnum%vep_type
+      write(out_unitp,*)
+      write(out_unitp,*) 'Qact',Qact
+
+      IF (present(dnGG)) THEN
+        write(out_unitp,*) 'dnGG'
+        write(out_unitp,*) 'ndimG      ',mole%ndimG
+        write(out_unitp,*) 'dnGG%nderiv',dnGG%nderiv
+        CALL write_dnMat(dnGG)
+      END IF
+      !write(out_unitp,*)
+      !CALL Write_CoordType(mole)
+      !write(out_unitp,*)
+      flush(out_unitp)
+    END IF
+    !---------------------------------------------------------
+
+    IF (present(WithTaylor)) THEN 
+      WithTaylor_loc = (para_Tnum%vepTaylor_Order > -1 .AND. WithTaylor)
+    ELSE
+      WithTaylor_loc = (para_Tnum%vepTaylor_Order > -1)
+    END IF
+    IF (debug) THEN
+      write(out_unitp,*) 'WithTaylor_loc',WithTaylor_loc
+      flush(out_unitp)
+    END IF
+
+    vep_done = .FALSE.
+    rho_done = .FALSE.
+
+    !------------------------------------------------------------
+    !-- extra potential term ------------------------------------
+    IF ( para_Tnum%vep_type == 1 .OR. para_Tnum%vep_type == 100) THEN
+
+      IF (WithTaylor_loc) THEN
+        vep      = get_vepTaylor(Qact,mole,para_Tnum)
+        vep_done = .TRUE.
+      END IF
+
+      IF (present(dnGG)) THEN 
+        dnGG_OK = (dnGG%nderiv == 2)
+      ELSE
+        dnGG_OK = .FALSE.
+      END IF
+
+      IF (debug) THEN
+        write(out_unitp,*) 'dnGG_OK,vep_done',dnGG_OK,vep_done
+        flush(out_unitp)
+      END IF
+
+      IF (.NOT. vep_done) THEN
+
+        !----------------------------------------------------
+        !-- jac0,jaci,JACij calculation
+        !----------------------------------------------------
+        nderiv_loc = 2
+        CALL alloc_dnSVM(dnJac,mole%nb_act,nderiv=nderiv_loc)
+        CALL alloc_dnSVM(dnrho,mole%nb_act,nderiv=nderiv_loc)
+
+        IF (dnGG_OK) THEN
+          CALL sub3_dnDetGG(dnJac,dnGG,nderiv_loc,mole%masses,mole%Mtot_inv,mole%ncart)
+        ELSE
+          CALL alloc_dnSVM(dnGG_loc,mole%ndimG,mole%ndimG,mole%nb_act,nderiv=nderiv_loc)
+
+          CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG_loc,nderiv=nderiv_loc)
+          CALL sub3_dnDetGG(dnJac,dnGG_loc,nderiv_loc,mole%masses,mole%Mtot_inv,mole%ncart)
+        END IF
+
+        IF (debug) THEN
+          write(out_unitp,*) 'dnJac'
+          CALL write_dnS(dnJac)
+          flush(out_unitp)
+        END IF
+
+        !----------------------------------------------------
+        !-- f0,fi,Fij calculation
+        !----------------------------------------------------
+        CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                          &
+                        nderiv_loc,para_Tnum%num_x,para_Tnum%stepT,     &
+                        para_Tnum%nrho)
+
+        IF (debug) THEN
+          write(out_unitp,*) 'dnrho'
+          CALL write_dnS(dnrho)
+          flush(out_unitp)
+        END IF
+
+        !----------------------------------------------------
+        !-- vep calculation
+        !----------------------------------------------------
+        IF (dnGG_OK) THEN
+          IF (new_vep) THEN !new vep
+            CALL sub_vep_new(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,       &
+                             dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
+          ELSE !old vep
+            CALL sub_vep(vep,dnGG%d0,dnGG%d1,dnrho%d1,dnrho%d2,           &
+                             dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
+          END IF
+        ELSE
+          IF (new_vep) THEN !new vep
+            CALL sub_vep_new(vep,dnGG_loc%d0,dnGG_loc%d1,dnrho%d1,dnrho%d2, &
+                             dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
+          ELSE !old vep
+            CALL sub_vep(vep,dnGG_loc%d0,dnGG_loc%d1,dnrho%d1,dnrho%d2,      &
+                             dnJac%d1,dnJac%d2,mole%ndimG,mole%nb_act)
+          END IF
+          CALL dealloc_dnSVM(dnGG_loc)
+        END IF
+        vep_done = .TRUE.
+
+        IF (present(rho)) THEN 
+          rho = dnrho%d0
+          !write(out_unitp,*) 'rho :',rho
+          rho_done = .TRUE.
+        END IF
+  
+        CALL dealloc_dnSVM(dnJac)
+        CALL dealloc_dnSVM(dnrho)
+      END IF
+    ELSE
+      vep = ZERO
+      vep_done = .TRUE.
+    END IF
+
+    IF (present(rho) .AND. .NOT. rho_done) THEN ! rho needs to calculate (nderiv_loc = 0). Vep calculation is done.
+
+      !----------------------------------------------------
+      !-- jac0,jaci,JACij calculation
+      !----------------------------------------------------
+      nderiv_loc = 0
+      CALL alloc_dnSVM(dnJac,mole%nb_act,nderiv=nderiv_loc)
+      CALL alloc_dnSVM(dnrho,mole%nb_act,nderiv=nderiv_loc)
+      IF (present(dnGG)) THEN
+        CALL sub3_dnDetGG(dnJac,dnGG,nderiv_loc,mole%masses,mole%Mtot_inv,mole%ncart)
+      ELSE
+        CALL alloc_dnSVM(dnGG_loc,mole%ndimG,mole%ndimG,mole%nb_act,nderiv=nderiv_loc)
+
+        CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG_loc,nderiv=nderiv_loc)
+        CALL sub3_dnDetGG(dnJac,dnGG_loc,nderiv_loc,mole%masses,mole%Mtot_inv,mole%ncart)
+        CALL dealloc_dnSVM(dnGG_loc)
+      END IF
+      IF (debug) write(out_unitp,*) 'dnJac'
+      IF (debug) CALL write_dnS(dnJac)
+
+      !----------------------------------------------------
+      !-- f0,fi,Fij calculation
+      !----------------------------------------------------
+      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                          &
+                      nderiv_loc,para_Tnum%num_x,para_Tnum%stepT,     &
+                      para_Tnum%nrho)
+
+      IF (debug) write(out_unitp,*) 'dnrho'
+      IF (debug) CALL write_dnS(dnrho)
+      rho = dnrho%d0
+      rho_done = .TRUE.
+
+      CALL dealloc_dnSVM(dnJac)
+      CALL dealloc_dnSVM(dnrho)
+    END IF
+
+    !---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'vep',vep
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+    END IF
+    !-----------------------------------------------------------
+
+END FUNCTION get_vep_rho
+FUNCTION get_vepTaylor(Qact,mole,para_Tnum) RESULT (vep)
+  IMPLICIT NONE
+
+  real (kind=Rkind)                             :: vep
+    !-----------------------------------------------------------------
+    real (kind=Rkind), intent(in)               :: Qact(:)
+    !----- for the CoordType and Tnum --------------------------------
+    TYPE (CoordType),  intent(in)               :: mole
+    TYPE (Tnum),       intent(in)               :: para_Tnum
+    !-----------------------------------------------------------------
+
+
+    !-----------------------------------------------------------------
+    ! local variables
+    integer                           :: nderiv_loc,i,j
+    real (kind=Rkind), allocatable    :: DQ(:)
+
+    !-----------------------------------------------------------------
+
+
+    !--- for debuging --------------------------------------------------
+    logical, parameter :: debug = .FALSE.
+    !logical, parameter :: debug = .TRUE.
+    character (len=*), parameter :: name_sub = 'get_vepTaylor'
+    !---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'BEGINNING ',name_sub
+      write(out_unitp,*) 'vep_type   ',para_Tnum%vep_type
+      write(out_unitp,*)
+      write(out_unitp,*) 'Qact',Qact
+      !write(out_unitp,*)
+      !CALL Write_CoordType(mole)
+      !write(out_unitp,*)
+    END IF
+    !---------------------------------------------------------
+
+    CALL check_alloc_dnS(para_Tnum%dnVepref,'para_Tnum%dnVepref',name_sub)
+
+    DQ = Qact - mole%ActiveTransfo%Qact0
+    IF (debug) THEN 
+      write(out_unitp,*) 'DQ',DQ(:)
+      write(out_unitp,*) 'para_Tnum%dnVepref'
+      CALL Write_dnSVM(para_Tnum%dnVepref)
+    END IF
+
+    vep = para_Tnum%dnVepref%d0
+
+    IF (para_Tnum%vepTaylor_Order > 0) THEN
+      DO i=1,mole%nb_act
+        vep = vep + para_Tnum%dnVepref%d1(i)*DQ(i)
+      END DO
+    END IF
+
+    IF (para_Tnum%vepTaylor_Order > 1) THEN
+      DO i=1,mole%nb_act
+      DO j=1,mole%nb_act
+        vep = vep + HALF*para_Tnum%dnVepref%d2(j,i)*DQ(i)*DQ(j)
+      END DO
+      END DO
+    END IF
+
+    deallocate(DQ)
+
+    !---------------------------------------------------------
+    IF (debug) THEN
+      write(out_unitp,*) 'vep',vep
+      write(out_unitp,*) 'END ',name_sub
+      CALL flush_perso(out_unitp)
+    END IF
+    !-----------------------------------------------------------
+
+END FUNCTION get_vepTaylor
+SUBROUTINE Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
   USE mod_dnDetGG_dnDetg, only : sub3_dnDetGG
   IMPLICIT NONE
 
@@ -2074,7 +2369,7 @@ END SUBROUTINE sub_d2A
 
       CALL dealloc_dnSVM(dnJac)
       CALL dealloc_dnSVM(dnrho)
-    ELSE ! here, the vpe=0, but rho needs to be calculate (nderiv_loc = 0)
+    ELSE ! here, the vpe=0, but rho needs to calculate rho (nderiv_loc = 0)
       nderiv_loc = 0
 
       !----------------------------------------------------
@@ -2112,6 +2407,264 @@ END SUBROUTINE sub_d2A
     !-----------------------------------------------------------
 
   END SUBROUTINE Calc_vep_rho_from_dnGG
+  SUBROUTINE Calc_vepTalylor_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
+    USE mod_dnDetGG_dnDetg, only : sub3_dnDetGG
+    IMPLICIT NONE
+  
+  
+      !-----------------------------------------------------------------
+      real (kind=Rkind), intent(inout)            :: vep,rho
+      real (kind=Rkind), intent(in)               :: Qact(:)
+      TYPE(Type_dnMat),  intent(in)               :: dnGG
+      !----- for the CoordType and Tnum --------------------------------
+      TYPE (CoordType),  intent(in)               :: mole
+      TYPE (Tnum),       intent(in)               :: para_Tnum
+      !-----------------------------------------------------------------
+  
+  
+      !-----------------------------------------------------------------
+      ! local variables
+      TYPE(Type_dnS)                    :: dnJac,dnrho
+      integer                           :: nderiv_loc,i,j
+      real (kind=Rkind), allocatable    :: DQ(:)
+
+      !-----------------------------------------------------------------
+  
+  
+      !--- for debuging --------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'Calc_vepTalylor_rho_from_dnGG'
+      !---------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'nrho       ',para_Tnum%nrho
+        write(out_unitp,*) 'vep_type   ',para_Tnum%vep_type
+        write(out_unitp,*) 'dnGG%nderiv',dnGG%nderiv
+        write(out_unitp,*) 'ndimG      ',mole%ndimG
+        write(out_unitp,*)
+        write(out_unitp,*) 'Qact',Qact
+  
+        write(out_unitp,*) 'dnGG'
+        CALL write_dnMat(dnGG)
+        !write(out_unitp,*)
+        !CALL Write_CoordType(mole)
+        !write(out_unitp,*)
+        write(out_unitp,*)
+        write(out_unitp,*) 'num_GG',para_Tnum%num_GG
+        write(out_unitp,*) 'num_g ',para_Tnum%num_g
+        write(out_unitp,*) 'num_x ',para_Tnum%num_x
+        write(out_unitp,*) 'JJ',para_Tnum%JJ
+        write(out_unitp,*)
+      END IF
+      !---------------------------------------------------------
+
+      CALL check_alloc_dnMat(dnGG,'dnGG',name_sub)
+      CALL check_alloc_dnS(para_Tnum%dnVepref,'para_Tnum%dnVepref',name_sub)
+  
+      DQ = Qact - mole%ActiveTransfo%Qact0
+      IF (debug) THEN 
+        write(out_unitp,*) 'DQ',DQ(:)
+        write(out_unitp,*) 'para_Tnum%dnVepref'
+        CALL Write_dnSVM(para_Tnum%dnVepref)
+      END IF
+  
+      vep = para_Tnum%dnVepref%d0
+  
+      IF (para_Tnum%vepTaylor_Order > 0) THEN
+        DO i=1,mole%nb_act
+          vep = vep + para_Tnum%dnVepref%d1(i)*DQ(i)
+        END DO
+      END IF
+  
+      IF (para_Tnum%vepTaylor_Order > 1) THEN
+        DO i=1,mole%nb_act
+        DO j=1,mole%nb_act
+          vep = vep + HALF*para_Tnum%dnVepref%d2(j,i)*DQ(i)*DQ(j)
+        END DO
+        END DO
+      END IF
+  
+  
+      deallocate(DQ)
+
+      !------------------------------------------------------------
+      !-- rho only ------------------------------------
+      nderiv_loc = 0
+  
+      !----------------------------------------------------
+      !-- jac0,jaci,JACij calculation
+      !----------------------------------------------------
+      CALL alloc_dnSVM(dnJac,dnGG%nb_var_deriv,nderiv=nderiv_loc)
+      CALL alloc_dnSVM(dnrho,dnGG%nb_var_deriv,nderiv=nderiv_loc)
+  
+      CALL sub3_dnDetGG(dnJac,dnGG,nderiv_loc,                          &
+                                 mole%masses,mole%Mtot_inv,mole%ncart)
+      !write(out_unitp,*) 'dnJac'
+      !CALL write_dnS(dnJac)
+      !----------------------------------------------------
+      !-- f0,fi,Fij calculation
+      !----------------------------------------------------
+      CALL sub3_dnrho(dnrho,dnJac,Qact,mole,                          &
+                      nderiv_loc,para_Tnum%num_x,para_Tnum%stepT,     &
+                      para_Tnum%nrho)
+      rho = dnrho%d0
+
+      CALL dealloc_dnSVM(dnJac)
+      CALL dealloc_dnSVM(dnrho)
+
+      !---------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'vep',vep
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+      !-----------------------------------------------------------
+  
+  END SUBROUTINE Calc_vepTalylor_rho_from_dnGG
+
+  SUBROUTINE Set_dnVepTaylor(dnVep,Qact,mole,para_Tnum,TaylorOrder)
+    IMPLICIT NONE
+
+    !-----------------------------------------------------------------
+    TYPE(Type_dnS),    intent(inout)            :: dnVep
+    real (kind=Rkind), intent(in)               :: Qact(:)
+    integer,           intent(in)               :: TaylorOrder
+
+    !----- for the CoordType and Tnum --------------------------------
+    TYPE (CoordType),  intent(in)               :: mole
+    TYPE (Tnum),       intent(inout)            :: para_Tnum
+    !-----------------------------------------------------------------
+  
+  
+      !-----------------------------------------------------------------
+      ! local variables
+      integer                           :: i,j
+      real (kind=Rkind), allocatable    :: Qact_loc(:)
+      real (kind=Rkind)                 :: vep,step2,step24,stepp
+      !-----------------------------------------------------------------
+  
+  
+      !--- for debuging --------------------------------------------------
+      logical, parameter :: debug = .FALSE.
+      !logical, parameter :: debug = .TRUE.
+      character (len=*), parameter :: name_sub = 'Set_dnVepTaylor'
+      !---------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unitp,*) 'vepTaylor_Order   ',para_Tnum%vepTaylor_Order
+        write(out_unitp,*)
+        write(out_unitp,*) 'Qact',Qact
+        flush(out_unitp)
+      END IF
+      !---------------------------------------------------------
+
+      IF (TaylorOrder < 0) RETURN
+      IF (para_Tnum%stepT == ZERO) THEN
+        write(out_unitp,*) ' ERROR in ',name_sub
+        write(out_unitp,*) ' para_Tnum%stepT is zero'
+        STOP ' ERROR : para_Tnum%stepT is zero'
+      END IF
+      step2  = ONE/(para_Tnum%stepT*para_Tnum%stepT)
+      step24 = step2/FOUR
+      stepp  = ONE/(para_Tnum%stepT+para_Tnum%stepT)
+
+      IF (.NOT. dnVep%alloc) CALL alloc_dnSVM(dnVep,mole%nb_act,TaylorOrder)
+
+!===================================================================
+!
+!       Computation in Qact
+!
+!===================================================================
+      Qact_loc = Qact(:)
+
+      dnVep%d0 = get_vep_rho(Qact_loc,mole,para_Tnum,WithTaylor=.FALSE.)
+ 
+!===================================================================
+!
+!       Computation in Qact(i)+step
+!               and in Qact(i)-step
+!
+!===================================================================
+
+      IF (TaylorOrder >=1) THEN
+        DO i=1,mole%nb_act
+          Qact_loc(:) = Qact(:)
+
+          Qact_loc(i) = Qact(i) + para_Tnum%stepT
+          vep = get_vep_rho(Qact_loc,mole,para_Tnum,WithTaylor=.FALSE.)
+
+          dnVep%d1(i) = vep
+          IF (TaylorOrder == 2) dnVep%d2(i,i) = vep
+
+          Qact_loc(i) = Qact(i) - para_Tnum%stepT
+          vep = get_vep_rho(Qact_loc,mole,para_Tnum,WithTaylor=.FALSE.)
+
+          dnVep%d1(i) = ( dnVep%d1(i) - vep ) * stepp
+
+          IF (TaylorOrder == 2) THEN 
+            dnVep%d2(i,i) = ( dnVep%d2(i,i) + vep - TWO*dnVep%d0 ) * step2
+          END IF
+
+        END DO
+      END IF
+
+!===================================================================
+!
+!       Computation in Qact(i)+/-step
+!               and in Qact(j)+/-step
+!
+!===================================================================
+
+      IF (TaylorOrder ==2) THEN
+        DO i=1,mole%nb_act
+        DO j=i+1,mole%nb_act
+          Qact_loc(:) = Qact(:)
+
+          Qact_loc(i) = Qact(i) + para_Tnum%stepT
+          Qact_loc(j) = Qact(j) + para_Tnum%stepT
+          vep = get_vep_rho(Qact_loc,mole,para_Tnum,WithTaylor=.FALSE.)
+
+          dnVep%d2(i,j) = vep
+
+          Qact_loc(i) = Qact(i) - para_Tnum%stepT
+          Qact_loc(j) = Qact(j) - para_Tnum%stepT
+          vep = get_vep_rho(Qact_loc,mole,para_Tnum,WithTaylor=.FALSE.)
+
+          dnVep%d2(i,j) = dnVep%d2(i,j) + vep
+
+          Qact_loc(i) = Qact(i) - para_Tnum%stepT
+          Qact_loc(j) = Qact(j) + para_Tnum%stepT
+          vep = get_vep_rho(Qact_loc,mole,para_Tnum,WithTaylor=.FALSE.)
+
+          dnVep%d2(i,j) = dnVep%d2(i,j) - vep
+
+          Qact_loc(i) = Qact(i) + para_Tnum%stepT
+          Qact_loc(j) = Qact(j) - para_Tnum%stepT
+          vep = get_vep_rho(Qact_loc,mole,para_Tnum,WithTaylor=.FALSE.)
+
+          dnVep%d2(i,j) = dnVep%d2(i,j) - vep
+
+          !-- d2A/dQidQj -----------------------------------------
+          dnVep%d2(i,j) = dnVep%d2(i,j) * step24
+          dnVep%d2(j,i) = dnVep%d2(i,j)
+
+        END DO
+        END DO
+      END IF
+
+      !---------------------------------------------------------
+      IF (debug) THEN
+        write(out_unitp,*) 'dnVep'
+        CALL write_dnS(dnVep)
+        write(out_unitp,*) 'END ',name_sub
+        CALL flush_perso(out_unitp)
+      END IF
+      !-----------------------------------------------------------
+  
+  END SUBROUTINE Set_dnVepTaylor
+
+
   SUBROUTINE Calc_vep_rho_from_dng_AND_dnGG(vep,rho,Qact,dng,dnGG,mole,para_Tnum)
   USE mod_dnDetGG_dnDetg, only : sub3_dndetA
   IMPLICIT NONE

@@ -65,7 +65,7 @@ MODULE mod_Coord_KEO
                                   Write_Cartg98, Write_XYZ
 
   USE mod_dnRho,           ONLY : sub3_dnrho_ana,Write_Rho
-  USE mod_dnGG_dng,        ONLY : get_d0GG,get_dng_dnGG,get_d0g_d0GG
+  USE mod_dnGG_dng,        ONLY : get_d0GG,get_dng_dnGG,get_d0g_d0GG,Set_dnVepTaylor
   USE mod_dnDetGG_dnDetg,  ONLY : sub3_dndetgg
   USE mod_f2f2Vep,         ONLY : calc3_f2_f1q_num,calc3_f2_f1q_numtay0qinact2n
 

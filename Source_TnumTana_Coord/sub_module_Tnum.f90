@@ -28,7 +28,7 @@
 !===========================================================================
 MODULE mod_Tnum
       USE mod_system
-      use mod_dnSVM,            only: Type_dnMat
+      use mod_dnSVM,            only: Type_dnMat,Type_dnS
       USE mod_nDFit,            only: param_nDFit
       USE mod_QTransfo,         only: type_qtransfo, write_qtransfo,    &
                                       dealloc_qtransfo, dealloc_array,  &
@@ -209,8 +209,10 @@ MODULE mod_Tnum
           integer                    :: NonGcteRange(2) = 0
           logical                    :: Inertia = .TRUE.
           real (kind=Rkind), pointer :: Gref(:,:) => null() ! reference value if Gcte=.true.
-          integer                    :: GTaylor_Order = -1
-          TYPE(Type_dnMat)           :: dnGGref             ! to be able to use a taylor expansion
+          integer                    :: GTaylor_Order   = -1
+          integer                    :: vepTaylor_Order = -1
+          TYPE(Type_dnMat)           :: dnGGref             ! to be able to use a taylor expansion of GG
+          TYPE(Type_dnS)             :: dnVepref            ! to be able to use a taylor expansion of the Vep
 
 
           integer                    :: nrho              = 2
@@ -703,7 +705,8 @@ MODULE mod_Tnum
 
       real (kind=Rkind) :: stepT,stepOp
       integer           :: KEO_TalyorOFQinact2n ! taylor epxansion along coordinate 2n (21) types
-      integer           :: GTaylor_Order  ! taylor epxansion of G
+      integer           :: GTaylor_Order    ! taylor epxansion of G
+      integer           :: vepTaylor_Order  ! taylor epxansion of the vep
 !     - end for the CoordType ----------------------------
 
 
@@ -720,7 +723,8 @@ MODULE mod_Tnum
                      hessian_cart,hessian_onthefly,file_hessian,stepOp,         &
                      stepT,num_GG,num_g,num_x,nrho,vep_type,                    &
                      Tana,Compa_TanaTnum,Tana_Init_Only,                        &
-                     Gdiago,Gcte,NonGcteRange,QMLib_G,GTaylor_Order,            &
+                     Gdiago,Gcte,NonGcteRange,QMLib_G,                          &
+                     GTaylor_Order,vepTaylor_Order,                             &
                      MidasCppForm,MCTDHForm,LaTeXForm,                          &
                      VSCFForm,FortranForm,                                      &
                      KEO_TalyorOFQinact2n,f2f1_ana,                             &
@@ -774,6 +778,7 @@ MODULE mod_Tnum
       vep_type             = -1
       KEO_TalyorOFQinact2n = -1
       GTaylor_Order        = -1
+      vepTaylor_Order      = -1
       f2f1_ana             = .FALSE.
 
       With_VecCOM          = .FALSE.
@@ -868,12 +873,13 @@ MODULE mod_Tnum
       para_Tnum%Gcte                 = Gcte
       para_Tnum%para_PES_FromTnum%QMLib_G = QMLib_G
       para_Tnum%GTaylor_Order        = min(2,GTaylor_Order)
+      para_Tnum%vepTaylor_Order      = min(2,vepTaylor_Order)
 
       IF ((nrho == 20 .OR. nrho == 10) .AND. vep_type /= -1 .AND. vep_type /= 0) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
         write(out_unitp,*) ' nrho    ',nrho
         write(out_unitp,*) ' vep_type',vep_type
-        write(out_unitp,*) ' nrho = 20 or 10                       => old way to force the vep to zero.'
+        write(out_unitp,*) ' nrho = 20 or 10                      => old way to force the vep to zero.'
         write(out_unitp,*) ' vep_type is defined [= -1) and /= 0  => vep is not forced to zero'
         write(out_unitp,*) ' You have two possibilities:'
         write(out_unitp,*) '   keep the nrho values (20 or 10)  and change vep_type to 0 or -1'
@@ -2024,8 +2030,14 @@ MODULE mod_Tnum
     Tnum1%Gref(:,:) = Tnum2%Gref
   END IF
 
-  Tnum1%dnGGref       = Tnum2%dnGGref
-  Tnum1%GTaylor_Order = Tnum2%GTaylor_Order
+  IF (Tnum2%dnGGref%alloc)  THEN
+    Tnum1%dnGGref       = Tnum2%dnGGref
+  END IF
+  IF (Tnum2%dnVepref%alloc) THEN 
+    Tnum1%dnVepref      = Tnum2%dnVepref
+  END IF
+  Tnum1%GTaylor_Order   = Tnum2%GTaylor_Order
+  Tnum1%vepTaylor_Order = Tnum2%vepTaylor_Order
 
   END SUBROUTINE Tnum2_TO_Tnum1
   SUBROUTINE dealloc_Tnum(para_Tnum)
@@ -2076,7 +2088,9 @@ MODULE mod_Tnum
   END IF
 
   CALL dealloc_dnSVM(para_Tnum%dnGGref)
-  para_Tnum%GTaylor_Order = -1
+  CALL dealloc_dnSVM(para_Tnum%dnVepref)
+  para_Tnum%GTaylor_Order   = -1
+  para_Tnum%vepTaylor_Order = -1
 
 
   END SUBROUTINE dealloc_Tnum

@@ -41,6 +41,7 @@
       TYPE (PrimOp_t)  :: PrimOp
 
       TYPE(Type_dnMat) :: dnGG
+      TYPE(Type_dnS)   :: dnVep
 
       TYPE(sum_opnd)   :: TWOxKEO
 
@@ -49,7 +50,8 @@
       real (kind=Rkind), allocatable :: Qxyz(:)
 !     - working parameters ------------------------------------------
       integer           :: nada,i,j,n,ndim
-      real (kind=Rkind) :: epsi_G = ONETENTH**10
+      real (kind=Rkind), parameter :: epsi_G = ONETENTH**10
+      real (kind=Rkind), parameter :: epsi_Vep = ONETENTH**10
       logical           :: Tana
 
       !     ------------------------------------------------------
@@ -168,15 +170,18 @@
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
-       CALL time_perso('Taylor expansion of G')
+       CALL time_perso('Taylor expansion of G and Vep')
 
        para_Tnum%WriteT    = .FALSE.
        CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=dnGG,nderiv=2)
        CALL export_Taylor_dnG(dnGG,Qact,epsi_G,file_name='Taylor_G.keo')
        !CALL export_Taylor_dnG(dnGG,Qact,ZERO,file_name='Taylor_G.keo')
 
+       CALL Set_dnVepTaylor(dnVep,Qact,mole,para_Tnum,TaylorOrder=2)
+       CALL export_Taylor_dnVep(dnVep,Qact,epsi_Vep=epsi_Vep,file_name='Taylor_Vep.keo')
+
        CALL dealloc_dnSVM(dnGG)
-       CALL time_perso('Taylor expansion of G')
+       CALL time_perso('Taylor expansion of G and Vep')
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
