@@ -1,6 +1,9 @@
 rm -r QuantumModelLib*
 rm -f QuantumModelLib #always remove the link
 
+ReleaseVersion=Save_QuantumModelLib-11.1.zip
+
+
 #latest release
 #version=https://github.com/lauvergn/QuantumModelLib/archive/refs/tags/v7.3.zip
 #version=https://github.com/lauvergn/QuantumModelLib/archive/refs/tags/v7.6.zip
@@ -10,7 +13,7 @@ rm -f QuantumModelLib #always remove the link
 
 
 curl -LJ $version --output OOP_branch.zip
-test -e OOP_branch.zip && echo OOP_branch.zip file exist || cp OOP_branch_save8.1.zip OOP_branch.zip
+test -e OOP_branch.zip && echo OOP_branch.zip file exist || cp $ReleaseVersion OOP_branch.zip
 unzip OOP_branch.zip
 rm -f OOP_branch.zip
 
