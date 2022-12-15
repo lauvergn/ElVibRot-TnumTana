@@ -1,10 +1,10 @@
 
  ici=`pwd`
- cd ..
+ cd ../..
  make Tnum_MCTDH
  cd $ici
 
-../Tnum90_MCTDH.exe << ** > res
+../../Tnum90_MCTDH.exe << ** > res
  &variables 
          nrho=2
          Old_Qtransfo=f

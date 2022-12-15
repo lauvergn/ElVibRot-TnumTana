@@ -1705,7 +1705,9 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
      DO j=1,para_Op%nb_Qact
 
        ! multiply by Jac
-       derRGj(:,j) = derRGj(:,j) * para_Op%para_AllBasis%basis_ext%Jac
+       IF (allocated(para_Op%para_AllBasis%basis_ext%Jac)) THEN
+        derRGj(:,j) = derRGj(:,j) * para_Op%para_AllBasis%basis_ext%Jac
+       END IF
 
        ! derivative with respect to Qact_j
        derive_termQdyn(:) = [para_Op%mole%liste_QactTOQdyn(j),0]
@@ -1717,7 +1719,11 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
      END DO
      CALL dealloc_NParray(derRGj,"derRGj",name_sub)
 
-     OpPsi%RvecG(iqi1:fqi1) = -HALF * OpPsi%RvecG(iqi1:fqi1) / para_Op%para_AllBasis%basis_ext%Jac
+     IF (allocated(para_Op%para_AllBasis%basis_ext%Jac)) THEN
+      OpPsi%RvecG(iqi1:fqi1) = -HALF * OpPsi%RvecG(iqi1:fqi1) / para_Op%para_AllBasis%basis_ext%Jac
+     ELSE
+      OpPsi%RvecG(iqi1:fqi1) = -HALF * OpPsi%RvecG(iqi1:fqi1)
+    END IF
 
      ! add the potential
      iterm = para_Op%derive_term_TO_iterm(0,0)

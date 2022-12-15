@@ -2253,10 +2253,12 @@ FUNCTION get_vepTaylor(Qact,mole,para_Tnum) RESULT (vep)
     END IF
 
     vep = para_Tnum%dnVepref%d0
+    !write(666,*) '0 order',para_Tnum%dnVepref%d0
 
     IF (para_Tnum%vepTaylor_Order > 0) THEN
       DO i=1,mole%nb_act
         vep = vep + para_Tnum%dnVepref%d1(i)*DQ(i)
+        !write(666,*) '1st order',i,para_Tnum%dnVepref%d1(i)
       END DO
     END IF
 
@@ -2264,6 +2266,7 @@ FUNCTION get_vepTaylor(Qact,mole,para_Tnum) RESULT (vep)
       DO i=1,mole%nb_act
       DO j=1,mole%nb_act
         vep = vep + HALF*para_Tnum%dnVepref%d2(j,i)*DQ(i)*DQ(j)
+        !write(666,*) '2d order',i,j,para_Tnum%dnVepref%d2(i,j)
       END DO
       END DO
     END IF

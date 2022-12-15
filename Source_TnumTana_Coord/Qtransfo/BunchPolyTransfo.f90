@@ -3187,6 +3187,9 @@
 
       !calculation of M (included the M of the center of mass)
       M_Tana = matmul(A,transpose(A))
+      write(out_unitp,*) 'M_Tana (with the center-of-mass contribution)'
+      CALL Write_Mat(M_Tana,out_unitp,5)
+
       BunchTransfo%M_Tana(:,:) = M_Tana(1:nb_vect,1:nb_vect)
       write(out_unitp,*) 'M_Tana (without the center-of-mass contribution)'
       CALL Write_Mat(BunchTransfo%M_Tana,out_unitp,5)
@@ -3615,8 +3618,8 @@
       !--------------------------------------------------------
       integer :: err_mem,memory
       character (len=*), parameter :: name_sub = "get_Mass"
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
       !--------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -3682,8 +3685,8 @@
 
       !--------------------------------------------------------
       character (len=*), parameter :: name_sub='M_Tana_FROM_Bunch2Transfo'
-      logical, parameter :: debug=.FALSE.
-      !logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.FALSE.
+      logical, parameter :: debug=.TRUE.
       !--------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
@@ -3754,8 +3757,10 @@
 
       ! calculation of M (included the M of the center of mass)
       M_Tana = matmul(A,transpose(A))
-      BunchTransfo%M_Tana(:,:) = M_Tana(1:BunchTransfo%nb_vect,1:BunchTransfo%nb_vect)
+      write(out_unitp,*) '  M_Tana (with the center-of-mass contribution)'
+      CALL Write_Mat(M_Tana,out_unitp,5)
 
+      BunchTransfo%M_Tana(:,:) = M_Tana(1:BunchTransfo%nb_vect,1:BunchTransfo%nb_vect)
       write(out_unitp,*) '  M_Tana (without the center-of-mass contribution)'
       CALL Write_Mat(BunchTransfo%M_Tana,out_unitp,5)
 

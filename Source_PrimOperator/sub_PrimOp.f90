@@ -3866,13 +3866,13 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
         CALL get_dng_dnGG(Qact,para_Tnum,mole,dnGG=para_Tnum%dnGGref,nderiv=GTaylor_Order)
         IF (debug) CALL export_Taylor_dnG(para_Tnum%dnGGref,Qact,epsi_G=ONETENTH**10,option=1)
       END IF
-      para_Tnum%GTaylor_Order = GTaylor_Order
 
       IF (para_Tnum%vepTaylor_Order > -1) THEN
         CALL Set_dnVepTaylor(para_Tnum%dnVepref,Qact,mole,para_Tnum,para_Tnum%vepTaylor_Order)
         CALL export_Taylor_dnVep(para_Tnum%dnVepref,Qact,epsi_Vep=ONETENTH**10,option=0)
         IF (debug) CALL export_Taylor_dnVep(para_Tnum%dnVepref,Qact,epsi_Vep=ONETENTH**10,option=1)
       END IF
+      para_Tnum%GTaylor_Order = GTaylor_Order
 
 !-----------------------------------------------------------
       !IF (debug) THEN
