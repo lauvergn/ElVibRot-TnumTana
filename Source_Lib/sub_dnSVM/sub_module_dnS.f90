@@ -208,7 +208,7 @@ MODULE mod_dnS
         !write(out_unitp,*) 'BEGINNING dealloc_dnS'
         !write(out_unitp,*) 'dnS%nb_var_deriv,dnS%nderiv',dnS%nb_var_deriv,dnS%nderiv
         !CALL Write_dnS(dnS)
-        !CALL flush_perso(out_unitp)
+        !flush(out_unitp)
 
         dnS%d0           = ZERO
 
@@ -230,7 +230,7 @@ MODULE mod_dnS
         dnS%nb_var_deriv = 0
 
         !write(out_unitp,*) 'END dealloc_dnS'
-        !CALL flush_perso(out_unitp)
+        !flush(out_unitp)
 
       END SUBROUTINE dealloc_dnS
 
@@ -1128,7 +1128,7 @@ MODULE mod_dnS
          write(out_unitp,*) 'dnS1'
          CALL Write_dnS(dnS1,nderiv_loc)
          write(out_unitp,*)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
       END IF
 !     -----------------------------------------------------------------
 
@@ -1187,7 +1187,7 @@ MODULE mod_dnS
         write(out_unitp,*) 'dntR2'
         CALL Write_dnS(dntR2,nderiv_loc)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -----------------------------------------------------------------
 
@@ -1263,7 +1263,7 @@ MODULE mod_dnS
         write(out_unitp,*) 'x',x
         write(out_unitp,*) 'itype',itype
          write(out_unitp,*) 'cte',cte(:)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -----------------------------------------------------------------
       IF (present(dnErr)) dnErr = 0
@@ -1801,7 +1801,7 @@ MODULE mod_dnS
         write(out_unitp,*) 'dntf'
         CALL Write_dnS(dntf)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -----------------------------------------------------------------
       END SUBROUTINE sub_dntf

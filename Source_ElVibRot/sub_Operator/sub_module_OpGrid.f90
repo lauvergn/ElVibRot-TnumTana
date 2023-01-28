@@ -46,7 +46,7 @@
       USE mod_basis_BtoG_GtoB_SGType4
       IMPLICIT NONE
 
-       TYPE param_FileGrid
+       TYPE File_tGrid
 
           logical                    :: Read_FileGrid      = .FALSE.   ! Read the grid from a file
 
@@ -81,7 +81,7 @@
         CONTAINS
           PROCEDURE, PRIVATE, PASS(para_FileGrid1) :: para_FileGrid2TOpara_FileGrid1
           GENERIC,   PUBLIC  :: assignment(=) => para_FileGrid2TOpara_FileGrid1
-        END TYPE param_FileGrid
+        END TYPE File_tGrid
 
         TYPE param_OpGrid
           integer                    :: nb_qa              =  0
@@ -106,8 +106,8 @@
 
           TYPE(Type_SmolyakRep)      :: SRep                         ! Smolyak Rep (SG4)
 
-          TYPE (param_file)          :: file_Grid                    ! file of the grid
-          TYPE (param_FileGrid)      :: para_FileGrid
+          TYPE (File_t)          :: file_Grid                    ! file of the grid
+          TYPE (File_tGrid)      :: para_FileGrid
 
         END TYPE param_OpGrid
 
@@ -124,8 +124,8 @@
 
       SUBROUTINE para_FileGrid2TOpara_FileGrid1(para_FileGrid1,para_FileGrid2)
 
-      CLASS (param_FileGrid), intent(inout) :: para_FileGrid1
-      TYPE (param_FileGrid),  intent(in)    :: para_FileGrid2
+      CLASS (File_tGrid), intent(inout) :: para_FileGrid1
+      TYPE (File_tGrid),  intent(in)    :: para_FileGrid2
 
       para_FileGrid1%Read_FileGrid      = para_FileGrid2%Read_FileGrid
 
@@ -153,7 +153,7 @@
                                Keep_FileGrid,Save_MemGrid,              &
                                Base_FileName_Grid)
 
-      TYPE (param_FileGrid), intent(inout) :: para_FileGrid
+      TYPE (File_tGrid), intent(inout) :: para_FileGrid
       logical, optional :: Save_FileGrid,Keep_FileGrid,Save_MemGrid,Formatted_FileGrid
       logical, optional :: Read_FileGrid,Restart_Grid,Test_Grid
 
@@ -241,7 +241,7 @@
       END SUBROUTINE init_FileGrid
   SUBROUTINE dealloc_FileGrid(para_FileGrid)
 
-      CLASS (param_FileGrid), intent(inout) :: para_FileGrid
+      CLASS (File_tGrid), intent(inout) :: para_FileGrid
 
       para_FileGrid%Read_FileGrid      = .FALSE.   ! Read the grid from a file
 
@@ -269,7 +269,7 @@
   END SUBROUTINE dealloc_FileGrid
       SUBROUTINE Write_FileGrid(para_FileGrid)
 
-      TYPE (param_FileGrid), intent(in) :: para_FileGrid
+      TYPE (File_tGrid), intent(in) :: para_FileGrid
 
       write(out_unitp,*) 'BEGINNING Write_FileGrid'
 
@@ -324,7 +324,7 @@
         write(out_unitp,*) 'derive_termQdyn(:)',derive_termQdyn(:)
         write(out_unitp,*) 'grid_cte',OpGrid%grid_cte
         write(out_unitp,*) 'Save_MemGrid',OpGrid%para_FileGrid%Save_MemGrid
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
        OpGrid%nb_qa      = nb_qa
@@ -368,11 +368,11 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                       delta=.FALSE.,grid=.TRUE.,nb0=nb_bie)
          END IF
        END IF
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 
       END SUBROUTINE alloc_OpGrid
@@ -454,14 +454,14 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
       write(out_unitp,*) 'alloc Smolyak Rep ',allocated(OpGrid%SRep%SmolyakRep)
       write(out_unitp,*) 'iq_min,Op_min     ',OpGrid%iq_min,OpGrid%Op_min
       write(out_unitp,*) 'iq_max,Op_max     ',OpGrid%iq_max,OpGrid%Op_max
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (associated(OpGrid%Mat_cte)) &
          write(out_unitp,*) 'Mat_cte           ',OpGrid%Mat_cte
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       write(out_unitp,*) 'END Write_OpGrid'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE Write_OpGrid
 
@@ -629,8 +629,8 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
 
       SUBROUTINE Set_file_Grid(file_Grid,para_fileGrid,cplx,iterm,name_Op,nb_bie)
 
-      TYPE (param_file),            intent(inout)   :: file_Grid     ! file of the grid
-      TYPE (param_FileGrid),        intent(in)      :: para_FileGrid ! parameters to tranfer to OpGrid%...
+      TYPE (File_t),            intent(inout)   :: file_Grid     ! file of the grid
+      TYPE (File_tGrid),        intent(in)      :: para_FileGrid ! parameters to tranfer to OpGrid%...
       integer,                      intent(in)      :: nb_bie,iterm
       logical,                      intent(in)      :: cplx
       character (len=*),            intent(in)      :: name_Op
@@ -713,7 +713,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                Formatted_FileGrid,Base_FileName_Grid,   &
                                name_Op,nb_bie)
 
-      TYPE (param_file),            intent(inout)   :: file_Grid  ! file of the grid
+      TYPE (File_t),            intent(inout)   :: file_Grid  ! file of the grid
       integer,                      intent(in)      :: nb_bie,Type_FileGrid,iterm
       logical,                      intent(in)      :: cplx,Formatted_FileGrid
       character (len=*),            intent(in)      :: name_Op
@@ -959,7 +959,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
       IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
         write(out_unitp,*)'n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       DO k_term=1,size(OpGrid)
@@ -1032,7 +1032,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
 
       IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE Analysis_OpGrid
@@ -1054,7 +1054,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
       IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
         write(out_unitp,*)'n_Op,k_term,derive_term,cte,zero,    minval,    maxval,dealloc'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       DO k_term=1,size(OpGrid)
@@ -1127,7 +1127,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
 
       IF (print_level>-1 .AND. MPI_id==0) THEN
         write(out_unitp,*)'--------------------------------------------------------------'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
     END SUBROUTINE SaveFile_OpGrid

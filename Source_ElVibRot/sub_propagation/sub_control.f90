@@ -539,7 +539,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
                            T,it,para_propa%para_control%alpha,          &
                            .TRUE.)
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         epsi_obj = ONETENTH**2
         IF (.NOT. para_propa%para_control%krotov) epsi_obj = FIVE
@@ -872,7 +872,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
 
         END DO ! j loop (nb_WP)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !----------------------------------------------------------
 
@@ -941,7 +941,7 @@ SUBROUTINE sub_Opt_control(para_AllOp,para_propa)
         write(out_unitp,*)
         write(out_unitp,*) para_field_new%type
         write(out_unitp,*) para_field_new%allo_grid
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 

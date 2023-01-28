@@ -72,8 +72,8 @@
            logical               :: T_only              = .FALSE.
            integer               :: nb_bRot             = 0
 
-           TYPE (param_FileGrid) :: para_FileGrid                       ! parameters to tranfer to OpGrid%...
-           TYPE (param_file)     :: FileMat                             ! file Operator Matrix
+           TYPE (File_tGrid) :: para_FileGrid                       ! parameters to tranfer to OpGrid%...
+           TYPE (File_t)     :: FileMat                             ! file Operator Matrix
 
            logical               :: comput_S            = .FALSE.       ! calculation of the active overlap matrix
 

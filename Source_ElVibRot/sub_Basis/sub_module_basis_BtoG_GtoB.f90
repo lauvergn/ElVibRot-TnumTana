@@ -337,7 +337,7 @@
         write(out_unitp,*) 'nq,nb',nq,nb
         write(out_unitp,*) 'shape CVecG',shape(CVecG)
         write(out_unitp,*) 'shape CVecB',shape(CVecB)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
         IF (basis_set%cplx .AND. basis_set%packed_done) THEN
@@ -645,7 +645,7 @@
           write(out_unitp,*) 'size RVecB',size(RVecB)
           write(out_unitp,*) 'RvecB(:)',RvecB(:)
           !CALL RecWrite_basis(basis_set)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         IF (present(tab_der)) THEN
@@ -673,7 +673,7 @@
           nb_mult_BTOG = nb_mult_BTOG + int(nb,kind=ILkind)*size(RVecG,kind=ILkind)
 
           dnba_ind(:) = basis_set%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN ! dnba_ind(:)=0 => no derivative
 
             RVecG(:) = matmul(basis_set%dnRGB%d0,RvecB)
@@ -1244,7 +1244,7 @@
           write(out_unitp,*) 'SparseGrid_type',basis_set%SparseGrid_type
 
           !CALL RecWrite_basis(basis_set)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         IF (present(tab_der)) THEN
@@ -1273,7 +1273,7 @@
 
           dnba_ind(:) = basis_set%Tabder_Qdyn_TO_Qbasis(tab_der_loc(:))
 
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN ! dnba_ind(:)=0 => no derivative
             CONTINUE ! notthing to do
           ELSE
@@ -1471,7 +1471,7 @@
           write(out_unitp,*) 'BEGINNING ',name_sub
           write(out_unitp,*) 'CvecG(:)',CvecG(:)
           !CALL RecWrite_basis(basis_set)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         IF (present(tab_der)) THEN

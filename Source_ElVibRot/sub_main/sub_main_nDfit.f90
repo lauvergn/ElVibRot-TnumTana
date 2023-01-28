@@ -58,8 +58,8 @@ MODULE mod_nDGridFit
     TYPE (Type_IntVec), allocatable :: tab_i_TO_l(:)
 
 
-    TYPE (param_file)               :: Grid_FOR_Fit_file1
-    TYPE (param_file)               :: Grid_FOR_Fit_file2
+    TYPE (File_t)               :: Grid_FOR_Fit_file1
+    TYPE (File_t)               :: Grid_FOR_Fit_file2
     character (len=Line_len)        :: name_Grid = ''
 
     integer                         :: MinCoupling = 0
@@ -178,13 +178,13 @@ SUBROUTINE sub_nDGrid_nDfit()
       CALL sub_constantes(const_phys,.TRUE.)
 
       auTOenergy = get_Conv_au_TO_unit('E',' ',WorkingUnit=.FALSE.)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "=== COORDINATES (TNUM) ====================================="
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "============================================================"
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !=======================================================================
 !=======================================================================
       CALL versionEVRT(.TRUE.)
@@ -215,7 +215,7 @@ SUBROUTINE sub_nDGrid_nDfit()
       write(out_unitp,*) "=== END COORDINATES (TNUM) ================================="
       write(out_unitp,*) "============================================================"
       write(out_unitp,*) "============================================================"
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       CALL alloc_NParray(Qact0,[mole%nb_var],'Qact0',name_sub)
@@ -467,7 +467,7 @@ SUBROUTINE sub_nDGrid_nDfit()
 
         IF (debug) write(out_unitp,*) 'nDweight',nDweight(:)
         IF (debug) write(out_unitp,*) 'stepQ',para_nDGrid%stepQ(:)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
         para_nDGrid%MinNorm      = MinNorm
@@ -477,7 +477,7 @@ SUBROUTINE sub_nDGrid_nDfit()
         para_nDGrid%nb_DeltaQ    = nb_DeltaQ
         IF (.NOT. nDsize_read) nDsize(:) = nb_DeltaQ
         IF (debug) write(out_unitp,*) 'nDsize',nDsize(:)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         CALL init_nDindexPrim(para_nDGrid%nDindG,mole%nb_act,nDsize,    &
                               nDweight=nDweight,type_OF_nDindex=0,      &
@@ -701,7 +701,7 @@ SUBROUTINE sub_nDGrid_coupling0_v2(para_nDGrid,Qact0,para_Tnum,mole,PrimOp)
     STOP
   END IF
   IF (debug) write(out_unitp,nDGrid)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   para_nDGrid%MinNorm      = MinNorm
   para_nDGrid%MaxNorm      = MaxNorm
@@ -907,7 +907,7 @@ SUBROUTINE sub_nDGrid_coupling1_v2(para_nDGrid,Qact0,para_Tnum,mole,PrimOp)
     STOP
   END IF
 
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   para_nDGrid%MinNorm      = MinNorm
   para_nDGrid%MaxNorm      = MaxNorm
@@ -1284,7 +1284,7 @@ END FUNCTION ValGridPoint
 
         IF (debug) write(out_unitp,*) 'nDweight',nDweight(:)
         IF (debug) write(out_unitp,*) 'stepQ',para_nDGrid%stepQ(:)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
         para_nDGrid%MinNorm      = MinNorm
@@ -1294,7 +1294,7 @@ END FUNCTION ValGridPoint
         para_nDGrid%nb_DeltaQ    = nb_DeltaQ
         IF (.NOT. nDsize_read) nDsize(:) = nb_DeltaQ
         IF (debug) write(out_unitp,*) 'nDsize',nDsize(:)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         CALL init_nDindexPrim(para_nDGrid%nDindG,mole%nb_act,nDsize,    &
                               nDweight=nDweight,type_OF_nDindex=0,      &
@@ -2132,13 +2132,13 @@ END FUNCTION ValGridPoint
 
         read(in_unitp,*) list1(:) ! for list of active variables of grid 1
         IF (debug) write(out_unitp,*) list1(:)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
         write(out_unitp,*) "======================================"
         write(out_unitp,*) "=== READING THE GRIDS ================"
         write(out_unitp,*) "======================================"
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         ! for the file with the grid points
         name_file = adjustl(trim(name_Grid1)) // '2'

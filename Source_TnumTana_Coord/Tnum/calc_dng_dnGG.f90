@@ -174,7 +174,7 @@ MODULE mod_dnGG_dng
       write(out_unitp,*) 'present vep ',present(vep)
       write(out_unitp,*)
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------------
 
@@ -436,7 +436,7 @@ MODULE mod_dnGG_dng
       write(out_unitp,*) 'present dnGG',present(dnGG)
       write(out_unitp,*) 'present dng ',present(dng)
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     IF (.NOT. present(dnGG) .OR. present(dng)) THEN
@@ -518,7 +518,7 @@ MODULE mod_dnGG_dng
       write(out_unitp,*) 'dnGG'
       CALL Write_dnSVM(dnGG)
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
   END SUBROUTINE get_dng_dnGG_WITH_GTaylor
@@ -557,7 +557,7 @@ MODULE mod_dnGG_dng
     !---------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     !-----------------------------------------------------------
@@ -596,7 +596,7 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -630,7 +630,7 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNIG ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     vep      = ZERO
     vep_done = .FALSE.
@@ -706,7 +706,7 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -741,7 +741,7 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNIG ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     vep      = ZERO
     vep_done = .FALSE.
@@ -830,7 +830,7 @@ MODULE mod_dnGG_dng
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -876,7 +876,7 @@ MODULE mod_dnGG_dng
       write(out_unitp,*) 'num_x,nrho',para_Tnum%num_x,para_Tnum%nrho
       write(out_unitp,*) 'JJ',para_Tnum%JJ
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
 
@@ -954,7 +954,7 @@ MODULE mod_dnGG_dng
       write(out_unitp,*) 'num_x,nrho',para_Tnum%num_x,para_Tnum%nrho
       write(out_unitp,*) 'JJ',para_Tnum%JJ
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     IF ( present(d0g) .AND. present(d0GG) ) THEN
@@ -1052,7 +1052,7 @@ MODULE mod_dnGG_dng
         write(out_unitp,*) 'step',para_Tnum%stepT
         write(out_unitp,*) 'JJ',para_Tnum%JJ
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       !---------------------------------------------------------------
@@ -1196,7 +1196,7 @@ MODULE mod_dnGG_dng
       write(out_unitp,*) 'step',para_Tnum%stepT
       write(out_unitp,*) 'JJ',para_Tnum%JJ
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !---------------------------------------------------------------
 
@@ -2202,7 +2202,7 @@ FUNCTION get_vep_rho(Qact,mole,para_Tnum,dnGG,rho,WithTaylor) RESULT (vep)
     IF (debug) THEN
       write(out_unitp,*) 'vep',vep
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -2277,7 +2277,7 @@ FUNCTION get_vepTaylor(Qact,mole,para_Tnum) RESULT (vep)
     IF (debug) THEN
       write(out_unitp,*) 'vep',vep
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -2405,7 +2405,7 @@ SUBROUTINE Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
     IF (debug) THEN
       write(out_unitp,*) 'vep',vep
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -2520,7 +2520,7 @@ SUBROUTINE Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
       IF (debug) THEN
         write(out_unitp,*) 'vep',vep
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------
   
@@ -2661,7 +2661,7 @@ SUBROUTINE Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
         write(out_unitp,*) 'dnVep'
         CALL write_dnS(dnVep)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------
   
@@ -2792,7 +2792,7 @@ SUBROUTINE Calc_vep_rho_from_dnGG(vep,rho,Qact,dnGG,mole,para_Tnum)
     IF (debug) THEN
       write(out_unitp,*) 'vep',vep
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -2995,7 +2995,7 @@ RETURN
       CALL Write_Mat(Vec,out_unitp,5,info='Vec')
       CALL Write_Vec(vp,out_unitp,5,info='vp')
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       gij = g(1:n-1,1:n-1)
       gsi = g(1:n-1,n)
@@ -3009,7 +3009,7 @@ RETURN
 
       CALL Write_Vec(gnsi,out_unitp,5,info='gnsi')
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       gn = g
@@ -3026,7 +3026,7 @@ RETURN
       CALL diagonalization(gn,vp,Vec,n,2,1,.FALSE.)
       CALL Write_Mat(Vec,out_unitp,5,info='Vec')
       CALL Write_Vec(vp,out_unitp,5,info='vp')
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       deallocate(Vec)

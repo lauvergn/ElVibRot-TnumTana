@@ -85,7 +85,7 @@
       integer                        :: Col_FOR_WeightOFFit  = 0 ! it is not used
       real (kind=Rkind)              :: Scal_FOR_WeightOFFit = 200._Rkind
 
-      TYPE (param_file)              :: Param_Fit_file
+      TYPE (File_t)              :: Param_Fit_file
       character (len=Line_len)       :: name_Fit = ''
 
       integer                        :: nb_fit = 0
@@ -404,7 +404,7 @@
         CALL Write_VecMat(nDFitAna%B,out_unitp,5,info='range B:')
         CALL Write_VecMat(nDFitAna%Step,out_unitp,5,info='Step:')
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
       END SUBROUTINE Read_Analysis
@@ -538,7 +538,7 @@
           CALL Read_Analysis(para_nDFit%nDFitAna,Q0)
         END IF
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
       END SUBROUTINE Read_nDFit
@@ -616,7 +616,7 @@
       write(out_unitp,*)  'END Write_nDFit'
       write(out_unitp,*)  '============================================================'
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       END SUBROUTINE Write_nDFit
@@ -760,7 +760,7 @@
           write(out_unitp,*) 'nDweight ',para_nDFit%nDweight
           write(out_unitp,*) 'nDsize   ',para_nDFit%nDsize
           write(out_unitp,*) 'ntyp     ',para_nDFit%ntyp
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           para_nDFit%nb_WB = nb_WB
           para_nDFit%ndim  = ndim
@@ -779,7 +779,7 @@
           para_nDFit%Col_FOR_WeightOFFit   = Col_FOR_WeightOFFit
           para_nDFit%Scal_FOR_WeightOFFit  = Scal_FOR_WeightOFFit
 
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           CALL alloc_NParray(para_nDFit%B,[nb_WB],                    &
                             'para_nDFit%B',name_sub)
@@ -944,8 +944,8 @@
 
       real (kind=Rkind)          :: conv_col,val_nDfit
       real (kind=Rkind)          :: Q(para_nDFit%ndim)
-      TYPE (param_file)          :: Grid1D_file
-      TYPE (param_file)          :: Grid2D_file
+      TYPE (File_t)          :: Grid1D_file
+      TYPE (File_t)          :: Grid2D_file
 
       real (kind=Rkind)          :: val0,Q10,Q20,Q30
       real (kind=Rkind)          :: val_min,Q1_min,Q2_min,Q3_min,val_min_1D
@@ -1047,7 +1047,7 @@
               write(out_unitp,*) 'Qmin val_min',i1,Q1_min,val_min*conv_col
               write(out_unitp,*) 'Qmax val_max',i1,Q1_max,val_max*conv_col
               IF (val_min < val0) write(out_unitp,*) 'WARNNING: val_min < val0'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END DO
             write(out_unitp,*) 'val_min_1D',val_min_1D*conv_col
 
@@ -1098,7 +1098,7 @@
               write(out_unitp,*) 'Qmin val_min',i1,i2,Q1_min,Q2_min,val_min*conv_col
               write(out_unitp,*) 'Qmax val_max',i1,i2,Q1_max,Q2_max,val_max*conv_col
               IF (val_min < val_min_1D) write(out_unitp,*) 'WARNNING: val_min < val_min_1D'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
 
               write(nio,*)
               ii = ii + 1
@@ -1162,7 +1162,7 @@
                 write(out_unitp,*) 'Qmin val_min',i1,i2,i3,Q1_min,Q2_min,Q3_min,val_min*conv_col
                 write(out_unitp,*) 'Qmax val_max',i1,i2,i3,Q1_max,Q2_max,Q3_max,val_max*conv_col
                 write(out_unitp,*) 'WARNNING: val_min < val_min_1D'
-                CALL flush_perso(out_unitp)
+                flush(out_unitp)
               END IF
 
               ii = ii + 1
@@ -1327,7 +1327,7 @@
         write(out_unitp,*) 'list_Qact',list_Qact(:)
 
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
         CALL init_nDindexPrim(para_nDFit2%nDindB,                       &
@@ -1515,7 +1515,7 @@
         write(out_unitp,*) 'Norm tQ',sqrt(dot_product(tQ,tQ))
         write(out_unitp,*) 'val_nDfit',val_nDfit
         write(out_unitp,*) " END ",name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE sub_ONLYnDFunc_FROM_nDFit

@@ -489,7 +489,7 @@ MODULE mod_Tnum
 !       -------------------------------------------------------
 
         write(out_unitp,*) 'END Write_CoordType'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
   END SUBROUTINE Write_CoordType
@@ -504,7 +504,7 @@ MODULE mod_Tnum
 
 
       !write(out_unitp,*) 'BEGINNING ',name_sub
-      !CALL flush_perso(out_unitp)
+      !flush(out_unitp)
 
         mole%WriteCC      = .FALSE.
 
@@ -984,7 +984,7 @@ MODULE mod_Tnum
             END IF
           END IF
 
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           IF (debug) write(out_unitp,*) 'read Qtransfo',it
 
           CALL read_Qtransfo(mole%tab_Qtransfo(it),nb_Qin,mole%nb_extra_Coord,  &
@@ -1058,7 +1058,7 @@ MODULE mod_Tnum
           END SELECT
 
           IF (debug) write(out_unitp,*) 'END: New Qtransfo',it
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END DO
         para_Tnum%Tana = para_Tnum%Tana .AND. Tana_Is_Possible
         write(out_unitp,*) 'Tana is possible: ',Tana_Is_Possible
@@ -1144,7 +1144,7 @@ MODULE mod_Tnum
           write(out_unitp,*) 'END New Coordinates transformation'
           write(out_unitp,*) '================================================='
           write(out_unitp,*) '================================================='
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         ENDIF
 !=======================================================================
 !===== Old Coordinates transformation ==================================
@@ -1232,7 +1232,7 @@ MODULE mod_Tnum
 
         IF (print_level > 1) CALL Write_QTransfo(mole%tab_Qtransfo(it))
         write(out_unitp,*) '------------------------------------------'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !===============================================================
         !===== SYM TRANSFO : linear ====================================
         !===============================================================
@@ -1252,7 +1252,7 @@ MODULE mod_Tnum
           mole%tab_Qtransfo(it)%nb_Qin  = mole%nb_var
           mole%tab_Qtransfo(it)%nb_Qout = mole%nb_var
           mole%tab_Qtransfo(it)%LinearTransfo%inv = .FALSE.
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           CALL Read_LinearTransfo(mole%tab_Qtransfo(it)%LinearTransfo,  &
                                   mole%nb_var)
@@ -1262,7 +1262,7 @@ MODULE mod_Tnum
 
           IF (print_level > 1) CALL Write_QTransfo(mole%tab_Qtransfo(it))
           write(out_unitp,*) '------------------------------------------'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         !===============================================================
@@ -1285,7 +1285,7 @@ MODULE mod_Tnum
           mole%tab_Qtransfo(it)%nb_Qin  = mole%nb_var
           mole%tab_Qtransfo(it)%nb_Qout = mole%nb_var
           mole%tab_Qtransfo(it)%LinearTransfo%inv = .FALSE.
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           CALL alloc_array(mole%tab_Qtransfo(it)%NMTransfo,             &
                           "mole%tab_Qtransfo(it)%NMTransfo",name_sub)
@@ -1313,7 +1313,7 @@ MODULE mod_Tnum
 
           IF (print_level > 1) CALL Write_QTransfo(mole%tab_Qtransfo(it))
           write(out_unitp,*) '------------------------------------------'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         !===============================================================
@@ -1370,7 +1370,7 @@ MODULE mod_Tnum
         CALL type_var_analysis_OF_CoordType(mole)
         mole%name_Qact        => mole%tab_Qtransfo(it)%name_Qin
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
         IF (print_level > 1) CALL Write_QTransfo(mole%tab_Qtransfo(it))
@@ -1419,7 +1419,7 @@ MODULE mod_Tnum
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '================================================='
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !=======================================================================
 !===== set up: Mtot, Mtot_inv, d0sm =================================
@@ -1580,7 +1580,7 @@ MODULE mod_Tnum
                write(out_unitp,*) 'i_Q,name_Qout,type_Qout',i_Q," ",    &
                            trim(mole%tab_Qtransfo(it)%name_Qout(i_Q)),  &
                                     mole%tab_Qtransfo(it)%type_Qout(i_Q)
-               CALL flush_perso(out_unitp)
+               flush(out_unitp)
              END DO
            END IF
 
@@ -1593,7 +1593,7 @@ MODULE mod_Tnum
                write(out_unitp,*) 'i_Q,name_Qin,type_Qin',i_Q," ",      &
                            trim(mole%tab_Qtransfo(it)%name_Qin(i_Q)),   &
                                     mole%tab_Qtransfo(it)%type_Qin(i_Q)
-               CALL flush_perso(out_unitp)
+               flush(out_unitp)
              END DO
            END IF
 
@@ -1605,7 +1605,7 @@ MODULE mod_Tnum
       write(out_unitp,*) '================================================='
       write(out_unitp,*) '================================================='
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       END SUBROUTINE Read_CoordType
 !===============================================================================
 
@@ -1627,7 +1627,7 @@ MODULE mod_Tnum
 
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -1794,7 +1794,7 @@ MODULE mod_Tnum
 
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
   END SUBROUTINE CoordType1TOCoordType2
@@ -1815,7 +1815,7 @@ MODULE mod_Tnum
 
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -1982,7 +1982,7 @@ MODULE mod_Tnum
 
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
      END SUBROUTINE CoordType2_TO_CoordType1
@@ -2630,7 +2630,7 @@ MODULE mod_Tnum
       IF (debug) THEN
         write(out_unitp,*) 'nb_OptParam ',para_FOR_optimization%nb_OptParam
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
   END SUBROUTINE Set_OptimizationPara_FROM_CoordType

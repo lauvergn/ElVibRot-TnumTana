@@ -116,7 +116,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4_MPI(Psi,OpPsi,para_Op)
   IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**4) THEN
     write(out_unitp,'(a)',ADVANCE='yes') '-]'
   END IF
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   iterm00 = para_Op%derive_term_TO_iterm(0,0)
   IF (associated(para_Op%OpGrid)) THEN

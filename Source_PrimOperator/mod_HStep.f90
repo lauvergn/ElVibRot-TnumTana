@@ -103,7 +103,7 @@
 
       write(out_unitp,*) 'iOp     ',HStep%iOp
       write(out_unitp,*) ' END write_HStep'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
   END SUBROUTINE write_HStep
   SUBROUTINE HStep2_TO_HStep1(HStep1,HStep2)
   IMPLICIT NONE
@@ -120,7 +120,7 @@
       HStep1%iOp                 = HStep2%iOp
 
      !write(out_unitp,*) ' END HStep2_TO_HStep1'
-     !CALL flush_perso(out_unitp)
+     !flush(out_unitp)
   END SUBROUTINE HStep2_TO_HStep1
   SUBROUTINE Read_HStep(HStep_in)
   IMPLICIT NONE
@@ -184,7 +184,7 @@
 
         HStep%iOp                  = 0
      !write(out_unitp,*) ' END dealloc_HStep'
-     !CALL flush_perso(out_unitp)
+     !flush(out_unitp)
   END SUBROUTINE dealloc_HStep
 
   FUNCTION calc_HStep(HStep,Q)
@@ -218,7 +218,7 @@
 
 
      !write(out_unitp,*) ' END calc_HStep'
-     !CALL flush_perso(out_unitp)
+     !flush(out_unitp)
   END FUNCTION calc_HStep
 
   END MODULE mod_HStep

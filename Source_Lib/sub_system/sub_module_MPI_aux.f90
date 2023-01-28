@@ -158,7 +158,7 @@ MODULE mod_MPI_aux
 !---------------------------------------------------------------------------------------
     !> check total memory used at certain point
     SUBROUTINE system_mem_usage(memory_RSS,name)
-      USE mod_NumParameters
+      USE QDUtil_NumParameters_m
 #if(run_MPI_ifort)
       USE ifport ! if on intel compiler
 #endif

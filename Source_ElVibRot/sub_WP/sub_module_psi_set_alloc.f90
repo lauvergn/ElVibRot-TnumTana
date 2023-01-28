@@ -472,7 +472,7 @@
       !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------
 
@@ -486,7 +486,7 @@
       !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------
 
@@ -511,7 +511,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) ' 1 test_',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -520,14 +520,14 @@
       nb = nb+1
       IF (debug) THEN
         write(out_unitp,*) 'dealloc_psi:',nb
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (allocated(psi%CvecB)) THEN
         CALL dealloc_NParray(psi%CvecB,'psi%CvecB',name_sub)
         IF (debug) THEN
           write(out_unitp,*) 'dealloc: CvecB'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
       END IF
 
@@ -535,7 +535,7 @@
         CALL dealloc_NParray(psi%RvecB,'psi%RvecB',name_sub)
         IF (debug) THEN
           write(out_unitp,*) 'dealloc: RvecB'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
       END IF
 
@@ -543,7 +543,7 @@
         CALL dealloc_NParray(psi%CvecG,'psi%CvecG',name_sub)
         IF (debug) THEN
           write(out_unitp,*) 'dealloc: CvecG'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
       END IF
 
@@ -551,7 +551,7 @@
         CALL dealloc_NParray(psi%RvecG,'psi%RvecG',name_sub)
         IF (debug) THEN
           write(out_unitp,*) 'dealloc: RvecG'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
       END IF
 
@@ -563,7 +563,7 @@
         CALL dealloc_NParray(psi%SR_G,'psi%SR_G',name_sub)
         IF (debug) THEN
           write(out_unitp,*) 'dealloc: SR_G'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
       ENDIF
 
@@ -571,7 +571,7 @@
         CALL dealloc_NParray(psi%SR_B,'psi%SR_B',name_sub)
         IF (debug) THEN
           write(out_unitp,*) 'dealloc: SR_B'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
       ENDIF
 
@@ -616,7 +616,7 @@
         psi%convAvOp         = .FALSE.
 
         IF (debug) write(out_unitp,*) 'end dealloc: init param'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
       END IF
@@ -626,7 +626,7 @@
       IF (debug) THEN
         write(out_unitp,*) ' 2 test_',name_sub
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -3067,7 +3067,7 @@
             !write(out_unitp,*) 'BEGINNING psi_time_C'
             !write(out_unitp,*) 'psi%CvecB',psi%CvecB
             !write(out_unitp,*) 'C',C
-            !CALL flush_perso(out_unitp)
+            !flush(out_unitp)
 
 !           - define and allocate psi_time_C ----
             CALL copy_psi2TOpsi1(psi_time_C,psi)
@@ -3098,7 +3098,7 @@
             psi_time_C%symab = psi%symab
 
             !write(out_unitp,*) 'END psi_time_C'
-            !CALL flush_perso(out_unitp)
+            !flush(out_unitp)
 
           END FUNCTION psi_time_C
 
@@ -3147,7 +3147,7 @@
             !write(out_unitp,*) 'BEGINNING psi_over_C'
             !write(out_unitp,*) 'psi%CvecB',psi%CvecB
             !write(out_unitp,*) 'C',C
-            !CALL flush_perso(out_unitp)
+            !flush(out_unitp)
 
 !           - define and allocate psi_over_C ----
             CALL copy_psi2TOpsi1(psi_over_C,psi)
@@ -3178,7 +3178,7 @@
             psi_over_C%symab = psi%symab
 
             !write(out_unitp,*) 'END psi_over_C'
-            !CALL flush_perso(out_unitp)
+            !flush(out_unitp)
 
           END FUNCTION psi_over_C
 

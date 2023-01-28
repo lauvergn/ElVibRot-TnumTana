@@ -199,7 +199,7 @@
 
 
     write(out_unitp,*) ' END write_PrimOp'
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END SUBROUTINE write_PrimOp
   SUBROUTINE PrimOp2_TO_PrimOp1(PrimOp1,PrimOp2)
   IMPLICIT NONE
@@ -266,7 +266,7 @@
       END IF
 
      !write(out_unitp,*) ' END PrimOp2_TO_PrimOp1'
-     !CALL flush_perso(out_unitp)
+     !flush(out_unitp)
   END SUBROUTINE PrimOp2_TO_PrimOp1
   SUBROUTINE dealloc_PrimOp(PrimOp)
   IMPLICIT NONE
@@ -329,7 +329,7 @@
       END IF
 
      !write(out_unitp,*) ' END dealloc_PrimOp'
-     !CALL flush_perso(out_unitp)
+     !flush(out_unitp)
   END SUBROUTINE dealloc_PrimOp
   SUBROUTINE Sub_PES_FromTnum_TO_PrimOp(PrimOp,para_PES_FromTnum)
       USE mod_OTF_def,   only: init_OTF
@@ -348,7 +348,7 @@
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -488,7 +488,7 @@
       IF (debug) THEN
         CALL write_PrimOp(PrimOp)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
   END SUBROUTINE Sub_PES_FromTnum_TO_PrimOp

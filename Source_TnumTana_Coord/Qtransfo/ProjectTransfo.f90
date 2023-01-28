@@ -115,7 +115,7 @@
       !   STOP
       ! END IF
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE Read_ProjectTransfo
 !-----------------------------------------------------------------------

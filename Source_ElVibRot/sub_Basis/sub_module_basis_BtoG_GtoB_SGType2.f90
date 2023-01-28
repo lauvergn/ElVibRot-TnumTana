@@ -219,7 +219,7 @@ ELSE IF (Rnb_BG < 1024._Rkind**2) THEN
 ELSE
   write(out_unitp,*) 'size WPG',int(Rnb_BG/(1024._Rkind**2))*Rkind,' MW (Words)'
 END IF
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 END SUBROUTINE Size_TabRDP
 
@@ -345,7 +345,7 @@ IF (debug) THEN
   !CALL Write_TabRDP(BgG)
   CALL Size_TabRDP(BgG,nb_BG)
   write(out_unitp,*) 'END in Set_BgG_FOR_id',id
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 END SUBROUTINE Set_BgG_FOR_id
 
@@ -502,7 +502,7 @@ CALL Set_BgG_FOR_id(BgG_new,ind_Grid,ind_Basis,tab_ba,D,LG,id,.FALSE.)
 
 IF (debug) THEN
   write(out_unitp,*) 'size(BgG),size(BgG_new)',size(BgG),size(BgG_new)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 ! id index of "b" of BbG
@@ -553,8 +553,8 @@ DO iG=1,size(BgG)
 
   CALL alloc_TabRDP_at_iG(BgG_new,iGm1)
 
-  !write(out_unitp,*) '---------------------' ; CALL flush_perso(out_unitp)
-  !write(out_unitp,*) 'iG,nbb,nqq',iG,nbb,nqq ; CALL flush_perso(out_unitp)
+  !write(out_unitp,*) '---------------------' ; flush(out_unitp)
+  !write(out_unitp,*) 'iG,nbb,nqq',iG,nbb,nqq ; flush(out_unitp)
   allocate(tab_ibbnew_AT_ibb(nbb))
   ibbNew = 0
   DO ibb=1,nbb
@@ -641,7 +641,7 @@ IF (debug) THEN
   CALL Write_TabRDP(BgG)
   CALL SumSq_TabRDP(BgG)
   write(out_unitp,*) 'END BgG_TO_BbG',id
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 END SUBROUTINE BgG_TO_BbG
@@ -681,7 +681,7 @@ CALL Set_BgG_FOR_id(BgG_new,ind_Grid,ind_Basis,tab_ba,D,LG,id-1,.FALSE.)
 
 IF (debug) THEN
   write(out_unitp,*) 'size(BgG_new),size(BgG)',size(BgG_new),size(BgG)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 ! id index of "b" of BgG_new
@@ -716,8 +716,8 @@ DO iG=iG1+1,iG2
 
 
 
-  !write(out_unitp,*) '---------------------' ; CALL flush_perso(out_unitp)
-  !write(out_unitp,*) 'iG,iGm1,nbb,nqq',iG,iGm1,nbb,nqq ; CALL flush_perso(out_unitp)
+  !write(out_unitp,*) '---------------------' ; flush(out_unitp)
+  !write(out_unitp,*) 'iG,iGm1,nbb,nqq',iG,iGm1,nbb,nqq ; flush(out_unitp)
   allocate(tab_ibbnew_AT_ibb(nbb))
   ibbNew = 0
   DO ibb=1,nbb
@@ -794,7 +794,7 @@ IF (debug) THEN
   CALL Write_TabRDP(BgG)
   CALL SumSq_TabRDP(BgG)
   write(out_unitp,*) 'END BbG_TO_BgG',id
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 END SUBROUTINE BbG_TO_BgG
@@ -888,7 +888,7 @@ IF (debug) THEN
   write(out_unitp,*) '====================================='
   CALL time_perso('sub_G_TO_B')
   write(out_unitp,*) '====================================='
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
   !write(out_unitp,*) 'RVecG',RVecG
 END IF
 
@@ -918,7 +918,7 @@ IF (debug) THEN
   write(out_unitp,*) '====================================='
   write(out_unitp,*) '====================================='
   write(out_unitp,*) '====================================='
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 END SUBROUTINE sub_G_TO_B_new
@@ -952,7 +952,7 @@ IF (debug) THEN
   CALL time_perso('sub_B_TO_G')
   write(out_unitp,*) '====================================='
   !write(out_unitp,*) 'RVecB',RVecB
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 CALL Set_BgG_FOR_id(WPG,ind_Grid,ind_Basis,tab_ba,D,LG(D),D,.TRUE.)
@@ -975,7 +975,7 @@ IF (debug) THEN
   write(out_unitp,*) '====================================='
   write(out_unitp,*) '====================================='
   write(out_unitp,*) '====================================='
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END  IF
 
 !CALL UnCheck_mem()
@@ -1011,7 +1011,7 @@ IF (debug) THEN
   write(out_unitp,*) '====================================='
   CALL time_perso('sub_G_TO_B')
   write(out_unitp,*) '====================================='
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
   write(out_unitp,*) 'RVecG',RVecG
 END IF
 
@@ -1041,7 +1041,7 @@ IF (debug) THEN
   write(out_unitp,*) '====================================='
   write(out_unitp,*) '====================================='
   write(out_unitp,*) '====================================='
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 END SUBROUTINE sub_G_TO_B
@@ -1074,7 +1074,7 @@ IF (debug) THEN
   CALL time_perso('sub_B_TO_G_old')
   write(out_unitp,*) '====================================='
   !write(out_unitp,*) 'RVecB',RVecB
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 CALL Set_BgG_FOR_id(WPG,ind_Grid,ind_Basis,tab_ba,D,LG,D,.TRUE.)
@@ -1104,7 +1104,7 @@ IF (debug) THEN
   write(out_unitp,*) '====================================='
   write(out_unitp,*) '====================================='
   write(out_unitp,*) '====================================='
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END  IF
 !stop
 !CALL UnCheck_mem()
@@ -1147,7 +1147,7 @@ logical, parameter :: debug=.FALSE.
 IF (debug) THEN
   write(out_unitp,*) 'BEGINNING ',name_sub
   write(out_unitp,*) 'RvecG(:)',RvecG(:)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 IF (present(tab_der)) THEN

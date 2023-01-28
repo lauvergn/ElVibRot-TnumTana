@@ -186,7 +186,7 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'GeneTransfo1'
         CALL Write_GeneTransfo(GeneTransfo1)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -205,7 +205,7 @@
         write(out_unitp,*) 'GeneTransfo2'
         CALL Write_GeneTransfo(GeneTransfo2)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -246,7 +246,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         CALL Write_GeneTransfo(GeneTransfo)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -539,7 +539,7 @@
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
       END SUBROUTINE calc_GeneTransfo

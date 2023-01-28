@@ -232,29 +232,29 @@
 
        integer :: m,i,j,it
        integer, parameter :: max_it = 100
-       real (kind=R16kind) :: xm,xl,z,z1,p1,p2,p3,pp
-       real (kind=R16kind), parameter ::                                   &
-         pi128 = 3.14159265358979323846264338327950288419716939937511_R16kind
+       real (kind=RkQ) :: xm,xl,z,z1,p1,p2,p3,pp
+       real (kind=RkQ), parameter ::                                   &
+         pi128 = 3.14159265358979323846264338327950288419716939937511_RkQ
 
        m = (n+1)/2
 
-       xm = 0.5_R16kind*(x2+x1)
-       xl = 0.5_R16kind*(x2-x1)
+       xm = 0.5_RkQ*(x2+x1)
+       xl = 0.5_RkQ*(x2-x1)
 
        DO i=1,m
-         z = cos(pi128*(real(i,kind=R16kind)-0.25_R16kind)/(0.5_R16kind+real(n,kind=R16kind)))
+         z = cos(pi128*(real(i,kind=RkQ)-0.25_RkQ)/(0.5_RkQ+real(n,kind=RkQ)))
 
          DO it=1,max_it
-           p1 = 1.0_R16kind
-           p2 = 0.0_R16kind
+           p1 = 1.0_RkQ
+           p2 = 0.0_RkQ
 
            DO j=1,n
              p3 = p2
              p2 = p1
-             p1 = (real(2*j-1,kind=R16kind)*z*p2 - real(j-1,kind=R16kind)*p3)/real(j,kind=R16kind)
+             p1 = (real(2*j-1,kind=RkQ)*z*p2 - real(j-1,kind=RkQ)*p3)/real(j,kind=RkQ)
            END DO
 
-           pp = real(n,kind=R16kind)*(z*p1-p2)/(z*z-1.0_R16kind)
+           pp = real(n,kind=RkQ)*(z*p1-p2)/(z*z-1.0_RkQ)
            z1 = z
            z  = z1-p1/pp
 
@@ -263,7 +263,7 @@
 
          x(i)     = xm-xl*z
          x(n+1-i) = xm+xl*z
-         w(i)     = 2.0_R16kind*xl/((1.0_R16kind-z*z)*pp*pp)
+         w(i)     = 2.0_RkQ*xl/((1.0_RkQ-z*z)*pp*pp)
          w(n+1-i) = w(i)
 
        END DO

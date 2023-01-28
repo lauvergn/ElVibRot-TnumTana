@@ -664,7 +664,7 @@ Erreur: Unexpected déclaration de données statement at (1)
 Erreur: Unexpected déclaration de données statement at (1)
 /Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1214:47:
 
-       TYPE (param_file)        :: cubature_file
+       TYPE (File_t)        :: cubature_file
                                                1
 Erreur: Unexpected déclaration de données statement at (1)
 /Users/lauvergn/git/ElVibRot/Source_ElVibRot/sub_Basis/sub_quadra_herm.f90:1215:42:

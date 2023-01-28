@@ -94,7 +94,7 @@ MODULE mod_Tana_keo
       IF (debug) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) ' BEGINNING Tana'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       nullify(M_mass_out)
@@ -188,14 +188,14 @@ MODULE mod_Tana_keo
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) 'vectors indices in their subsystem to the indices in the BF'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       i_var = 1
       call  iv_system_to_iv_BF(mole%tab_Qtransfo(i_transfo)%BFTransfo,i_var)
       call init_tab_num_frame_Peuler(mole%tab_Qtransfo(i_transfo)%BFTransfo,P_euler)
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) 'Initialization of the coordinates associated with each subsystem'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       i_var = 1
       With_Li = .FALSE.
       call extract_qval_F_system(mole%tab_Qtransfo(i_transfo)%BFTransfo,        &
@@ -209,7 +209,7 @@ MODULE mod_Tana_keo
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) 'Initialization of the M_mass matrix of each subsystem'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       do k = 1, size(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana(:,1))
       do j = 1, size(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana(:,1))
@@ -227,7 +227,7 @@ MODULE mod_Tana_keo
       TWOxKEO = CZERO
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' Computation of the 2xKEO (in full dimension)'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       call get_opKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,  TWOxKEO,          &
                      P_Euler, M_mass_out, scalar_PiPj)
@@ -257,17 +257,17 @@ MODULE mod_Tana_keo
       write(out_unitp,*) '================================================='
       write(out_unitp,*) 'number of terms before adding Vextr=',nb_terms_KEO_withoutVep
       write(out_unitp,*) 'number of terms after  adding Vextr=',nb_terms_KEO_withVep
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' Computation of the 2xKEO (in reduced dimension)'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL get_KEO_for_Qactiv(TWOxKEO, constraint,Qact,tabQpoly_Qel,tabQact_Qel, &
                               list_Qactiv,list_QpolytoQact)
       IF (debug) CALL write_op(TWOxKEO,header=.TRUE.)
       write(out_unitp,*) '================================================='
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
 
@@ -280,7 +280,7 @@ MODULE mod_Tana_keo
         IF (new) THEN
           write(out_unitp,*) '================================================='
           write(out_unitp,*) ' GET F2 F1 (in reduced dimension)'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           CALL  Get_F2_F1_FROM_TWOxKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,&
                                        TWOxKEO,para_Tnum%ExpandTWOxKEO,       &
                                        tabQact_Qel,mole%nb_act,mole%nb_var,   &
@@ -292,7 +292,7 @@ MODULE mod_Tana_keo
           !!!! Otherwise, the KEO can be not hermitian !
           write(out_unitp,*) '================================================='
           write(out_unitp,*) ' Expand 2xKEO (in reduced dimension)'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           CALL Expand_Sum_OpnD_TO_Sum_OpnD(TWOxKEO,para_Tnum%ExpandTWOxKEO)
           write(out_unitp,*) 'number of terms after the expansion=',size(para_Tnum%ExpandTWOxKEO%sum_prod_op1d)
           IF (debug) CALL write_op(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
@@ -304,7 +304,7 @@ MODULE mod_Tana_keo
       IF (get_Gana) THEN
           write(out_unitp,*) '================================================='
           write(out_unitp,*) ' Get Gana'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           CALL  Get_Gana_FROM_TWOxKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,   &
                                        TWOxKEO,Gana,                            &
                                        tabQact_Qel,mole%nb_act,mole%nb_var,     &
@@ -322,7 +322,7 @@ MODULE mod_Tana_keo
       write(out_unitp,*) ' LaTex    Form: ',para_Tnum%LaTexForm
       write(out_unitp,*) ' Fortran  Form: ',para_Tnum%FortranForm
       write(out_unitp,*) '================================================='
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       tab_Qname(:) = tab_Qname(list_QactTOQpoly(:)) ! to change the order due to the "constraints"
 
@@ -409,7 +409,7 @@ MODULE mod_Tana_keo
       IF (debug) THEN
         write(out_unitp,*) ' END Tana'
         write(out_unitp,*) '================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
    END SUBROUTINE compute_analytical_KEO
@@ -457,7 +457,7 @@ MODULE mod_Tana_keo
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' BEGINNING Tana'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       poly = .false.
       i_transfo = -1
       do i = 1, size(mole%tab_Qtransfo)
@@ -549,14 +549,14 @@ MODULE mod_Tana_keo
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) 'vectors indices in their subsystem to the indice in th BF'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       i_var = 1
       call  iv_system_to_iv_BF(mole%tab_Qtransfo(i_transfo)%BFTransfo,i_var)
       call init_tab_num_frame_Peuler(mole%tab_Qtransfo(i_transfo)%BFTransfo,P_euler)
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) 'Initialization of the coordinates associated with each subsystem'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       i_var = 1
       With_Li = .FALSE.
       call extract_qval_F_system(mole%tab_Qtransfo(i_transfo)%BFTransfo, &
@@ -569,7 +569,7 @@ MODULE mod_Tana_keo
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) 'Initialization of the M_mass matrix of each subsystem'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       do k = 1, size(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana(:,1))
       do j = 1, size(mole%tab_Qtransfo(1)%BunchTransfo%M_Tana(:,1))
@@ -587,7 +587,7 @@ MODULE mod_Tana_keo
       TWOxKEO = CZERO
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' Computation of the 2xKEO (in full dimension)'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       call  get_opKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,  TWOxKEO, &
                       P_Euler, M_mass_out, scalar_PiPj)
@@ -604,7 +604,7 @@ MODULE mod_Tana_keo
       write(out_unitp,*) '================================================='
       write(out_unitp,*) 'number of terms before adding Vextr=',nb_terms_KEO_withoutVep
       write(out_unitp,*) 'number of terms after  adding Vextr=',nb_terms_KEO_withVep
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (debug) THEN
         write(out_unitp,*) ' Write 2xKEO (in full dimension)'
@@ -613,7 +613,7 @@ MODULE mod_Tana_keo
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' Computation of the 2xKEO (in reduced dimension)'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL get_KEO_for_Qactiv(TWOxKEO, constraint,Qact,tabQpoly_Qel,tabQact_Qel, &
                               list_Qactiv,list_QpolytoQact)
       write(out_unitp,*) '================================================='
@@ -623,7 +623,7 @@ MODULE mod_Tana_keo
       IF (new) THEN
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' GET F2 F1 (in reduced dimension)'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL  Get_F2_F1_FROM_TWOxKEO(mole%tab_Qtransfo(i_transfo)%BFTransfo,&
                                    TWOxKEO,para_Tnum%ExpandTWOxKEO,       &
                                    tabQact_Qel,mole%nb_act,mole%nb_var,para_Tnum%nrho)
@@ -634,7 +634,7 @@ MODULE mod_Tana_keo
       !!!! Otherwise, the KEO can be not hermitian !
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' Expand 2xKEO (in reduced dimension)'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL Expand_Sum_OpnD_TO_Sum_OpnD(TWOxKEO,para_Tnum%ExpandTWOxKEO)
       write(out_unitp,*) 'number of terms after the expansion=',size(para_Tnum%ExpandTWOxKEO%sum_prod_op1d)
       IF (debug) CALL write_op(para_Tnum%ExpandTWOxKEO,header=.TRUE.)
@@ -651,7 +651,7 @@ MODULE mod_Tana_keo
       write(out_unitp,*) ' MidasCpp Form: ',para_Tnum%MidasCppForm
       write(out_unitp,*) ' LaTex    Form: ',para_Tnum%LaTexForm
       write(out_unitp,*) '================================================='
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       tab_Qname(:) = tab_Qname(list_QactTOQpoly(:)) ! to change the order du to the "constraints"
 

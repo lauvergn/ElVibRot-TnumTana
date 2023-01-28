@@ -260,8 +260,8 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
 
 !----- variables for the WP propagation ----------------------------
 
-        TYPE (param_file)    :: file_WP,file_autocorr,file_spectrum
-        TYPE (param_file)    :: file_WP_restart ! files to be able to write the propagation
+        TYPE (File_t)    :: file_WP,file_autocorr,file_spectrum
+        TYPE (File_t)    :: file_WP_restart ! files to be able to write the propagation
 
         TYPE(param_WP0)      :: para_WP0
         TYPE(param_control)  :: para_control
@@ -380,7 +380,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
 
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_file), intent(inout) :: file_restart
+      TYPE (File_t), intent(inout) :: file_restart
       TYPE (param_psi),  intent(in)    :: WP(:)
       real (kind=Rkind), intent(in)    :: T
 
@@ -399,7 +399,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
         write(out_unitp,*) ' T=',T
         write(out_unitp,*) ' nb_WP,size WP',size(WP),size(WP(1)%CvecB)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -417,7 +417,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
 !----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
        END IF
 !----------------------------------------------------------
 
@@ -428,7 +428,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_file), intent(inout) :: file_restart
+      TYPE (File_t), intent(inout) :: file_restart
       TYPE (param_psi),  intent(inout) :: WP(:)
       real (kind=Rkind), intent(inout) :: T
 
@@ -445,7 +445,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) ' nb_psi',size(WP)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -481,7 +481,7 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
 !----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
        END IF
 !----------------------------------------------------------
 
@@ -770,7 +770,7 @@ SUBROUTINE sub_analyze_WP_OpWP(T,WP,nb_WP,para_H,para_propa,adia,para_field)
         para_propa%ana_psi%GridDone = .TRUE.
         CALL sub_analyze_psi(w1,para_propa%ana_psi,adia=.TRUE.)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL alloc_psi(WP(i),BasisRep=BasisRep,GridRep=GridRep)
     ENDIF ! for keep_MPI

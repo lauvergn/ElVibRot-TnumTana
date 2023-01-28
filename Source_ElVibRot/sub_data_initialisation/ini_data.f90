@@ -136,7 +136,7 @@
 !------ read or set up the physical constants ------------------------
       CALL sub_constantes(const_phys,.TRUE.)
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       IF(MPI_id==0) THEN
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
@@ -144,7 +144,7 @@
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
       ENDIF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !---------------------------------------------------------------------
 !------- read the coordinates ....     -------------------------------
@@ -168,7 +168,7 @@
         write(out_unitp,*) "=== END COORDINATES (TNUM) ================================="
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
 
 !---------------------------------------------------------------------
@@ -184,18 +184,18 @@
         write(out_unitp,*) "=== BASIS =================================================="
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
 
       ! allocate para_AllBasis, but no big mem at this point
       CALL alloc_AllBasis(para_AllBasis)
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       IF(MPI_id==0) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '== READ ACTIVE BASIS ============================'
         write(out_unitp,*) '================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
 
       ! basis information in BasisnD
@@ -209,7 +209,7 @@
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '== INACTIVE BASIS ==============================='
         write(out_unitp,*) '================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
 
       CALL read_inactive(para_AllBasis,mole,para_Tnum%para_PES_FromTnum%QMLib)
@@ -240,7 +240,7 @@
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '== END INACTIVE BASIS ==========================='
         write(out_unitp,*) '================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
 !---------------------------------------------------------------------
 
@@ -251,7 +251,7 @@
         write(out_unitp,*) "=== END BASIS =============================================="
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
 
       CALL read_active(para_Tnum,mole,para_ReadOp)
@@ -416,14 +416,14 @@
 !      End of data reading
 !
 !=====================================================================
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       IF(MPI_id==0) THEN
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "=== AUTO BASIS ============================================="
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
       write(out_unitp,*) "BuildBasis_done? ",para_AllBasis%BasisnD%BuildBasis_done
 
@@ -472,7 +472,7 @@
         write(out_unitp,*) "=== END AUTO BASIS ========================================="
         write(out_unitp,*) "============================================================"
         write(out_unitp,*) "============================================================"
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
 
        !write(out_unitp,*) 'pack ?',para_AllBasis%BasisnD%packed_done

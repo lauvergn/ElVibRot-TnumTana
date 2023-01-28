@@ -396,7 +396,7 @@
 
      IF (debug) THEN
        write(out_unitp,*) ' BEGINNING ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      if(.not.allocated(V1%vec_sum) .or. .not.allocated(V2%vec_sum)) then
@@ -450,7 +450,7 @@
 
      IF (debug) THEN
        write(out_unitp,*) ' END ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    END SUBROUTINE V1_cross_V2_in_Vres

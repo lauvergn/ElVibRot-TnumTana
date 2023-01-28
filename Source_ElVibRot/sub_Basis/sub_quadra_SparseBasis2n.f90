@@ -193,7 +193,7 @@
 !       write(out_unitp,*) '--------------------------'
 !       write(out_unitp,*) 'basis',ib,L
 !       CALL RecWrite_basis(tab_basis_loc(L,iib))
-!       CALL flush_perso(out_unitp)
+!       flush(out_unitp)
       END DO
       END DO
       write(out_unitp,*) 'L, 1D max_nq',L_SparseGrid,                   &
@@ -285,14 +285,14 @@
 !       write(out_unitp,*) '--------------------------'
 !       write(out_unitp,*) 'tab_Pbasis',ib
 !       CALL RecWrite_basis(SparseBasis%tab_Pbasis(ib)%Pbasis)
-!       CALL flush_perso(out_unitp)
+!       flush(out_unitp)
 
 
         CALL dealloc_NParray(x,"x",name_sub)
 
       END DO
       write(out_unitp,*) '1D-basis: done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------------------------
 
 !----------------------------------------------------------------------------
@@ -372,7 +372,7 @@
                            indL_per_nDgrid,nb_grid,                     &
                            min_nq,max_nq,nb_basis)
       END DO
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL dealloc_NParray(max_nq,"max_nq",name_sub)
       CALL dealloc_NParray(min_nq,"min_nq",name_sub)
@@ -408,7 +408,7 @@
 !       write(out_unitp,*) 'ig,indgrid',ig,indgrid_per_nDgrid(:,ig)
       END DO
       write(out_unitp,*) 'nb_points (with duplicates): ',nb_points
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------------------------
 
 !----------------------------------------------------------------------------
@@ -445,7 +445,7 @@
         IF (DeltaL > nb_basis -1) STOP 'DeltaL > nb_basis-1'
         C = (-ONE)**DeltaL * binomial(nb_basis-1,deltaL)
 !       write(out_unitp,*) 'For grid ',ig,' C:',C
-!       CALL flush_perso(out_unitp)
+!       flush(out_unitp)
 
 
         DO iq=1,product(max_nq(:))
@@ -471,7 +471,7 @@
 !    *         ib=1,nb_basis)
 !         write(out_unitp,*) 'ig,iq,ind_nq,w:',ig,iq,
 !    *                  list_nDgrid_points(:,nb_points),w(nb_points)
-!         CALL flush_perso(out_unitp)
+!         flush(out_unitp)
 
 
         END DO
@@ -487,7 +487,7 @@
         STOP
       END IF
       write(out_unitp,*) 'list_nDgrid_points: done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !     -----------------------------------------------------------------------
 !     6b: sort the list_nDgrid_points
       CALL alloc_NParray(list2_nDgrid_points,[nb_basis,nb_points],    &
@@ -529,7 +529,7 @@
       CALL dealloc_NParray(w2,"w2", name_sub)
 
       write(out_unitp,*) 'sort list_nDgrid_points: done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nb_remove = 0
       iqnD_id = 0
@@ -550,7 +550,7 @@
         END IF
       END DO
       write(out_unitp,*) 'nb_remove',nb_remove
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !     -----------------------------------------------------------------------
 !     6c: list_nDgrid_points, w in SparseBasis
       nq   = nb_points-nb_remove
@@ -564,7 +564,7 @@
       write(out_unitp,*) 'SparseBasis: nq',nq
       write(out_unitp,*) 'Efficiency',                                  &
            real(L_SparseGrid+1,kind=Rkind)**nb_basis/real(nq,kind=Rkind)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       iq2nD = 0
       DO iqnD=1,nb_points
@@ -616,7 +616,7 @@
       CALL dealloc_NParray(max_nbL_basis,     'max_nbL_basis',     name_sub)
       CALL dealloc_NParray(tab_nb_Grid_per_L, 'tab_nb_Grid_per_L', name_sub)
       write(out_unitp,*) 'free memory: done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------------------
 
 !-----------------------------------------------------------

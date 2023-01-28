@@ -126,7 +126,7 @@ MODULE mod_SetOp
 
           logical                      :: alloc_Grid           = .FALSE.
           logical                      :: Grid_done            = .FALSE.
-          TYPE (param_file)            :: file_Grid                    ! file of the grid
+          TYPE (File_t)            :: file_Grid                    ! file of the grid
 
           TYPE (param_ReadOp)          :: para_ReadOp
 
@@ -660,7 +660,7 @@ END SUBROUTINE alloc_MatOp
       write(out_unitp,*)
       write(out_unitp,*) 'n_Op,name',para_Op%n_Op,para_Op%name_Op
       write(out_unitp,*) 'alloc,mat_done ',para_Op%alloc,para_Op%mat_done
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       write(out_unitp,*) 'Read_Op ',para_Op%read_Op
       write(out_unitp,*) 'Make_Mat ',para_Op%Make_Mat
       write(out_unitp,*) 'sym_Hamil ',para_Op%sym_Hamil
@@ -727,27 +727,27 @@ END SUBROUTINE alloc_MatOp
           write(out_unitp,*) 'Op term',i,'der',para_Op%derive_termQdyn(:,i)
         END DO
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       write(out_unitp,*) 'para_FileGrid'
       CALL Write_FileGrid(para_Op%para_ReadOp%para_FileGrid)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       write(out_unitp,*) 'asso ...Grid',associated(para_Op%OpGrid)
       IF (associated(para_Op%OpGrid))                                   &
                               write(out_unitp,*) shape(para_Op%OpGrid)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       write(out_unitp,*) 'asso ...imGrid',associated(para_Op%imOpGrid)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (associated(para_Op%OpGrid)) THEN
         DO iOp=1,size(para_Op%OpGrid)
            write(out_unitp,*) 'param of para_Op%OpGrid(iOp)',iOp
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
           CALL Write_OpGrid(para_Op%OpGrid(iOp))
         END DO
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       IF (para_Op%n_Op == 0) THEN
@@ -757,10 +757,10 @@ END SUBROUTINE alloc_MatOp
         write(out_unitp,*) 'pot0 ',para_Op%pot0
         write(out_unitp,*) 'pot_only,T_only ',para_Op%pot_only,para_Op%T_only
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       write(out_unitp,*) 'END WRITE param_Op'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE write_param_Op
 !===============================================================================
@@ -911,7 +911,7 @@ END SUBROUTINE alloc_MatOp
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'i_bi',i_bi
         CALL write_param_Op(para_H)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1201,7 +1201,7 @@ END SUBROUTINE alloc_MatOp
       SUBROUTINE Set_File_OF_tab_Op(tab_Op,para_FileGrid)
 
       TYPE (param_Op), pointer, intent(inout) :: tab_Op(:)
-      TYPE (param_FileGrid), optional         :: para_FileGrid
+      TYPE (File_tGrid), optional         :: para_FileGrid
 
       integer :: iOp,Type_FileGrid
 
@@ -1354,11 +1354,11 @@ END SUBROUTINE alloc_MatOp
           IF (mod(i_qa,max(1,int(para_Op%nb_qa/10))) == 0)                &
               write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                &
                 int(real(i_qa,kind=Rkind)*HUNDRED/real(para_Op%nb_qa,kind=Rkind))
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
 
         END DO
         write(out_unitp,'(a)',ADVANCE='yes') ' - End'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL dealloc_d0MatOp(d0MatOp)
 
       CASE (1) ! sequential acces file

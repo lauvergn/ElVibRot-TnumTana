@@ -99,7 +99,7 @@
 
        TYPE (Type_QTOXanaTransfo), intent(inout) :: QTOXanaTransfo
 
-       !write(out_unitp,*) 'BEGINNING dealloc_QTOXanaTransfo'; call flush_perso(out_unitp)
+       !write(out_unitp,*) 'BEGINNING dealloc_QTOXanaTransfo'; flush(out_unitp)
 
        IF (associated(QTOXanaTransfo%Z))  THEN
          CALL dealloc_array(QTOXanaTransfo%Z,                           &
@@ -126,7 +126,7 @@
 
        nullify(QTOXanaTransfo%type_Qin)
 
-       !write(out_unitp,*) 'END dealloc_QTOXanaTransfo'; call flush_perso(out_unitp)
+       !write(out_unitp,*) 'END dealloc_QTOXanaTransfo'; flush(out_unitp)
 
       END SUBROUTINE dealloc_QTOXanaTransfo
 

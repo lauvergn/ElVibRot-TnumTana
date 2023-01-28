@@ -162,7 +162,7 @@
   IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
       mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
     write(out_unitp,'(a)',ADVANCE='no') '---'
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   !$OMP parallel                                                &
@@ -189,7 +189,7 @@
     IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
         mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
       write(out_unitp,'(a)',ADVANCE='no') '---'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
@@ -202,7 +202,7 @@
   IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5) THEN
     write(out_unitp,'(a)',ADVANCE='yes') '----]'
   END IF
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   !-------------------------------------------------------
   IF (debug) THEN

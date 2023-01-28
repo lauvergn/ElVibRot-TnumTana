@@ -134,7 +134,7 @@ character (len=*), parameter :: name_sub='Write_OldParam'
   write(out_unitp,*) 'tab_l_AT_SG(:) ',OldPara%tab_l_AT_SG(:)
 
   write(out_unitp,*) 'END ',name_sub
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 END SUBROUTINE Write_OldParam
 SUBROUTINE dealloc_OldParam(OldPara)
@@ -194,7 +194,7 @@ character (len=*), parameter :: name_sub='Write_SGType2'
   write(out_unitp,*)
 
   write(out_unitp,*) 'END ',name_sub
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 END SUBROUTINE Write_SGType2
 
@@ -380,7 +380,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'ndim (nb_basis)',SGType2%nDind_SmolyakRep%ndim
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -439,7 +439,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
                     ' nDval_init: ',SGType2%nDval_init(:,ith)
         END DO
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -468,7 +468,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'ndim (nb_basis)',SGType2%nDind_SmolyakRep%ndim
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -531,7 +531,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
                     ' nDval_init: ',SGType2%nDval_init(:,ith)
         END DO
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       END SUBROUTINE Set_nDval_init_FOR_SG4_v0
@@ -562,7 +562,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
         write(out_unitp,*) 'nb_threads',nb_threads
         write(out_unitp,*) 'SGType2%nb_SG',SGType2%nb_SG
         write(out_unitp,*) 'SGType2%nDind_SmolyakRep%Max_nDI',SGType2%nDind_SmolyakRep%Max_nDI
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -629,7 +629,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
                                  SGType2%iG_th(ith),SGType2%fG_th(ith), &
                     ' nDval_init: ',SGType2%nDval_init(:,ith)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       !err /= 0 means nb_threads is too large => table are deallocated
@@ -643,7 +643,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       IF (debug) THEN
         write(out_unitp,*) 'err_sub ',err_sub
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -675,7 +675,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
         write(out_unitp,*) 'ndim (nb_basis): ',SGType2%nDind_SmolyakRep%ndim
         write(out_unitp,*) 'nb_threads:      ',nb_threads
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -695,7 +695,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
       IF (debug) THEN
         write(out_unitp,*) 'SGType2%nb_tasks',SGType2%nb_tasks
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -746,7 +746,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
                               ' nDval_init: ',SGType2%nDval_init(:,ith)
         END DO
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       END SUBROUTINE Set_nDval_init_FOR_SG4_v2
@@ -876,7 +876,7 @@ character (len=*), parameter :: name_sub = 'get_iqSG_iSG_FROM_iq'
 err_sub = 0
 IF (debug) THEN
   write(out_unitp,*) 'BEGINNING ',name_sub
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 IF (present(OldPara)) THEN
@@ -958,7 +958,7 @@ IF (debug) THEN
   write(out_unitp,*) ' Tabiq',Tabiq
   write(out_unitp,*) ' Tabil',Tabil
   IF (present(OldPara)) CALL Write_OldParam(OldPara)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 !first calculation of i_SG and iq_SG from iq and OldPara (if available)
@@ -996,7 +996,7 @@ IF (i_SG > SGType2%nDind_SmolyakRep%Max_nDI) THEN
   write(out_unitp,*) ' i_SG',i_SG
   write(out_unitp,*) ' nDind_SmolyakRep%Max_nDI',SGType2%nDind_SmolyakRep%Max_nDI
   IF (present(OldPara)) CALL Write_OldParam(OldPara)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
   STOP 'i_SG too large'
 END IF
 IF (iq_SG < 1) THEN
@@ -1004,12 +1004,12 @@ IF (iq_SG < 1) THEN
   write(out_unitp,*) ' iq_SG',iq_SG
   write(out_unitp,*) ' iq_SG < 1'
   IF (present(OldPara)) CALL Write_OldParam(OldPara)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
   STOP 'iq_SG < 1'
 END IF
 
   IF (debug) write(out_unitp,*) ' i_SG,iq_SG,iq',i_SG,iq_SG,iq
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 
 !2d calculation of Tabil from i_SG and OldPara (if available)
@@ -1044,7 +1044,7 @@ IF (err_sub /= 0) THEN
   !STOP 'calc_nDindex'
 END IF
   IF (debug) write(out_unitp,*) ' Tabil',i_SG,' : ',Tabil
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 
 ! Save the parameters in OldPara if OldPara is present
@@ -1072,14 +1072,14 @@ END IF
    END IF
 
   !IF (debug) write(out_unitp,*) ' Tabiq',Tabiq
-  !CALL flush_perso(out_unitp)
+  !flush(out_unitp)
 
 IF (debug) THEN
   write(out_unitp,*) 'iq,i_SG,iq_SG',iq,i_SG,iq_SG
   write(out_unitp,*) 'iq,i_SG,Tabil',iq,i_SG,':',Tabil
   write(out_unitp,*) 'iq,i_SG,Tabiq',iq,i_SG,':',Tabiq
   write(out_unitp,*) 'END ',name_sub
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 
 END SUBROUTINE get_Tabiq_Tabil_FROM_iq

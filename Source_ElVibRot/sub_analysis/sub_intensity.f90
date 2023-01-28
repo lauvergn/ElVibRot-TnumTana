@@ -149,7 +149,7 @@
         write(out_unitp,*) ' nb_ana <=0',nb_ana
         STOP
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (intensity_only) THEN
 
@@ -201,7 +201,7 @@
             CALL dealloc_para_Op(para_Dip(k))
           END IF
 
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END DO
         write(nio_res_int,*) 'Mat_Aif'
         CALL Write_Mat(Mat_Aif,nio_res_int,5,Rformat='e30.23')
@@ -211,7 +211,7 @@
         END IF
         write(out_unitp,*) '==================================================='
         write(out_unitp,*) '==================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END IF
 
@@ -298,7 +298,7 @@
         write(out_unitp,*) 'intensity Vib+Rot (dip)'
         IF (debug) CALL Write_Mat(Mat_Aif,out_unitp,5,Rformat='e15.8')
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (para_intensity%l_Int .OR. para_intensity%l_CrossSec) THEN
 
@@ -333,7 +333,7 @@
         Q = ZERO
         Jmax = para_intensity%JJmax
         write(out_unitp,*) ' Jmax : ',Jmax
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF (.NOT. allocated(para_intensity%ABC)) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
@@ -341,7 +341,7 @@
           write(out_unitp,*) ' CHECK the fortran!!'
           STOP
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 !       - calculation of the partition function Q
         DO i=1,nb_ana
@@ -388,7 +388,7 @@
                        Q,Jmax,const_phys)
 
         write(out_unitp,*) 'Imax',Imax
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 !       - spectrum : RoVib
         emin = para_intensity%Emin
 
@@ -508,7 +508,7 @@
         write(out_unitp,*) 'Rvp',shape(para_H%Rvp)
         !CALL Write_Mat(para_H%Rvp,out_unitp,5)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -521,7 +521,7 @@
         write(out_unitp,*) ' nb_ana <=0',nb_ana
         STOP
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DO k=1,nb_ScalOp
         write(out_unitp,*)
@@ -541,7 +541,7 @@
 
         write(out_unitp,*) '==================================================='
         write(out_unitp,*) '==================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END DO
 
       write(out_unitp,*)
@@ -591,7 +591,7 @@
       integer           :: Jmax
 
       real (kind=Rkind) :: width,emin,emax,pas
-      TYPE (param_file) :: file_spectrum,file_intensity
+      TYPE (File_t) :: file_spectrum,file_intensity
       integer           :: nio,nio_int
       integer           :: n
       real (kind=Rkind),allocatable :: spectre(:)
@@ -1022,7 +1022,7 @@
 
       real (kind=Rkind) :: Ewidth,emin,emax,pas
 
-      TYPE (param_file) :: file_spectrum
+      TYPE (File_t) :: file_spectrum
       integer           :: nio
       integer           :: n
       real (kind=Rkind),allocatable :: spectre(:)

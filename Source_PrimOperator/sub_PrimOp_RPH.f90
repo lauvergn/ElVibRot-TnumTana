@@ -77,7 +77,7 @@
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) ' Qact',Qact(:)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -105,7 +105,7 @@
     IF (debug) THEN
       write(out_unitp,*) ' RPHQact1',RPHpara_AT_Qact1%RPHQact1(:)
       write(out_unitp,*) 'END ',name_sub
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
     END IF
 
   END SUBROUTINE CoordQact_TO_RPHQact1
@@ -133,7 +133,7 @@
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) ' RPHQact1',RPHpara_AT_Qact1%RPHQact1(:)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
 
@@ -164,7 +164,7 @@
     IF (debug) THEN
       write(out_unitp,*) ' Qact',Qact(:)
       write(out_unitp,*) 'END ',name_sub
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
     END IF
 
   END SUBROUTINE RPHQact1_TO_CoordQact
@@ -191,7 +191,7 @@
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) 'RPHTransfo%option',mole%RPHTransfo%option
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     !-----------------------------------------------------------
@@ -212,7 +212,7 @@
     IF (debug) THEN
       CALL Write_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
   END SUBROUTINE Set_RPHpara_AT_Qact1
@@ -258,7 +258,7 @@
     !-----------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !-----------------------------------------------------------
     auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
@@ -360,7 +360,7 @@
     IF (debug) THEN
        CALL Write_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
        write(out_unitp,*) 'END ',name_sub
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
     END IF
 
   END SUBROUTINE Set_RPHpara_AT_Qact1_opt2
@@ -392,7 +392,7 @@
      !-----------------------------------------------------------
      IF (debug) THEN
        write(out_unitp,*) 'BEGINNING ',name_sub
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
      !-----------------------------------------------------------
      auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
@@ -427,7 +427,7 @@
     IF (debug) THEN
       CALL Write_RPHpara_AT_Qact1(RPHpara_AT_Qact1)
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
   END SUBROUTINE Set_RPHpara_AT_Qact1_opt01
@@ -478,7 +478,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !-----------------------------------------------------------
@@ -710,7 +710,7 @@
     IF (debug) THEN
       write(out_unitp,*) 'END ',name_sub
     END IF
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 !-----------------------------------------------------------
 
    END SUBROUTINE sub_dnfreq
@@ -780,7 +780,7 @@
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          CALL Write_RPHTransfo(RPHTransfo)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -798,7 +798,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'RPHTransfo%C_ini'
         CALL Write_Mat(RPHTransfo%C_ini,out_unitp,4)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -1021,7 +1021,7 @@
         write(out_unitp,*) 'dnC%d0 :'
         CALL Write_Mat(RPHpara_AT_Qact1%dnC%d0,out_unitp,4)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       END SUBROUTINE sub_freq_RPH

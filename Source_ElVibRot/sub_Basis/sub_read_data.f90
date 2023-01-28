@@ -954,7 +954,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !---------------------------------------------------------------------
       end subroutine read5_basis_nD
 !================================================================

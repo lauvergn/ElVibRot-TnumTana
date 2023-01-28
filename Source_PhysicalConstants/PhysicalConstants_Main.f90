@@ -118,7 +118,7 @@
 !!     mass = get_mass_Tnum(const_phys%mendeleev,Z=6,A=12)
 
   PROGRAM PhysicalConstants
-    USE mod_system
+    USE QDUtil_m,  out_unitp => out_unit, in_unitp => in_unit
     USE mod_constant
     USE mod_RealWithUnit
     IMPLICIT NONE
@@ -136,7 +136,7 @@
     !=======================================================================
     !=======================================================================
     write(out_unitp,*) 'BEGINNING ',name_sub
-    print_level=0
+    CALL set_print_level(0)
 
     write(out_unitp,*) '==========================================='
     write(out_unitp,*) '= Module test: RealWithUnit(RWU) =========='
@@ -176,82 +176,82 @@
     write(out_unitp,*)
 
     write(out_unitp,*) '==========================================='
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) '==========================================='
     write(out_unitp,*) '====== TEST to get masses ================='
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='X')
     write(out_unitp,*) 'mass of X in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='100.')
     write(out_unitp,*) 'mass of "100." in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='H')
     write(out_unitp,*) 'mass of H in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='1_2')
     write(out_unitp,*) 'mass of "1_2" in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='D')
     write(out_unitp,*) 'mass of D in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='T')
     write(out_unitp,*) 'mass of T in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='1_4',err_mass=err_mass)
     write(out_unitp,*) 'mass of "1_4" in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='He')
     write(out_unitp,*) 'mass of He in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='HE')
     write(out_unitp,*) 'mass of HE in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     mass = get_mass_Tnum(const_phys%mendeleev,name='he')
     write(out_unitp,*) 'mass of he in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     Z=-1
     A=-1
     mass = get_mass_Tnum(const_phys%mendeleev,Z,A,name='He')
     write(out_unitp,*) 'mass of He in au',mass,' and then Z and A',Z,A
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     Z=6
     A=-1
     mass = get_mass_Tnum(const_phys%mendeleev,Z,A)
     write(out_unitp,*) 'mass of Z=6 in au',mass,' and then A',A
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) ' -------------------------------------- '
     Z=6
     A=13
     mass = get_mass_Tnum(const_phys%mendeleev,Z,A,err_mass=err_mass)
     write(out_unitp,*) 'mass of Z=6,A=13 in au',mass
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) '==========================================='
     DO
@@ -261,7 +261,7 @@
       write(out_unitp,*) 'mass of "',trim(adjustl(mass_name)),'" in au',mass
 
       write(out_unitp,*) ' -------------------------------------- '
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
     END DO
 

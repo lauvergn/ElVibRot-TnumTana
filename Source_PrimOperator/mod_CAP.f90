@@ -162,7 +162,7 @@
       write(out_unitp,*) 'iOp     ',CAP%iOp
 
     write(out_unitp,*) ' END write_CAP'
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END SUBROUTINE write_CAP
   SUBROUTINE CAP2_TO_CAP1(CAP1,CAP2)
   IMPLICIT NONE
@@ -187,7 +187,7 @@
       CAP1%iOp                 = CAP2%iOp
 
      !write(out_unitp,*) ' END CAP2_TO_CAP1'
-     !CALL flush_perso(out_unitp)
+     !flush(out_unitp)
   END SUBROUTINE CAP2_TO_CAP1
   SUBROUTINE Read_CAP(CAP_in,nb_Qtransfo)
   IMPLICIT NONE
@@ -322,7 +322,7 @@ write(6,*) 'len(adjustl(trim(Name_Cap)))',len(adjustl(trim(Name_Cap)))
 
         CAP%iOp                  = 0
      !write(out_unitp,*) ' END dealloc_CAP'
-     !CALL flush_perso(out_unitp)
+     !flush(out_unitp)
   END SUBROUTINE dealloc_CAP
 
   FUNCTION calc_CAP(CAP,Q)
@@ -384,7 +384,7 @@ write(6,*) 'len(adjustl(trim(Name_Cap)))',len(adjustl(trim(Name_Cap)))
       END SELECT
 
      !write(out_unitp,*) ' END calc_CAP'
-     !CALL flush_perso(out_unitp)
+     !flush(out_unitp)
   END FUNCTION calc_CAP
 
   END MODULE mod_CAP

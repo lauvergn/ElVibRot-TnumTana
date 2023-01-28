@@ -71,7 +71,7 @@
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*) 'n',n
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !---------------------------------------------------------------------------------------
 !       H matrix diagonalisation
@@ -133,7 +133,7 @@
     CALL Write_Mat(Vec,out_unitp,5)
 
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !------------------------------------------------------
 

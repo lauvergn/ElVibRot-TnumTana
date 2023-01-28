@@ -78,7 +78,7 @@
         write(out_unitp,*) '--------------------------'
         CALL RecWrite_basis(basis_DP)
         write(out_unitp,*) '--------------------------'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------------------
 
@@ -130,14 +130,14 @@
       IF (debug) write(out_unitp,*) '      nb',basis_DP%nb
       IF (debug)                                                        &
        write(out_unitp,*) 'Tabder_Qdyn_TO_Qbasis',basis_DP%Tabder_Qdyn_TO_Qbasis
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       ! set of tab_symab ---------------------------------------
       CALL Set_SymAbelian_OF_BasisDP(basis_DP)
       IF (basis_DP%print_info_OF_basisDP .AND. print_level > -1)        &
                                          write(out_unitp,*) 'symab done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       ! set of nrho ---------------------------------------
       iq = 1
@@ -254,7 +254,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -280,7 +280,7 @@
           basis_DP%nDindB%tab_nDNorm(ib)%d0(:) =                        &
                        basis_DP%tab_Pbasis(ib)%Pbasis%nDindB%Tab_Norm(:)
           IF (debug) write(out_unitp,*) 'ib,tab_nDNorm(ib)%d0',ib,basis_DP%nDindB%tab_nDNorm(ib)%d0(:)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
         END DO
 
@@ -305,7 +305,7 @@
 
       basis_DP%nb      = basis_DP%nDindB%max_nDI
       IF (debug) write(out_unitp,*) 'basis_DP%nb',basis_DP%nb
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       ! set-up Tab_OF_Tabnb2(:) for SparseBasis and type_OF_nDindex=0
@@ -359,7 +359,7 @@
                              'ibasis,size(vec),sum(vec)',ibasis,        &
                              basis_DP%Tab_OF_Tabnb2(ibasis)%nb_var_vec, &
                              sum(basis_DP%Tab_OF_Tabnb2(ibasis)%vec)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END DO
 
       ELSE   ! for true direct-product (not SparseBasis)
@@ -377,7 +377,7 @@
                              'ibasis,size(vec),sum(vec)',ibasis,        &
                              basis_DP%Tab_OF_Tabnb2(ibasis)%nb_var_vec, &
                              sum(basis_DP%Tab_OF_Tabnb2(ibasis)%vec)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END DO
       END IF
 
@@ -406,7 +406,7 @@
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 

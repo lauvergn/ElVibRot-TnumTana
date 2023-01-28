@@ -96,7 +96,7 @@ CONTAINS
 
       integer                        :: i,nb_col,ib
       real (kind=Rkind)              :: Q,E,DE
-      TYPE (param_file)              :: file_WPspectral
+      TYPE (File_t)              :: file_WPspectral
       integer                        :: nioWP
       character (len=Name_longlen)   :: lformat
       TYPE(REAL_WU)                  :: RWU_ZPE,RWU_E,RWU_DE
@@ -130,7 +130,7 @@ CONTAINS
         write(out_unitp,*) 'nb_act1',mole%nb_act1
         write(out_unitp,*) 'max_ana,max_ene',para_ana%max_ana,para_ana%max_ene
         write(out_unitp,*) 'nb_psi_in',nb_psi_in
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       CALL alloc_NParray(ene,shape(Tab_psi),'ene',name_sub)
@@ -148,7 +148,7 @@ CONTAINS
       write(out_unitp,*) 'Average_ene: ',RWU_Write(RWU_E,  WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
       RWU_E   = REAL_WU(sum(ene),'au','E') ! trace
       write(out_unitp,*) 'trace_ene  : ',RWU_Write(RWU_E,  WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       IF (para_ana%max_ana > nb_psi_in) para_ana%max_ana = nb_psi_in
 
       IF (para_ana%intensity .AND. para_intensity%l_IntVR) THEN
@@ -169,7 +169,7 @@ CONTAINS
       ! write the energy level + save the psi
       write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
       write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and means :'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       DO i=1,nb_psi_in
 
         IF (ene(i)-para_H%ZPE > para_ana%max_ene) CYCLE
@@ -199,7 +199,7 @@ CONTAINS
 
       write(out_unitp,*) 'population at T, Q',para_ana%Temp,Q
       write(out_unitp,*) 'Energy level (',const_phys%ene_unit,') pop and averages :'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DO i=1,nb_psi_in
 
@@ -252,7 +252,7 @@ CONTAINS
         CALL dealloc_NParray(AllPsi_max_RedDensity,"AllPsi_max_RedDensity",name_sub)
       END IF
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !----------------------------------------------------------
 
@@ -262,7 +262,7 @@ CONTAINS
       para_ana%print_psi = min(para_ana%print_psi,nb_psi_in)
       IF (debug) para_ana%print_psi = nb_psi_in
       write(out_unitp,*) 'para_ana%print_psi',para_ana%print_psi
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (cube) CALL write_cube(Tab_Psi)
 
@@ -285,7 +285,7 @@ CONTAINS
         !                                   .AND. mole%nb_act1 < 3) THEN
         !  CALL write_psi2_new(tab_Psi)
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         nb_col = 5
         write(out_unitp,*) 'eigenvectors in column'
         write(out_unitp,*) nb_col,para_ana%print_psi,tab_Psi(1)%nb_tot
@@ -474,7 +474,7 @@ CONTAINS
        END DO
 
        write(out_unitp,"(i0,2a,100(f15.9,1x))") iPsi,' avScalOp: ',info,avScalOp
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        !for H
        IF (para_AllOp%tab_Op(1)%name_Op /= 'H') STOP 'wrong Operator !!'
@@ -486,7 +486,7 @@ CONTAINS
           ' H(',iOp,') der[',para_AllOp%tab_Op(1)%derive_termQact(:,iOp),&
           ']: ',info,avOp
 
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
        END DO
 
@@ -497,7 +497,7 @@ CONTAINS
 !----------------------------------------------------------
         IF (debug) THEN
           write(out_unitp,*) 'END sub_moyScalOp'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !----------------------------------------------------------
 

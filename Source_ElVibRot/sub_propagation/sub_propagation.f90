@@ -423,7 +423,7 @@ CONTAINS
         END IF
         it = it + 1
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END DO
 !----------------------------------------------------------
@@ -852,7 +852,7 @@ CONTAINS
       GridRep  = psi0(1)%GridRep
 
       write(out_unitp,*) ' vib : propagation: ',para_propa%name_WPpropa
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF(.NOT. (para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4)) THEN
         CALL initialisation1_poly(para_propa%para_poly,                   &
@@ -914,7 +914,7 @@ CONTAINS
                           RWU_Write(RWU_T,WithUnit=.TRUE.,WorkingUnit=.FALSE.), &
                           ', Delta Real time (s): ',int(RealTime)
          END IF
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
       END DO
 
@@ -1082,7 +1082,7 @@ CONTAINS
         it = it + 1
 
        END DO ! loop on the Time iteration
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
 !----------------------------------------------------------
 !     - write the final WP---------------------------------

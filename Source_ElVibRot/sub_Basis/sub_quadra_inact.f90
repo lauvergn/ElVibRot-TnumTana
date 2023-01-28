@@ -177,7 +177,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'Basis2n functions:',Basis2n%nb
         CALL Write_nDindex(Basis2n%nDindB)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -189,7 +189,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'Basis2n grids:',get_nq_FROM_basis(Basis2n)
         CALL Write_nDindex(Basis2n%nDindG)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (Basis2n%nDindG%max_nDI /= get_nq_FROM_basis(Basis2n)) THEN

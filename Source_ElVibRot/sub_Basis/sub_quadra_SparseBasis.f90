@@ -264,7 +264,7 @@
                       (basis_SG%tab_basisPrimSG(ib,L)%nb,ib=1,basis_SG%nb_basis)
             write(out_unitp,*) '================================================='
           END IF
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END DO
 
         ! find the optimal grid point number : cubature, SG or DP
@@ -291,7 +291,7 @@
         IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
           IF(MPI_id==0) write(out_unitp,*) '=END Set-up SG primtive basis sets==============='
           IF(MPI_id==0) write(out_unitp,*) '================================================='
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
 
@@ -550,7 +550,7 @@
         write(out_unitp,*) '======== END SPARSE GRID ========================'
         write(out_unitp,*) '================================================='
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !CALL RecWriteMini_basis(basis_SG)
 
@@ -718,7 +718,7 @@
                                        basis_SG%tab_basisPrimSG(L,ib)%nb
 
           IF (debug) write(out_unitp,*) 'primtive basis sets of SG,L,ib',L,ib,' done'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
         END DO
         IF(MPI_id==0) THEN
@@ -730,7 +730,7 @@
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,*) '=END Set-up SG primtive basis sets==============='
         write(out_unitp,*) '================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -750,7 +750,7 @@
       ! for the Basis functions -----------------------------------------
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,*) '============ Set nDindB'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       CALL dealloc_nDindex(basis_SG%nDindB)
       CALL init_nDindexPrim(basis_SG%nDindB,basis_SG%nb_basis,nDsize,   &
@@ -762,17 +762,17 @@
         DO i=1,basis_SG%nDindB%Max_nDI
           write(out_unitp,*) 'ib,tab_L',i,basis_SG%nDindB%Tab_nDval(:,i)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN
-        write(out_unitp,*) '============ Set nDindB: done' ; CALL flush_perso(out_unitp)
-        CALL flush_perso(out_unitp)
+        write(out_unitp,*) '============ Set nDindB: done' ; flush(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
-        write(out_unitp,*) '============ Set nDind_SmolyakRep' ; CALL flush_perso(out_unitp)
-        CALL flush_perso(out_unitp)
+        write(out_unitp,*) '============ Set nDind_SmolyakRep' ; flush(out_unitp)
+        flush(out_unitp)
       END IF
       ! for the Smolyak grids -----------------------------------------
       CALL dealloc_SGType2(basis_SG%para_SGType2)
@@ -810,12 +810,12 @@
       END IF
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,*) '============ Set nDind_SmolyakRep: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       ! for the number grid points --------------------------------------
@@ -857,7 +857,7 @@
 
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -872,22 +872,22 @@
       !-- Packed the basis if needed -------------------------------
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
         write(out_unitp,*) '============ Set pack_basis',basis_SG%packed
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       CALL pack_basis(basis_SG,sortX=.TRUE.)
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
         write(out_unitp,*) '============ Set pack_basis: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
         write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       CALL Set_SymAbelian_OF_BasisDP(basis_SG)
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
         write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (debug) THEN
@@ -896,7 +896,7 @@
         CALL Write_nDindex(basis_SG%nDindB)
         write(out_unitp,*) '==== nDind_SmolyakRep ========================='
         CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       IF (basis_SG%print_info_OF_basisDP .AND. print_level > -1) THEN
         write(out_unitp,*) '================================================='
@@ -905,7 +905,7 @@
         write(out_unitp,*) '======== END SPARSE GRID ========================'
         write(out_unitp,*) '================================================='
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DO ib=1,size(tab_i_TO_l)
         CALL dealloc_dnSVM(tab_i_TO_l(ib))
@@ -1110,7 +1110,7 @@
           IF (debug) THEN
             CALL RecWrite_basis(basis_SG%tab_basisPrimSG(L,ib),.TRUE.)
             write(out_unitp,*) 'primtive basis sets of SG,L,ib',L,ib,' done'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
@@ -1124,13 +1124,13 @@
       IF (Print_basis) THEN
         write(out_unitp,*) '=END Set-up SG primtive basis sets==============='
         write(out_unitp,*) '================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       ! for the Basis functions -----------------------------------------
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDindB'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       L1maxB = basis_SG%para_SGType2%L1_SparseBasis
       L2maxB = basis_SG%para_SGType2%L2_SparseBasis
@@ -1194,7 +1194,7 @@
 
       IF (debug) THEN
         CALL Write_nDindex(basis_SG%nDindB)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       ELSE IF (Print_basis) THEN
         IF (allocated(basis_SG%nDindB%Tab_nDval)) THEN
@@ -1212,17 +1212,17 @@
         IF (basis_SG%nDindB%Max_nDI > max_bf_print) THEN
           IF(MPI_id==0) write(out_unitp,*) 'ib,tab_L .....'
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDindB: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDind_SmolyakRep'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       ! nDsize can be wrong
@@ -1278,13 +1278,13 @@
 
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set nDind_SmolyakRep: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !STOP
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB'
         write(out_unitp,*) 'nb_SG:',basis_SG%nb_SG
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       ! for the number grid points --------------------------------------
 
@@ -1347,7 +1347,7 @@
       IF(MPI_id==0) THEN
         write(out_unitp,*) ' max nq nb:',maxval(basis_SG%para_SGType2%tab_nq_OF_SRep), &
                                          maxval(basis_SG%para_SGType2%tab_nb_OF_SRep)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
       IF (nqq /= nqq_ILkind) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
@@ -1366,7 +1366,7 @@
 
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set para_SGType2%nDind_DPG and para_SGType2%nDind_DPB: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF(MPI_id==0) THEN
@@ -1376,7 +1376,7 @@
         write(out_unitp,*) '    Mat_size (Smolyak Rep)',Mat_size
         write(out_unitp,*) 'Mat_size/SG4_Mat_size     ',Mat_size/SG4_Mat_size
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       ! set of nrho ---------------------------------------
       iq = 1
@@ -1389,22 +1389,22 @@
       !-- Packed the basis if needed -------------------------------
       IF (Print_basis) THEN
         write(out_unitp,*) '============ pack_basis',basis_SG%packed
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       CALL pack_basis(basis_SG,sortX=.TRUE.)
       IF (Print_basis) THEN
         write(out_unitp,*) '============ pack_basis: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       CALL Set_SymAbelian_OF_BasisDP(basis_SG)
       IF (Print_basis) THEN
         write(out_unitp,*) '============ Set_SymAbelian_OF_BasisDP: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -1414,7 +1414,7 @@
         CALL Write_nDindex(basis_SG%nDindB)
         write(out_unitp,*) '==== nDind_SmolyakRep ========================='
         CALL Write_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (Print_basis) THEN
@@ -1423,7 +1423,7 @@
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '======== END SPARSE GRID ========================'
         write(out_unitp,*) '================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !-----------------------------------------------------------

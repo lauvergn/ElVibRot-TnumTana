@@ -161,7 +161,7 @@
         write(out_unitp,*) 'nb_bi',get_nb_bi_FROM_AllBasis(para_AllBasis)
         write(out_unitp,*) 'nb_elec',para_ReadOp%nb_elec
         write(out_unitp,*) 'nb_inact2n',mole%nb_inact2n
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       IF (nqa < 1) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
@@ -259,7 +259,7 @@
         write(out_unitp,*) 'packed_done:                   ',BasisnD%packed_done
         write(out_unitp,*) 'SparseGrid_type:               ',BasisnD%SparseGrid_type
         write(out_unitp,*) 'nb_basis:                      ',BasisnD%nb_basis
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done .AND. .NOT. BasisnD%BuildBasis_done) THEN
@@ -341,7 +341,7 @@
 
               IF (Print_basis) write(out_unitp,*)                       &
                     'direct_product%tab_Pbasis(i): ',ibasis,' done. Layer: ',rec
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END DO
           ELSE
             IF (Print_basis) write(out_unitp,*)                         &
@@ -354,7 +354,7 @@
                  (BasisnD%tab_Pbasis(i)%Pbasis%nb,i=1,BasisnD%nb_basis)
           IF (Print_basis) write(out_unitp,*) 'direct_product%...%nq',  &
            (get_nq_FROM_basis(BasisnD%tab_Pbasis(i)%Pbasis),i=1,BasisnD%nb_basis)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           ! direct product construction
           CALL sub_DirProd_basis(BasisnD)
@@ -364,7 +364,7 @@
         IF (Print_basis) THEN
           write(out_unitp,*) 'Active basis:                  ',BasisnD%active
           write(out_unitp,*) 'check_nq_OF_basis:             ',BasisnD%check_nq_OF_basis
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         CALL construct_primitive_basis(BasisnD)
@@ -375,10 +375,10 @@
         END IF
 
         IF (Print_basis) write(out_unitp,*) 'Primitive basis done. Layer:      ',rec
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       ! For the recursivity ....
 
@@ -402,14 +402,14 @@
             CALL Autocontract_basis(BasisnD,para_Tnum,mole,para_ReadOp)
 
             IF (Print_basis) write(out_unitp,*) 'Autocontract_basis (POGridRep_poly) done. Layer: ',rec
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             BasisnD%nqc =  BasisnD%nbc
             !CALL POGridRep2_basis(BasisnD,nb0)
             CALL POGridRep_basis(BasisnD,nb0)
 
             IF (Print_basis) write(out_unitp,*) 'POGridRep_basis done. Layer:   ',rec
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             !- d1b => d1BasisRep and  d2b => d2BasisRep ------------
             CALL sub_dnGB_TO_dnBB(BasisnD)
@@ -437,7 +437,7 @@
           END IF
 
           IF (Print_basis) write(out_unitp,*) 'Autocontract_basis done. Layer:',rec
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
         ELSE ! just contraction (not the automatic procedure)
 
@@ -475,7 +475,7 @@
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '= END Rec Auto Basis for Layer:',rec
         write(out_unitp,*) '==================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       rec = rec - 1
 
@@ -538,7 +538,7 @@
         write(out_unitp,*) 'packed_done:                   ',BasisnD%packed_done
         write(out_unitp,*) 'SparseGrid_type:               ',BasisnD%SparseGrid_type
         write(out_unitp,*) 'nb_basis:                      ',BasisnD%nb_basis
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done) THEN
@@ -661,7 +661,7 @@
             RWU_E  = REAL_WU(BasisnD%EneH0(i),'au','E')
             write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
           END DO
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       ELSE ! packed basis
@@ -676,7 +676,7 @@
               RWU_E  = REAL_WU(BasisnD%EneH0(i),'au','E')
               write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
             END DO
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
         END IF
       END IF ! for BasisnD%nb_basis > 0 .AND. .NOT. BasisnD%packed_done
@@ -685,7 +685,7 @@
         write(out_unitp,*) '==============================================='
         write(out_unitp,*) '= END RecSet_EneH0 for Layer:',rec
         write(out_unitp,*) '==================================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       rec = rec - 1
 
@@ -755,7 +755,7 @@
           RWU_E  = REAL_WU(basis_set%EneH0(i),'au','E')
           IF(MPI_id==0) write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       !-----------------------------------------------------------------
@@ -769,7 +769,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
   END SUBROUTINE Set_EneH0_OF_PackedBasis
   SUBROUTINE Set_EneH0_OF_ContracBasis(basis_Set,para_Tnum,mole,para_ReadOp)
@@ -840,7 +840,7 @@
           RWU_E  = REAL_WU(basis_set%EneH0(i),'au','E')
           IF(MPI_id==0) write(out_unitp,*) i,RWU_Write(RWU_E,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       !-----------------------------------------------------------------
@@ -854,7 +854,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
   END SUBROUTINE Set_EneH0_OF_ContracBasis
 
@@ -944,7 +944,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE AutoParam_basis
       ! basis parameters: for HO basis set (scaleQ)
@@ -1117,7 +1117,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE AutoParam_basis_scaleQ
       SUBROUTINE AutoParam_basis_Q0(basis_temp,para_Tnum,mole,para_ReadOp)
@@ -1293,7 +1293,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE AutoParam_basis_Q0
       FUNCTION check_OutOfRange(Q,type_Q)
@@ -1393,7 +1393,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
   END FUNCTION Ene_FROM_basis
 
@@ -1523,7 +1523,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
   END SUBROUTINE Get_Hmat_FROM_basis
 
@@ -1626,7 +1626,7 @@
           write(out_unitp,*) i,RWU_Write(RWU_E ,WithUnit=.FALSE.,WorkingUnit=.FALSE.),&
                            " ",RWU_Write(RWU_DE,WithUnit=.TRUE. ,WorkingUnit=.FALSE.)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       basis_AutoContract%nbc = nbc
 
@@ -1661,7 +1661,7 @@
         DO i=1,get_nq_FROM_basis(basis_AutoContract)
           write(out_unitp,*) i,basis_AutoContract%x(:,i),basis_AutoContract%dnRGB%d0(i,:)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       !-----------------------------------------------------------------
@@ -1680,7 +1680,7 @@
         !write(out_unitp,*) 'END ',name_sub
       END IF
       IF (print_level > -1) write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
   END SUBROUTINE Autocontract_basis
   SUBROUTINE basis_TO_AllBasis(basis_temp,Allbasis,mole)
@@ -2037,7 +2037,7 @@
  98   CONTINUE
 
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'Block of ReMatOp(:,:) (%): '
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nplus = min(kmem,nreste)
       DO k=1,nplus
@@ -2047,7 +2047,7 @@
             print_level>-1) THEN
            write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                 &
                       int(real(nDGridI,kind=Rkind)*HUNDRED/para_H%nb_qa)
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
         END IF
 
         CALL sub_reading_Op(nDGridI,para_H%nb_qa,d0MatOp,para_H%n_Op,   &
@@ -2088,7 +2088,7 @@
 !     - END of loop of kmem block ----------------------------
 !     --------------------------------------------------------
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - End'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL dealloc_NParray(td0b,     'td0b',     name_sub)
 

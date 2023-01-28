@@ -52,7 +52,7 @@
         logical                    :: hessian_old      = .TRUE.
         logical                    :: hessian_cart     = .TRUE.
         logical                    :: hessian_onthefly = .FALSE.
-        TYPE (param_file)          :: file_hessian
+        TYPE (File_t)          :: file_hessian
         integer                    :: nb_NM            = 0      ! nb_act
 
         integer                    :: NM_TO_sym_ver    = 4
@@ -287,7 +287,7 @@
         write(out_unitp,*)  'mat_inv of LinearTransfo: '
         CALL Write_Mat(LinearTransfo%mat_inv,out_unitp,4)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE Read_LinearTransfo
 !-----------------------------------------------------------------------
@@ -508,7 +508,7 @@
         write(out_unitp,*)  'mat_inv of LinearTransfo: '
         CALL Write_Mat(LinearTransfo%mat_inv,out_unitp,4)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE Read_LC_projectionTransfo
 
@@ -798,7 +798,7 @@
         END IF
 
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       IF (NMTransfo%hessian_read .NEQV. NMTransfo%k_read) THEN
@@ -869,7 +869,7 @@
         IF (allocated(mat)) CALL dealloc_NParray(mat,"mat",name_sub)
 
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (NMTransfo%k_read) THEN
 
@@ -922,7 +922,7 @@
         IF (allocated(mat)) CALL dealloc_NParray(mat,"mat",name_sub)
 
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (NMTransfo%purify_hess) THEN
 
@@ -1056,25 +1056,25 @@
 
       nb_NM = NMTransfo%nb_NM
       write(out_unitp,*) 'nb_NM',nb_NM
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (nb_NM > 0) THEN
         IF (associated(NMTransfo%d0c_inv)) THEN
           write(out_unitp,*)  'd0c_inv: '
           CALL Write_Mat(NMTransfo%d0c_inv,out_unitp,4)
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF (associated(NMTransfo%d0c)) THEN
           write(out_unitp,*)  'd0c: '
           CALL Write_Mat(NMTransfo%d0c,out_unitp,4)
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF (associated(NMTransfo%d0eh)) THEN
           write(out_unitp,*)  'd0eh: ',NMTransfo%d0eh(:)
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END IF
 
@@ -1106,7 +1106,7 @@
       write(out_unitp,*) 'END ',name_sub
 
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       END SUBROUTINE Write_NMTransfo
 
       !!@description: TODO

@@ -98,7 +98,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',para_H%nb_tot
         write(out_unitp,*) 'Hmin,Hmax',para_H%Hmin,para_H%Hmax
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL Write_ana_psi(para_propa%ana_psi)
       END IF
 !-----------------------------------------------------------
@@ -191,7 +191,7 @@
 !       --------------------------------------------------------
       END IF ! for para_H%para_ReadOp%para_FileGrid%Save_MemGrid_done
       IF (debug) write(out_unitp,*) 'Hmin: ',para_H%Hmin
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !     --------------------------------------------------------
 !     -  Hmax ------------------------------------------------
@@ -219,7 +219,7 @@
       IF(openmpi .AND. MPI_scheme/=1) CALL MPI_Bcast_(para_H%Hmax,size1_MPI,root_MPI)
 
       IF (debug) write(out_unitp,*) 'Hmax: ',para_H%Hmax
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL dealloc_psi(psi)
       CALL dealloc_psi(Hpsi)
@@ -227,7 +227,7 @@
 
       write(out_unitp,*) 'non-auto : Hmin,Hmax',para_H%Hmin,para_H%Hmax
       write(out_unitp,*) 'nb_tot',para_H%nb_tot
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (para_H%read_Op) THEN
         IF (para_H%cplx) THEN

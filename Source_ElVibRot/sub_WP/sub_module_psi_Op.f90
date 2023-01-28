@@ -386,7 +386,7 @@
         write(out_unitp,*) ' nb_save,ndim',nb_save,ndim
         CALL Write_Mat(Vec,out_unitp,5)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -459,7 +459,7 @@
 !----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !----------------------------------------------------------
 
@@ -507,7 +507,7 @@
             psi(i) = psi(i) - psi(j) * ROverlap
           END IF
 !         write(out_unitp,*) 'j,i,S',j,i,Overlap
-!         CALL flush_perso(out_unitp)
+!         flush(out_unitp)
         END DO
         IF (i > 1) THEN
           CALL Set_symab_OF_psiBasisRep(psi(i),sym)

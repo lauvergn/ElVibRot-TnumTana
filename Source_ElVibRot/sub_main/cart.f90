@@ -123,7 +123,7 @@
           DO i=1,nat
             read(in_unitp,41) line
             !write(out_unitp,*) line
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
  41         format(72a)
             read(line,*) name_Z,x,y,z
             para_cart%masses(i) = get_mass_Tnum(const_phys%mendeleev,name=name_Z)
@@ -210,7 +210,7 @@
       write(out_unitp,*) ' CART: END ',trim(name_transfo)
       write(out_unitp,*) '================================================='
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
      END DO
  999 CONTINUE ! no more namelist (end-of-file)
 

@@ -976,7 +976,7 @@
        CALL write_op(E,header=.TRUE.)
        write(out_unitp,*) ' FRel'
        CALL write_op(FRel,header=.TRUE.)
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      if(FRel%idq /= 2) then
@@ -1016,7 +1016,7 @@
        write(out_unitp,*) ' P'
        CALL write_op(P,header=.TRUE.)
        write(out_unitp,*) ' END ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    END SUBROUTINE get_opPi
@@ -1522,7 +1522,7 @@
      END IF
 
      write(out_unitp,*) 'entree S_(', F_system%tab_num_frame,')'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
      DO i_syst = F_system%nb_vect, 1, -1
        IF (F_system%tab_BFTransfo(i_syst)%frame) THEN
@@ -1533,7 +1533,7 @@
      END DO
 
      write(out_unitp,*) 'sub_system S_(', F_system%tab_num_frame,')'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
      IF (F_system%frame) THEN
 
@@ -1564,12 +1564,12 @@
 
        write(out_unitp,*) 'system S_r, r=', F_system%tab_num_frame
        write(out_unitp,*) 'size before simplify', size(F_system%KEO%sum_prod_op1d)
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        call Simplify_Sum_OpnD(F_system%KEO,Expand_Sin2=.TRUE.)
 
        write(out_unitp,*) 'size after simplify', size(F_system%KEO%sum_prod_op1d)
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
        CALL F1_sum_nd_PLUS_TO_Fres_sum_nd(F_system%KEO,TWOxKEO)
 
      END IF
@@ -2190,7 +2190,7 @@
      end do
 
        write(out_unitp,*) 'processing S_(',F_system%tab_num_frame,')'
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
        CALL alloc_NParray(E,    [nvec],'E',routine_name)
        CALL alloc_NParray(L,    [nvec],'L',routine_name)
        CALL alloc_NParray(L_dag,[nvec],'L_dag',routine_name)
@@ -2409,7 +2409,7 @@
      !Computation the elementary operators
      write(out_unitp,*) 'get elementaries op. S_(',F_system%tab_num_frame,')'
      write(out_unitp,*) 'with euler(1) = false'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
      iv = 1
 
      nvec_parent = count( .NOT. F_system_parent%tab_BFTransfo(:)%frame )
@@ -3172,7 +3172,7 @@
        DO i=1,size(tabQact_Qel)
          CALL write_op(tabQact_Qel(i))
        END DO
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      ! first extract G(ij)
@@ -3328,7 +3328,7 @@
      write(out_unitp,*) 'd1lnrho'
      DO i=1,size(d1lnrho)
        write(out_unitp,*) 'd1lnrho',i
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
        CALL write_op(d1lnrho(i))
      END DO
 
@@ -3371,7 +3371,7 @@
      IF (debug) THEN
        CALL write_op(ExpandTWOxKEO,header=.TRUE.)
        write(out_unitp,*) ' END ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    END SUBROUTINE Get_F2_F1_FROM_TWOxKEO
@@ -3467,7 +3467,7 @@
        DO i=1,size(tabQact_Qel)
          CALL write_op(tabQact_Qel(i))
        END DO
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      ! first extract G(ij)
@@ -3552,7 +3552,7 @@
        END DO
        END DO
        write(out_unitp,*) ' END ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    END SUBROUTINE Get_Gana_FROM_TWOxKEO

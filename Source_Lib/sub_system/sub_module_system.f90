@@ -21,11 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_system
-      USE mod_NumParameters
-      USE mod_string
-      USE mod_file
-      USE mod_RW_MatVec
-      USE mod_Frac
+      USE QDUtil_m, out_unitp => out_unit, in_unitp => in_unit
       USE mod_memory
       USE mod_memory_Pointer
       USE mod_memory_NotPointer
@@ -158,278 +154,10 @@ MODULE mod_system
 
       END TYPE param_EVRT_calc
 
-      TYPE param_time
-        integer :: count_old,count_ini
-        real    :: t_cpu_old,t_cpu_ini
-        logical :: begin = .TRUE.
-      END TYPE param_time
-
       TYPE (param_FOR_optimization), save :: para_FOR_optimization
       TYPE (param_EVRT_calc),        save :: para_EVRT_calc
 
       CONTAINS
-
-!===============================================================================
-      !!@description: TODO
-      !!@param: TODO
-      SUBROUTINE time_perso(name)
-      USE mod_MPI
-      IMPLICIT NONE
-
-        character (len=*), intent(in) :: name
-
-        !local variables
-        integer           :: tab_time(8) = 0
-        real (kind=Rkind) :: dt_real,t_real
-        real              :: dt_cpu,t_cpu
-        integer           :: seconds,minutes,hours,days
-
-
-        CALL date_and_time(values=tab_time)
-        write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
- 21     format('     Time and date in ',a,' : ',i2,'h:',                &
-               i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
-
-        CALL DeltaTime(dt_real,t_real,dt_cpu,t_cpu)
-
-        !============================================
-        !real and cpu delta times in the subroutine: "name"
-        seconds = int(dt_real)
-        minutes = seconds/60
-        seconds = mod(seconds,60)
-        hours   = minutes/60
-        minutes = mod(minutes,60)
-        days    = hours/24
-        hours   = mod(hours,24)
-
-        IF(openmpi) THEN
-          write(out_unitp,30) dt_real,name,MPI_id
-30        format('        real (s): ',f18.3,' in ',a, ' from MPI id ',i4)
-        ELSE
-          write(out_unitp,31) dt_real,name
-31        format('        real (s): ',f18.3,' in ',a)
-        ENDIF
-
-        write(out_unitp,32) days,hours,minutes,seconds,name
-32      format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
-
-         write(out_unitp,33) dt_cpu,name
-33      format('        cpu (s): ',f18.3,' in ',a)
-
-
-        !============================================
-        !real and cpu total time
-        seconds = int(t_real)
-        minutes = seconds/60
-        seconds = mod(seconds,60)
-        hours   = minutes/60
-        minutes = mod(minutes,60)
-        days    = hours/24
-        hours   = mod(hours,24)
-
-        IF(openmpi) THEN
-          write(out_unitp,40) t_real,MPI_id
-40        format('  Total real (s): ',f18.3,' from MPI id ',i4)
-        ELSE
-          write(out_unitp,41) t_real
-41        format('  Total real (s): ',f18.3)
-        ENDIF
-
-        write(out_unitp,42) days,hours,minutes,seconds
-42      format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
-        write(out_unitp,43) t_cpu
-43      format('  Total cpu (s): ',f18.3)
-
-        CALL flush_perso(out_unitp)
-        !============================================
-
-
-      END SUBROUTINE time_perso
-!===============================================================================
-
-      SUBROUTINE time_perso_v0(name)
-      USE mod_MPI
-      IMPLICIT NONE
-
-        character (len=*) :: name
-
-
-        integer :: tab_time(8) = 0
-        real (kind=Rkind) :: t_real
-        integer       :: count,count_work,freq,count_max
-        real          :: t_cpu
-        integer, save :: count_old,count_ini
-        real, save    :: t_cpu_old,t_cpu_ini
-        integer       :: seconds,minutes,hours,days
-        logical, save :: begin = .TRUE.
-
-
-
-        CALL date_and_time(values=tab_time)
-        write(out_unitp,21) name,tab_time(5:8),tab_time(3:1:-1)
- 21     format('     Time and date in ',a,' : ',i2,'h:',                &
-               i2,'m:',i2,'.',i3,'s, the ',i2,'/',i2,'/',i4)
-
-        CALL system_clock(count=count,count_rate=freq,count_max=count_max)
-        call cpu_time(t_cpu)
-
-        IF (begin) THEN
-          begin = .FALSE.
-          count_old = count
-          count_ini = count
-          t_cpu_old = t_cpu
-          t_cpu_ini = t_cpu
-        END IF
-
-
-!       ============================================
-!       cpu time in the subroutine: "name"
-
-        !count_work = count-count_old
-        count_work=merge(count-count_old,count-count_old+count_max,count>=count_old)
-        seconds = count_work/freq
-
-        minutes = seconds/60
-        seconds = mod(seconds,60)
-        hours   = minutes/60
-        minutes = mod(minutes,60)
-        days    = hours/24
-        hours   = mod(hours,24)
-
-
-        t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
-        write(out_unitp,31) t_real,name
- 31     format('        real (s): ',f18.3,' in ',a)
-        write(out_unitp,32) days,hours,minutes,seconds,name
- 32     format('        real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s in ',a)
-
-         write(out_unitp,33) t_cpu-t_cpu_old,name
- 33     format('        cpu (s): ',f18.3,' in ',a)
-
-
-!       ============================================
-!       Total cpu time
-
-        !count_work = count-count_ini
-        count_work=merge(count-count_ini,count-count_ini+count_max,count>=count_ini)
-        seconds = count_work/freq
-
-        minutes = seconds/60
-        seconds = mod(seconds,60)
-        hours   = minutes/60
-        minutes = mod(minutes,60)
-        days    = hours/24
-        hours   = mod(hours,24)
-
-        t_real = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
-
-        IF(openmpi) THEN
-          write(out_unitp,40) t_real,MPI_id
-40        format('  Total real (s): ',f18.3,' from MPI id ',i4)
-        ELSE
-          write(out_unitp,41) t_real
-41        format('  Total real (s): ',f18.3)
-        ENDIF
-
-        write(out_unitp,42) days,hours,minutes,seconds
-42      format('  Total real    : ',i3,'d ',i2,'h ',i2,'m ',i2,'s')
-        write(out_unitp,43) t_cpu-t_cpu_ini
-43      format('  Total cpu (s): ',f18.3)
-
-        write(out_unitp,51) '  Total memory: ',para_mem%mem_tot,' in ',name
-51      format(a,i10,a,a)
-
-
-        CALL flush_perso(out_unitp)
-!       ============================================
-
-        count_old = count
-        t_cpu_old = t_cpu
-
-
-      END SUBROUTINE time_perso_v0
-      SUBROUTINE DeltaTime(dt_real,t_real,dt_cpu,t_cpu,LocalTime)
-      IMPLICIT NONE
-
-        real (kind=Rkind), intent(inout)           :: dt_real,t_real
-        real,              intent(inout)           :: dt_cpu,t_cpu
-        TYPE (param_time), intent(inout), optional :: LocalTime
-
-
-        integer       :: count,count_work,freq
-
-        TYPE (param_time), save :: MainTime
-
-        IF (present(LocalTime)) THEN
-          CALL DeltaTime_withParam_time(dt_real,t_real,dt_cpu,t_cpu,LocalTime)
-        ELSE
-          CALL DeltaTime_withParam_time(dt_real,t_real,dt_cpu,t_cpu,MainTime)
-        END IF
-
-      END SUBROUTINE DeltaTime
-
-      SUBROUTINE DeltaTime_withParam_time(dt_real,t_real,dt_cpu,t_cpu,LocalTime)
-      IMPLICIT NONE
-
-        real (kind=Rkind), intent(inout) :: dt_real,t_real
-        real,              intent(inout) :: dt_cpu,t_cpu
-        TYPE (param_time), intent(inout) :: LocalTime
-
-
-        integer       :: count,count_work,freq,count_max
-
-
-
-        CALL system_clock(count=count,count_rate=freq,count_max=count_max)
-        call cpu_time(t_cpu)
-
-        IF (LocalTime%begin) THEN
-          LocalTime%begin     = .FALSE.
-          LocalTime%count_old = count
-          LocalTime%count_ini = count
-          LocalTime%t_cpu_old = t_cpu
-          LocalTime%t_cpu_ini = t_cpu
-        END IF
-
-
-        ! real time
-        !count_work = count-LocalTime%count_old
-        count_work=merge(count-LocalTime%count_old,count-LocalTime%count_old+count_max,&
-                         count>=LocalTime%count_old)
-        dt_real    = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
-        !count_work = count-LocalTime%count_ini
-        count_work=merge(count-LocalTime%count_ini,count-LocalTime%count_ini+count_max,&
-                         count>=LocalTime%count_ini)
-        t_real     = real(count_work,kind=Rkind)/real(freq,kind=Rkind)
-
-        ! cpu time
-        dt_cpu  = t_cpu-LocalTime%t_cpu_old
-        t_cpu   = t_cpu-LocalTime%t_cpu_ini
-
-        ! change the save variable
-        LocalTime%count_old = count
-        LocalTime%t_cpu_old = t_cpu
-
-      END SUBROUTINE DeltaTime_withParam_time
-      FUNCTION Delta_RealTime(LocalTime)
-      IMPLICIT NONE
-
-        TYPE (param_time), intent(inout), optional :: LocalTime
-
-        real (kind=Rkind) :: Delta_RealTime
-
-        real (kind=Rkind) :: dt_real,t_real
-        real              :: dt_cpu,t_cpu
-
-        IF (present(LocalTime)) THEN
-          CALL DeltaTime(dt_real,t_real,dt_cpu,t_cpu,LocalTime)
-        ELSE
-          CALL DeltaTime(dt_real,t_real,dt_cpu,t_cpu)
-        END IF
-
-        Delta_RealTime = dt_real
-
-      END FUNCTION Delta_RealTime
 
       !! @description: Compare two arrays of complex numbers
       !!               L1 and L2 of equal size
@@ -633,4 +361,61 @@ MODULE mod_system
           STOP 'error when calling time_record'
         ENDIF
       ENDSUBROUTINE
+  SUBROUTINE versionEVRT(write_version)
+    IMPLICIT NONE
+  
+        logical :: write_version
+  
+        character (len=*), parameter :: EVR_name='ElVibRot'
+        character (len=*), parameter :: Tnum_name='Tnum'
+        character (len=*), parameter :: Tana_name='Tana'
+  
+  
+  
+        IF (write_version .AND. MPI_id==0) THEN
+          write(out_unitp,*) '==============================================='
+          write(out_unitp,*) '==============================================='
+          write(out_unitp,*) 'Working with ',                             &
+                     EVR_name,trim(adjustl(EVR_version)),'-',             &
+                     Tnum_name,trim(adjustl(Tnum_version)),'-',           &
+                     Tana_name,trim(adjustl(Tana_version))
+  
+          write(out_unitp,*) 'Compiled on "',trim(compile_host), '" the ',trim(compile_date)
+          write(out_unitp,*) 'Compiler version: ',trim(compiler_ver)
+          write(out_unitp,*) 'Compiler options: ',trim(compiler_opt)
+          write(out_unitp,*) 'Compiler libs: ',trim(compiler_libs)
+  
+          write(out_unitp,*) 'EVRT_path: ',trim(EVRT_path)
+          write(out_unitp,*) 'git ',trim(git_branch)
+  
+          write(out_unitp,*) '-----------------------------------------------'
+  
+          write(out_unitp,*) EVR_name,' is written by David Lauvergnat [1] '
+          write(out_unitp,*) '  with contributions of'
+          write(out_unitp,*) '     Josep Maria Luis (optimization) [2]'
+          write(out_unitp,*) '     Ahai Chen (MPI) [1,4]'
+          write(out_unitp,*) '     Lucien Dupuy (CRP) [5]'
+  
+          write(out_unitp,*) EVR_name,' is under GNU LGPL3 license.'
+          write(out_unitp,*)
+  
+          write(out_unitp,*) Tnum_name,' is written David Lauvergnat [1]'
+          write(out_unitp,*) Tana_name,' is written by Mamadou Ndong [1] and David Lauvergnat [1]'
+          write(out_unitp,*) '  with contributions'
+          write(out_unitp,*) '      Emil Lund klinting (coupling with MidasCpp) [3]'
+  
+          write(out_unitp,*) Tnum_name,' and ',Tana_name,' are under GNU LGPL3 license.'
+          write(out_unitp,*)
+          write(out_unitp,*) '[1]: Institut de Chimie Physique, UMR 8000, CNRS-Université Paris-Saclay, France'
+          write(out_unitp,*) '[2]: Institut de Química Computacional and Departament de Química',&
+                                     ' Universitat de Girona, Catalonia, Spain'
+          write(out_unitp,*) '[3]: Department of Chemistry, Aarhus University, DK-8000 Aarhus C, Denmark'
+          write(out_unitp,*) '[4]: Maison de la Simulation USR 3441, CEA Saclay, France'
+          write(out_unitp,*) '[5]: Laboratoire Univers et Particule de Montpellier, UMR 5299,', &
+                                     ' Université de Montpellier, France'
+          write(out_unitp,*) '==============================================='
+          write(out_unitp,*) '==============================================='
+        END IF
+  END SUBROUTINE versionEVRT
+
 END MODULE mod_system

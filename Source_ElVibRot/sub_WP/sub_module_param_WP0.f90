@@ -75,7 +75,7 @@
         logical             :: New_Read_WP0       = .FALSE. ! default: F. if T, use a new subroutine to read the WP0
         logical             :: WP0restart         = .FALSE. ! restart
         real (kind=Rkind)   :: Trestart           = ZERO    ! time of the restart (id T0)
-        TYPE (param_file)   :: file_WP0
+        TYPE (File_t)   :: file_WP0
         logical             :: WP0cplx            = .TRUE.  ! default = t
         logical             :: lect_WP0GridRep    = .FALSE. ! read WP0 on the grid
         logical             :: lect_WP0BasisRep   = .FALSE. ! read WP0 on the basis

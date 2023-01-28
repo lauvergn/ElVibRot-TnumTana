@@ -267,7 +267,7 @@
           END IF
           CALL dealloc_array(mat,'mat','Write_MatOFdnS')
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END SUBROUTINE Write_MatOFdnS
 !================================================================
 !        dnS2 = dnS1 , dnVec2 = dnVec1 ...
@@ -523,7 +523,7 @@
           CALL Vec1OFdnS_DOTPRODUCT_Vec2OFdnS_TO_dnS3(Vec1dnS,Vec2dnS,  &
                                               MatWorkdnS(1,1),nderiv_loc)
           write(out_unitp,*) 'vec #1 in line?',MatWorkdnS(1,1)%d0,MatdnS(1,1)%d0
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           CALL MatOFdnS_TO_VecOFdnS(EigVecdnS,Vec1dnS,1,.FALSE.,nderiv_loc)
           CALL Mat1OFdnS_MUL_Vec2OFdnS_TO_Vec3OFdnS(MatdnS_save,        &
@@ -531,7 +531,7 @@
           CALL Vec1OFdnS_DOTPRODUCT_Vec2OFdnS_TO_dnS3(Vec1dnS,Vec2dnS,  &
                                               MatWorkdnS(1,1),nderiv_loc)
           write(out_unitp,*) 'vec #1 in column?',MatWorkdnS(1,1)%d0,MatdnS(1,1)%d0
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
 
 

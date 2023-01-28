@@ -89,11 +89,11 @@
       CALL alloc_array(W,[NPT2],"C","TF_autocorr")
 
       write(out_unitp,*)  'NPT,NPT2,microWPdeltaT',NPT,NPT2,microDeltaT
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DO I=1,NPT
         CALL Read_AutoCorr(ni,t,C(I))
-        !write(out_unitp,*) t,C(I) ; CALL flush_perso(out_unitp)
+        !write(out_unitp,*) t,C(I) ; flush(out_unitp)
       END DO
       C(1) = C(1) * HALF
       close(ni)

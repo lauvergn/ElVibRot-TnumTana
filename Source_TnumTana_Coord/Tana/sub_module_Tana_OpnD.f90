@@ -995,7 +995,7 @@ subroutine check_allocate_opnd(F_nd)
      do i = 1, size(F_nd%prod_op1d)
        call write_op(F_nd%prod_op1d(i), i_open)
      end do
-     CALL flush_perso(i_open)
+     flush(i_open)
 
    END SUBROUTINE write_opnd
 
@@ -1349,7 +1349,7 @@ subroutine check_allocate_opnd(F_nd)
        write(out_unitp,*) ' BEGINNING ',routine_name
      CALL write_op(F1_nd,header=.TRUE.)
      CALL write_op(F2_1d,header=.TRUE.)
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      CALL check_allocate_op(F1_nd)
@@ -1361,7 +1361,7 @@ subroutine check_allocate_opnd(F_nd)
        IF (debug) THEN
          CALL write_op(Fres_nd,header=.TRUE.)
          write(out_unitp,*) 'END ',routine_name
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
        return
      end  if
@@ -1371,7 +1371,7 @@ subroutine check_allocate_opnd(F_nd)
        IF (debug) THEN
          CALL write_op(Fres_nd,header=.TRUE.)
          write(out_unitp,*) 'END ',routine_name
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
        return
      end if
@@ -1413,7 +1413,7 @@ subroutine check_allocate_opnd(F_nd)
      IF (debug) THEN
        CALL write_op(Fres_nd,header=.TRUE.)
        write(out_unitp,*) 'END ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
    END SUBROUTINE get_F1_nd_times_F2_1d_to_Fres_nd
 
@@ -1440,7 +1440,7 @@ subroutine check_allocate_opnd(F_nd)
 
      IF (debug) THEN
        write(out_unitp,*) ' BEGINNING ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    CALL check_allocate_op(F1_nd)
@@ -1453,7 +1453,7 @@ subroutine check_allocate_opnd(F_nd)
        IF (debug) THEN
          CALL write_op(Fres_nd,header=.true.)
          write(out_unitp,*) ' END ',routine_name
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
        return
      end if
@@ -1464,7 +1464,7 @@ subroutine check_allocate_opnd(F_nd)
        IF (debug) THEN
          CALL write_op(Fres_nd,header=.true.)
          write(out_unitp,*) ' END ',routine_name
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
        return
      end if
@@ -1489,7 +1489,7 @@ subroutine check_allocate_opnd(F_nd)
      IF (debug) THEN
        CALL write_op(Fres_nd,header=.true.)
        write(out_unitp,*) ' END ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    END SUBROUTINE get_F1_nd_times_F2_nd_to_Fres_nd
@@ -1732,7 +1732,7 @@ subroutine check_allocate_opnd(F_nd)
      write(out_unitp,*) ' BEGINNING ',routine_name
     write(out_unitp,*) ' Unsorted OpnD',size(FOpnD%prod_op1d)
      CALL write_op(FOpnD,header=.TRUE.)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
    n = size(FOpnD%prod_op1D)
 
@@ -1791,7 +1791,7 @@ subroutine check_allocate_opnd(F_nd)
      write(out_unitp,*) ' Sorted OpnD'
      CALL write_op(FOpnD,header=.TRUE.)
      write(out_unitp,*) ' END ',routine_name
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
  END SUBROUTINE Sort_OpnD
@@ -1813,7 +1813,7 @@ subroutine check_allocate_opnd(F_nd)
      write(out_unitp,*) ' BEGINNING ',routine_name
     write(out_unitp,*) ' Unsimplified OpnD',size(FOpnD%prod_op1d)
      CALL write_op(FOpnD,header=.TRUE.)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    ! 1) check if it is zero
@@ -1832,7 +1832,7 @@ subroutine check_allocate_opnd(F_nd)
      write(out_unitp,*) ' Simplified OpnD',size(FOpnD%prod_op1d)
      CALL write_op(FOpnD,header=.TRUE.)
      write(out_unitp,*) ' END ',routine_name
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
  END SUBROUTINE Simplify_OpnD
@@ -1859,7 +1859,7 @@ subroutine Expand_OpnD_TO_SumOpnD(FOpnD,SumOpnD)
    IF (debug) THEN
      write(out_unitp,*) ' BEGINNING ',routine_name
      CALL write_op(FOpnD,header=.TRUE.)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    ! 1) Determined in which prod_op1d(:) the P operator are located
@@ -1944,7 +1944,7 @@ subroutine Expand_OpnD_TO_SumOpnD(FOpnD,SumOpnD)
       CALL write_op(SumOpnD(ij),header=.TRUE.)
     END DO
     write(out_unitp,*) ' END ',routine_name
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
  end subroutine Expand_OpnD_TO_SumOpnD

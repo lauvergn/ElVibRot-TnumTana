@@ -119,7 +119,7 @@
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
          write(out_unitp,*) 'PrimOp%nb_scalar_Op ',PrimOp%nb_scalar_Op
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
        print_level_EVRT = print_level
 !-----------------------------------------------------------
@@ -263,7 +263,7 @@
 
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE Sub_init_dnOp
@@ -355,7 +355,7 @@
         write(out_unitp,*) 'pot_cplx',PrimOp%pot_cplx
         write(out_unitp,*) 'pot_itQtransfo',PrimOp%pot_itQtransfo
         write(out_unitp,*) 'PrimOp%QMLib',PrimOp%QMLib
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -519,7 +519,7 @@
           ELSE
             IF (debug) THEN
               write(out_unitp,*) 'With calcN_op'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
             CALL calcN_op(d0MatOp(iOpE)%ReVal(:,:,itermE),              &
                           mat_imV,mat_ScalOp,                           &
@@ -685,7 +685,7 @@ SUBROUTINE get_Vinact_AT_Qact_HarD(Qact,Vinact,mole,para_Tnum,PrimOp)
   IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
    write(out_unitp,*) 'Qact',Qact
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
   END IF
   !-----------------------------------------------------------
 
@@ -1220,7 +1220,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
          write(out_unitp,*) 'stepOp',PrimOp%stepOp
          write(out_unitp,*) 'nb_elec',PrimOp%nb_elec
 
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
       nderiv_loc = min(nderiv,Tab_dnMatOp(1)%tab_dnMatOp(1,1,1)%nderiv) ! We assume that all nderiv are identical!!
@@ -1241,7 +1241,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       END IF
       IF (PrimOp%OnTheFly) nb_thread = 1
       IF (print_level > 1) write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
 
@@ -1753,7 +1753,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       IF (debug .OR. print_freq_loc) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Qact',Qact
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       CALL alloc_NParray(d0c,    [mole%nb_act,mole%nb_act],"d0c",    name_sub)
@@ -1830,7 +1830,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
         write(out_unitp,*) 'END ',name_sub
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !-----------------------------------------------------------
 
       END SUBROUTINE sub_freq_AT_Qact
@@ -2456,7 +2456,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
       write(out_unitp,*) '  nb_PerBlock(:)      ',nb_PerBlock(:)
       write(out_unitp,*) '  Ind_Coord_AtBlock(:)',Ind_Coord_AtBlock(:)
       write(out_unitp,*) '  nb_NM',nb_NM
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       !-----------------------------------------------------------------
       !-----------------------------------------------------------------
 
@@ -2472,7 +2472,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,*) '========= nb_PerBlock: ',nb_PerBlock(i_Block)
         write(out_unitp,*) '========================================='
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         !- create mole_1 (type=-1 => type=1)
         mole_1 = mole
@@ -2496,13 +2496,13 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         Qact = mole_1%ActiveTransfo%Qact0(:)
         IF (print_level > 1) write(out_unitp,*) 'Qdyn0',mole_1%ActiveTransfo%Qdyn0
         IF (print_level > 1) write(out_unitp,*) 'Qact0',mole_1%ActiveTransfo%Qact0
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
         IF (debug) THEN
           write(out_unitp,*) 'mole_1:'
           CALL Write_CoordType(mole_1)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         CALL alloc_NParray(d0c,     [nb_NM,nb_NM],"d0c",     name_sub)
@@ -2537,7 +2537,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
           write(out_unitp,'("frequencies (cm-1): ",i0,"-",i0,3(1x,f0.4))') &
                           i,i2,d0eh(i:i2)*auTOcm_inv
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         ! frequencies
         iQ = 0
@@ -2554,7 +2554,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
           write(out_unitp,*) 'new d0k'
           CALL Write_Mat(d0k_save,out_unitp,5)
           write(out_unitp,*) '==========================='
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         ! change d0c, d0c_inv
@@ -2618,7 +2618,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,*) '========================================='
         write(out_unitp,*) '===== END Block: ',i_Block
         write(out_unitp,*) '========================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END DO
 
@@ -3087,7 +3087,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,*) '========================================='
         write(out_unitp,*) '===== END Block: ',i_Block
         write(out_unitp,*) '========================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END DO
 
@@ -3302,7 +3302,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,*)
         CALL Write_CoordType(mole)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -3313,7 +3313,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,*) '========================================='
         write(out_unitp,*) '==== hessian and kinetic matrices ======='
         write(out_unitp,*) '========================================='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (mole%NMTransfo%hessian_read .AND. mole%NMTransfo%k_read) THEN
@@ -3361,7 +3361,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
 
             write(out_unitp,*) 'Read ab initio hessian from file: ',    &
                                   trim(PrimOp%para_OTF%file_FChk%name)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             CALL Init_Tab_OF_dnMatOp(dnMatOp,nb_NM,1,nderiv=2)
             CALL get_dnMatOp_AT_Qact(Qact,dnMatOp,mole,para_Tnum,PrimOp)
@@ -3419,7 +3419,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         IF (debug) THEN
           write(out_unitp,*) 'Qref (Qact)',Qact
           write(out_unitp,*) 'pot_Qref',dnE%d0
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         IF (para_Tnum%WriteT .OR. debug .OR. print_level > 0) THEN
@@ -3427,7 +3427,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
           DO i=1,nb_NM
             write(out_unitp,'(a,1x,i0,1x,f12.6)') 'Q',i,d0grad(i)
           END DO
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END IF
@@ -3442,7 +3442,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,*) nb_NM,5
         CALL Write_Mat(d0k,out_unitp,5,Rformat='e20.13')
         !CALL Write_Mat(d0k,out_unitp,5,Rformat='f12.6')
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (debug) THEN
@@ -3451,7 +3451,7 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         DO i=1,nb_NM,3
           write(out_unitp,*) i,'d0eh:',d0eh(i:min(i+2,nb_NM))
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (print_level > 1) THEN
@@ -3460,14 +3460,14 @@ END SUBROUTINE get_Vinact_AT_Qact_HarD
         write(out_unitp,*) '========================================='
         write(out_unitp,*) '========================================='
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !     -----------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !     -----------------------------------------------------------------
@@ -3579,7 +3579,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
     write(out_unitp,*) 'asso  NMTransfo',associated(mole%NMTransfo)
     IF (associated(mole%NMTransfo)) &
       write(out_unitp,*) 'skip_transfo  NMTransfo',mole%tab_Qtransfo(mole%itNM)%skip_transfo
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-----------------------------------------------------------
 
@@ -3677,7 +3677,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
           CALL Write_dnVec(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnQopt,nderiv=0)
           write(out_unitp,*) 'dnC_inv'
           CALL Write_dnMat(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnC_inv,nderiv=0)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           IF (debug) CALL Write_RPHTransfo(mole%RPHTransfo)
 
           DO iact=1,nb_act1_RPH
@@ -3788,12 +3788,12 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
         !IF (print_level > 1) write(out_unitp,*) ' para_Tnum%Tana'
         CALL compute_analytical_KEO(para_Tnum%TWOxKEO,mole,para_Tnum,Qact)
         !IF (debug) CALL write_op(para_Tnum%TWOxKEO,header=.TRUE.)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF (para_Tnum%Compa_TanaTnum > 0) THEN
           write(out_unitp,*) '--- First comparison with internal analytical KEO'
           CALL comparison_G_FROM_Tnum_Tana(para_Tnum%ExpandTWOxKEO,mole,para_Tnum,Qact)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         ELSE
           write(out_unitp,*) 'WARNING:'
           write(out_unitp,*) 'NO COMPARISON with internal analytical KEO'
@@ -3803,7 +3803,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
           ! second comparison with the reading of the KEO in MCTDH format
           write(out_unitp,*) '--- Second comparison with MCTDH read KEO'
           CALL comparison_G_FROM_Tnum_ReadKEO(mole,para_Tnum,Qact)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         ELSE
           write(out_unitp,*) 'WARNING:'
           write(out_unitp,*) 'NO COMPARISON with MCTDH read KEO'
@@ -3823,7 +3823,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
       IF (Qref) THEN
         write(out_unitp,*) '================================================='
         write(out_unitp,*) '=== Reference geometry (not recenter) ==========='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
 
         CALL get_Qact0(Qact,mole%ActiveTransfo)
@@ -3877,7 +3877,7 @@ SUBROUTINE Finalize_TnumTana_Coord_PrimOp(para_Tnum,mole,PrimOp,Tana,KEO_only)
 !-----------------------------------------------------------
       !IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       !END IF
 !-----------------------------------------------------------
 

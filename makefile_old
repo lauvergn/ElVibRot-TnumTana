@@ -1,20 +1,23 @@
-#=================================================================================
-#=================================================================================
-# Compiler?
-#Possible values: (Empty: gfortran)
-#                gfortran (version: 9.0 linux and osx)
+DIR_EVRT:=$(shell pwd)
+#===============================================================================
+#===============================================================================
+## Compiler? Possible values: ifort; gfortran; pgf90 (v17),mpifort
 # F90 = mpifort
- FC = gfortran
-#
+  F90 = gfortran
+# F90 = nagfor
+# F90 = ifort
+# F90 = pgf90
+
 ## parallel_make=1 to enable parallel make
 ## parallel_make=0 for fast debug make, no parallel
 parallel_make=0
-# Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 1
+
+## Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
+OPT = 0
+#
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
-## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
-LAPACK = 1
+#
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
 INT = 4
@@ -23,51 +26,36 @@ INT = 4
 ARPACK = 0
 ## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
 CERFACS = 0
+## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
+LAPACK = 1
+## Quantum Model Lib (QMLib) Empty: default with QMLib; 0: without QMLib; 1 with QMLib
+## Always QML=1
+QML = 1
+#
 ## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
 ## if $(EXTFextern) is empty, the default is f
 extf = $(EXTFextern)
-## how to get external libraries;  "loc" (default): from local zip file, Empty or something else (v0.5): from github
-EXTLIB_TYPE = loc
-#=================================================================================
-#=================================================================================
-ifeq ($(FC),)
-  FFC      := gfortran
-else
-  FFC      := $(FC)
-endif
-ifeq ($(OPT),)
-  OOPT      := 1
-else
-  OOPT      := $(OPT)
-endif
-ifeq ($(OMP),)
-  OOMP      := 1
-else
-  OOMP      := $(OMP)
-endif
-ifeq ($(LAPACK),)
-  LLAPACK      := 1
-else
-  LLAPACK      := $(LAPACK)
-endif
-#=================================================================================
+## Some compilers (like PGF90) do not have inverse hyperbolic functions: atanh, asinh, acosh
+# NVHYP  = 1 : with intrinsic inverse hyperbolic functions
+# NVHYP  = 0 : with external inverse hyperbolic functions (without intrinsic ones)
+INVHYP  = 1
 #
-# Operating system, OS? automatic using uname:
-OS :=$(shell uname)
-
-
-EVRT_path := $(shell pwd)
-
-
-
+## Operating system, OS? automatic using uname:
+OS=$(shell uname)
+#
+#===============================================================================
+# External Libraries directory (QML ...)
+ExternalLibDIR=Ext_Lib
+#===============================================================================
+#
 #===============================================================================
 # turn off ARPACK when using pgf90
-ifeq ($(FFC),pgf90)
+ifeq ($(F90),pgf90)
   ARPACK = 0
 endif
 
 # setup for mpifort
-ifeq ($(FFC),mpifort)
+ifeq ($(F90),mpifort)
   ## MPI compiled with: gfortran or ifort
   MPICORE := $(shell ompi_info | grep 'Fort compiler:' | sed 's/Fort compiler://g' | sed 's/ //g')
   OMP = 0
@@ -76,15 +64,12 @@ ifeq ($(FFC),mpifort)
   endif
 endif
 
-# Extension for the object directory and the library
-ext_obj=_$(FFC)
-ifeq ($(FFC),mpifort)
-  ext_obj += _$(MPICORE)
+# obj directory
+ifeq ($(F90),mpifort)
+  obj_dir = obj/obj_$(F90)_$(MPICORE)_$(INT)
+else
+  obj_dir = obj/obj_$(F90)_$(INT)
 endif
-ext_obj += _opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
-
-obj_dir = obj/obj_$(ext_obj)
-
 ## turn off ARPACK
 #=================================================================================
 # External pot for the library: libpot.a,

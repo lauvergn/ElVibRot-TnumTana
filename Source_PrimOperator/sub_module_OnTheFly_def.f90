@@ -62,12 +62,12 @@
           logical                       :: header             = .FALSE.
           logical                       :: footer             = .FALSE.
           character (len=Name_len)      :: file_name          = ' '
-          TYPE (param_file)   :: file_header
-          TYPE (param_file)   :: file_footer
-          TYPE (param_file)   :: file_data
-          TYPE (param_file)   :: file_log
-          TYPE (param_file)   :: file_FChk
-          TYPE (param_file)   :: file_pun
+          TYPE (File_t)   :: file_header
+          TYPE (File_t)   :: file_footer
+          TYPE (File_t)   :: file_data
+          TYPE (File_t)   :: file_log
+          TYPE (File_t)   :: file_FChk
+          TYPE (File_t)   :: file_pun
         CONTAINS
           PROCEDURE, PRIVATE, PASS(para_OTF1) :: OTF2_TO_OTF1
           GENERIC,   PUBLIC  :: assignment(=) => OTF2_TO_OTF1
@@ -172,7 +172,7 @@
       CALL file_Write(para_OTF%file_pun)
 
       write(out_unitp,*) 'END write_OTF'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE write_OTF
 

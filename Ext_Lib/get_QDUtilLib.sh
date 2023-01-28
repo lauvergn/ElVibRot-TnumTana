@@ -2,20 +2,19 @@
 
 EXTLIB_TYPE=$1
 
-echo "In get_dnSVM.sh"
+echo "In get_QDUtilLib.sh"
+pwd
 
+SAVE_version=Save_QDUtilLib-0.7
+LOC_version=QDUtilLib
 
-SAVE_version=Save_AD_dnSVM-3.2
-LOC_version=AD_dnSVM
-
-
-rm -rf AD_dnSVM* #always remove the link
+rm -rf QDUtilLib* #always remove the link
 
 
 #latest release
-#latest HEAD version (dev version)
- version=https://github.com/lauvergn/AD_dnSVM/archive/refs/tags/v3.2.zip
-
+ version=https://github.com/lauvergn/QDUtilLib/archive/refs/tags/v0.7.zip
+#latest HEAD version
+#version=https://github.com/lauvergn/QDUtilLib/archive/refs/heads/main.zip
 
 test -z $EXTLIB_TYPE       &&    curl -LJ $version --output $LOC_version.zip
 test $EXTLIB_TYPE != 'loc' &&    curl -LJ $version --output $LOC_version.zip
@@ -26,9 +25,10 @@ unzip $LOC_version.zip
 rm -f $LOC_version.zip
 
 
-LIBDIR=`ls -d AD_dnSVM*`
-#echo $LIBDIR
+LIBDIR=`ls -d QDUtilLib*`
+#echo $QMLDIR
 
 ln -s $LIBDIR $LOC_version
 
-echo "End get_dnSVM.sh"
+
+echo "End get_QDUtilLib.sh"

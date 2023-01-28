@@ -39,7 +39,7 @@ MODULE mod_file
 
       !!@description: TODO
       !!@param: TODO
-      TYPE param_file
+      TYPE File_t
         character (len=Line_len) :: name      = " "     ! name of the file
         integer                  :: unit      = 0       ! unit of the file
         logical                  :: formatted = .TRUE.
@@ -57,9 +57,9 @@ MODULE mod_file
       CONTAINS
         PROCEDURE, PRIVATE, PASS(file1) :: file2TOfile1
         GENERIC,   PUBLIC  :: assignment(=) => file2TOfile1
-      END TYPE param_file
+      END TYPE File_t
 
-      PUBLIC :: param_file,file_GetUnit, file_open, file_open2
+      PUBLIC :: File_t,file_GetUnit, file_open, file_open2
       PUBLIC :: file_close, file_delete, file_dealloc, file_write, make_FileName
       PUBLIC :: err_file_name,check_file_exist_WITH_file_name
       PUBLIC :: flush_perso,join_path
@@ -68,8 +68,8 @@ MODULE mod_file
       CONTAINS
 
       SUBROUTINE file2TOfile1(file1,file2)
-      CLASS(param_file), intent(inout)  :: file1
-      TYPE(param_file),  intent(in)     :: file2
+      CLASS(File_t), intent(inout)  :: file1
+      TYPE(File_t),  intent(in)     :: file2
 
       integer :: err_mem,memory
       !write(out_unitp,*) 'BEGINNING file_GetUnit'
@@ -152,7 +152,7 @@ MODULE mod_file
       FUNCTION file_GetUnit(ffile,err_file)
 
       integer           :: file_GetUnit
-      TYPE(param_file)  :: ffile
+      TYPE(File_t)  :: ffile
       integer, optional :: err_file
 
 
@@ -243,7 +243,7 @@ MODULE mod_file
       SUBROUTINE file_open(ffile,iunit,lformatted,append,old,seq,lrecl,err_file)
       USE mod_string, ONLY : int_TO_char
 
-      TYPE(param_file)  :: ffile
+      TYPE(File_t)  :: ffile
       integer           :: iunit
       integer, optional :: lrecl
       logical, optional :: lformatted,append,old,seq
@@ -442,7 +442,7 @@ MODULE mod_file
 
       SUBROUTINE file_close(ffile)
 
-      TYPE(param_file)  :: ffile
+      TYPE(File_t)  :: ffile
 
       integer                   :: ith
       logical                   :: op
@@ -547,7 +547,7 @@ MODULE mod_file
       !!@param: TODO
       SUBROUTINE file_delete(ffile)
 
-      TYPE(param_file)  :: ffile
+      TYPE(File_t)  :: ffile
       integer           :: unit
 
       integer                  :: ithread,nio
@@ -584,7 +584,7 @@ MODULE mod_file
 
       SUBROUTINE file_dealloc(ffile)
 
-      TYPE(param_file)  :: ffile
+      TYPE(File_t)  :: ffile
 
       !write(out_unitp,*) 'BEGINNING file_dealloc'
 
@@ -603,7 +603,7 @@ MODULE mod_file
 
       SUBROUTINE file_Write(ffile)
 
-      TYPE(param_file)  :: ffile
+      TYPE(File_t)  :: ffile
 
       integer :: ith
 

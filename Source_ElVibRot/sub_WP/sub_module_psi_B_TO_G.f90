@@ -202,7 +202,7 @@ CONTAINS
 
         write(out_unitp,*) 'psi GridRep'
         CALL ecri_psi(ZERO,psi,out_unitp,.TRUE.,.FALSE.)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 

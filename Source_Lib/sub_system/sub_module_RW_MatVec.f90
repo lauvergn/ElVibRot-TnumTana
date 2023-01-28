@@ -625,7 +625,7 @@ SUBROUTINE sub_ReadRV(RV,FileName_RV,lformatted,err_sub)
     write(out_unitp,*) '   Problem with the file associated to RV'
     write(out_unitp,*) '   file name: ',FileName_RV
     write(out_unitp,*) '   err_file: ',err_file
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
     error = 2
   ELSE
       IF (lformatted) THEN
@@ -637,7 +637,7 @@ SUBROUTINE sub_ReadRV(RV,FileName_RV,lformatted,err_sub)
       write(out_unitp,*) ' ERROR in ',Name_sub
       write(out_unitp,*) '   Error while reading nvec',nvec
       write(out_unitp,*) '   file name: ',FileName_RV
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       error = 3
       nvec = 0
     END IF
@@ -654,7 +654,7 @@ SUBROUTINE sub_ReadRV(RV,FileName_RV,lformatted,err_sub)
       write(out_unitp,*) ' ERROR in ',Name_sub
       write(out_unitp,*) '   Error while reading RV'
       write(out_unitp,*) '   file name: ',FileName_RV
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       error = 4
     END IF
   END IF
@@ -698,7 +698,7 @@ SUBROUTINE sub_WriteRV(RV,FileName_RV,lformatted,err_sub)
       write(out_unitp,*) '   Problem with the file associated to RV'
       write(out_unitp,*) '   file name: ',FileName_RV
       write(out_unitp,*) '   err_file: ',err_file
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       error = 2
     ELSE
       IF (lformatted) THEN
@@ -710,7 +710,7 @@ SUBROUTINE sub_WriteRV(RV,FileName_RV,lformatted,err_sub)
         write(out_unitp,*) ' ERROR in ',Name_sub
         write(out_unitp,*) '   Error while writing nvec',nvec
         write(out_unitp,*) '   file name: ',FileName_RV
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         error = 3
         nvec = 0
       ELSE
@@ -723,7 +723,7 @@ SUBROUTINE sub_WriteRV(RV,FileName_RV,lformatted,err_sub)
           write(out_unitp,*) ' ERROR in ',Name_sub
           write(out_unitp,*) '   Error while writing Rvec'
           write(out_unitp,*) '   file name: ',FileName_RV
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           error = 4
         END IF
       END IF

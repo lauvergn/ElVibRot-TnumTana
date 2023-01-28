@@ -2744,7 +2744,7 @@ c-----------------------------------------------------------
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Vin',Vin(:)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2798,7 +2798,7 @@ c-----------------------------------------------------------
         write(out_unitp,*) 'Vut',Vut(:)
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 c-----------------------------------------------------------
 

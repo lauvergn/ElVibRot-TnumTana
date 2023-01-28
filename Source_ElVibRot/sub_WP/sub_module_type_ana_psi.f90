@@ -64,7 +64,7 @@
       real (kind=Rkind)              :: Ene            = -Huge(ONE)   ! Ene
 
       ! population analysis + reduced density
-      TYPE (param_file)              :: file_PsiRho
+      TYPE (File_t)              :: file_PsiRho
       real (kind=Rkind), allocatable :: max_RedDensity(:)         ! the gaussian weighted (almost the last basis function) reduced density
       !real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)   ! tab_WeightChannels(nb_bi,nb_be)
       real (kind=Rkind)              :: Psi_norm2     = -ONE      ! norm^2 of psi
@@ -99,17 +99,17 @@
 
       ! For the exact factorization
       integer                        :: ExactFact = 0       ! default, 0: no exact factorization analysis
-      TYPE (param_file)              :: file_ExactFactPotCut
+      TYPE (File_t)              :: file_ExactFactPotCut
 
 
       ! 1D and 2D cut of psi at Qana
-      TYPE (param_file)              :: file_PsiCut
+      TYPE (File_t)              :: file_PsiCut
       logical                        :: psi1D_Q0 = .FALSE.  ! reduced densities (1D or 2D) along coordinates
       logical                        :: psi2D_Q0 = .FALSE.  ! reduced densities (1D or 2D) along coordinates
       real (kind=Rkind), allocatable :: Qana(:)             ! geometry (Qact order) for the analysis
 
       ! write the psi
-      TYPE (param_file)              :: file_Psi
+      TYPE (File_t)              :: file_Psi
       logical                        :: Write_psi        = .FALSE. ! write psi (or psi^2 ...)
       logical                        :: Write_psi2_Grid  = .FALSE. ! write the density on the grid
       logical                        :: Write_psi2_Basis = .FALSE. ! write the density on the basis functions

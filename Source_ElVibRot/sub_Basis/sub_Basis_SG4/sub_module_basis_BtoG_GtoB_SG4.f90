@@ -521,7 +521,7 @@ IF (allocated(SRep%SmolyakRep)) THEN
     write(out_unitp,*) iG,size(SRep%SmolyakRep(iG)%V),SRep%SmolyakRep(iG)%V
   END DO
 END IF
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 END SUBROUTINE Write_SmolyakRep
 
 SUBROUTINE Write_SmolyakRepC(SRep)
@@ -543,7 +543,7 @@ IF (allocated(SRep%SmolyakRep)) THEN
     write(out_unitp,*) iG,size(SRep%SmolyakRep(iG)%V),SRep%SmolyakRep(iG)%V
   END DO
 END IF
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 END SUBROUTINE Write_SmolyakRepC
 
 
@@ -677,7 +677,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   !    END DO
   !  END IF
     write(out_unitp,*) 'END Write nDindB'
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   CALL SYSTEM_CLOCK(COUNT_RATE=nb_ticks_sec, COUNT_MAX=nb_ticks_max)
@@ -694,7 +694,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
     IF (debug) THEN
       write(out_unitp,*) '------------------------------------ id',id
       write(out_unitp,*) 'id,tab_i_TO_l',id,':',basis_SG%nDindB%tab_i_TO_l(id)%vec
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     ib    = 1
     iVal  = 1
@@ -725,7 +725,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       write(out_unitp,*) ' MaxnD_with_id_and_l',l,':',MaxnD_with_id_and_L(:,l)
     END DO
     write(out_unitp,*) '---------------------------------------------------------------'
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   IF (allocated(basis_SG%para_SGType2%tab_iB_OF_SRep_TO_iB)) THEN
@@ -743,7 +743,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   write(out_unitp,*) 'Max_Srep',Max_Srep
 
   IF (lMax_Srep /= int(Max_Srep,kind=ILkind)) STOP 'ERROR Max_Srep is too large!!'
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   IF(openmpi) THEN
     CALL Set_scheme_MPI(basis_SG,lMax_Srep)
@@ -777,7 +777,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   IF(.NOT. debug) THEN
     write(out_unitp,'(a)')              'Tab(:) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
     write(out_unitp,'(a)',ADVANCE='no') 'Tab(:) (%): ['
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   !$OMP parallel                                                &
@@ -815,13 +815,13 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
     IF (debug) THEN
       write(out_unitp,*) '============================== iG,nb_G',iG,size(basis_SG%para_SGType2%tab_nb_OF_SRep)
       write(out_unitp,*) '======================= size(DPB)',basis_SG%para_SGType2%tab_nb_OF_SRep(iG)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
   !  IF (max(1,size(basis_SG%para_SGType2%tab_nb_OF_SRep)/100) == 0 .OR. &
   !      size(basis_SG%para_SGType2%tab_nb_OF_SRep) < 100) THEN
   !    IF(MPI_id==0) write(out_unitp,*) 'iG,nb_G',iG,size(basis_SG%para_SGType2%tab_nb_OF_SRep)
-  !    CALL flush_perso(out_unitp)
+  !    flush(out_unitp)
   !  END IF
 
     CALL ADD_ONE_TO_nDindex(basis_SG%para_SGType2%nDind_SmolyakRep,tab_l,iG=iG)
@@ -846,7 +846,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
 
       IF (debug) THEN
         write(out_unitp,*) 'iG,iBDP,',iG,iBDP,'tab',tab_ib,'LL',LL
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       IF (LL > basis_SG%nDindB%Lmax) CYCLE
 
@@ -869,7 +869,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
       IF (err_sub == 0) THEN
         IF (debug) THEN
           write(out_unitp,*) '     nDI',nDI,nDI,'tab',tab_ib(:)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
         IF (allocated(basis_SG%nDindB%Tab_nDval)) THEN
         IF ( .NOT. all(tab_ib == basis_SG%nDindB%Tab_nDval(:,nDI)) ) THEN
@@ -893,7 +893,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
 
     IF (mod(iG,max(1,int(basis_SG%nb_SG/10))) == 0 .AND. .NOT. debug) THEN
       write(out_unitp,'(a)',ADVANCE='no') '---'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
   END DO
@@ -906,7 +906,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
 
   IF (.NOT. debug) THEN
     write(out_unitp,'(a)',ADVANCE='yes') '----]'
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   IF(MPI_id==0) THEN
@@ -944,7 +944,7 @@ SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis(basis_SG)
   write(out_unitp,*) 'real time:',REAL(nb_ticks) / real(nb_ticks_sec,kind=Rkind)
 
   write(out_unitp,*) 'END ',name_sub
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 END SUBROUTINE Set_tables_FOR_SmolyakRepBasis_TO_tabPackedBasis
 
@@ -1201,7 +1201,7 @@ integer :: ib0,nb_AT_iG,iB_ib0,nDI_ib0,Max_nDI_ib0
         write(out_unitp,*) 'nb0',SGType2%nb0
         write(out_unitp,*) 'iG',iG
         write(out_unitp,*) 'nb at iG',SGType2%tab_nb_OF_SRep(iG)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1240,7 +1240,7 @@ END DO
       IF (debug) THEN
         write(out_unitp,*) 'tabR_iG: ',tabR_iG(:)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 END SUBROUTINE tabPackedBasis_TO_tabR_AT_iG
@@ -2413,7 +2413,7 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
 
     IF (present(nb0)) write(out_unitp,*) 'nb0',nb0
     write(out_unitp,*) 'size(R)',size(R)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
  nb0_loc = 1
@@ -2490,7 +2490,7 @@ real(kind=Rkind), allocatable      :: RG(:,:),RB(:,:)
   IF (debug) THEN
     write(out_unitp,*) 'size(R)',size(R)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
 END SUBROUTINE BDP_TO_GDP_OF_SmolyakRep
@@ -2714,7 +2714,7 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRep(R,tab_ba,tab_l,tab_nq,tab_der)
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'R(:)',R(:)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   IF (present(tab_der)) THEN
@@ -2821,7 +2821,7 @@ SUBROUTINE DerivOp_TO_RDP_OF_SmolaykRepC(R,tab_ba,tab_l,tab_nq,tab_der)
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'R(:)',R(:)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   IF (present(tab_der)) THEN

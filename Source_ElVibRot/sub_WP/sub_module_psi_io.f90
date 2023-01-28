@@ -139,7 +139,7 @@
         write(out_unitp,*) ' nb_readWP_file: ',nb_readWP_file
         write(out_unitp,*) ' nb_tot_file   : ',size(list_nDindBasis1_TO_nDindBasis2)
         write(out_unitp,*) ' Version_File  : ',Version_File
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF (nb_readWP_file < para_WP0%nb_WP0 .OR. para_WP0%nb_WP0 == 0) THEN
            write(out_unitp,*) ' WARNING in ',name_sub
@@ -160,14 +160,14 @@
         END IF
 
         IF (debug) write(out_unitp,*) 'list_readWP:',list_readWP(1:para_WP0%nb_WP0)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 
         IF (.NOT. allocated(list_nDindBasis1_TO_nDindBasis2) ) THEN ! Version_File=0, option=1
           ilist = 1
           DO i=1,nb_readWP_file
             IF (debug .OR. print_level > 1) write(out_unitp,*) i,ilist
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
             CALL lect_psiBasisRepnotall_nD(psi0(ilist),nioWP,cplx,      &
                                     para_WP0%file_WP0%formatted)
             IF (list_readWP(ilist) == i) ilist = ilist + 1
@@ -182,7 +182,7 @@
           ilist = 1
           DO i=1,nb_readWP_file
             IF (debug .OR. print_level > 1) write(out_unitp,*) 'i,ilist',i,ilist
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             CALL Read_psi_nDBasis(psi0(ilist),nioWP,                     &
                                para_WP0%file_WP0%formatted,Version_File, &
@@ -205,11 +205,11 @@
       ELSE
         DO i=1,para_WP0%nb_WP0
           write(out_unitp,*) ' Read in',in_unitp,i
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           CALL alloc_psi(psi0(i),BasisRep=.TRUE.)
           CALL lect_psiBasisRepnotall_nD(psi0(i),in_unitp,cplx,.TRUE.)
           write(out_unitp,*) ' write in',out_unitp,i
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           IF(keep_MPI) CALL ecri_psiBasisRepnotall_nD(psi0(i),out_unitp,ONETENTH**4,.TRUE.,i)
           IF (debug) write(out_unitp,*) ' read with lect_psiBasisRepnotall_nD ' // &
                               '(Version_File=0, option=1 ???): done'
@@ -221,7 +221,7 @@
         CALL Set_symab_OF_psiBasisRep(psi0(i))
         CALL renorm_psi(psi0(i))
         IF (debug .OR. print_level > 1) write(out_unitp,*) ' norm psi0(i),symab',i,psi0(i)%norm2,psi0(i)%symab
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END DO
 
 !-----Check the norm and Check and set the symmetry--------------------
@@ -274,7 +274,7 @@
 
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_file) :: file_WP
+      TYPE (File_t) :: file_WP
       integer            :: ndim,nb_save
       TYPE (param_psi)   :: psi(ndim)
       TYPE (param_psi)   :: psiTemp
@@ -368,7 +368,7 @@
       IMPLICIT NONE
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_file) :: file_WP
+      TYPE (File_t) :: file_WP
 
       integer            :: nb_save
       TYPE (param_psi)   :: psi(nb_save)
@@ -388,7 +388,7 @@
         write(out_unitp,*) ' nioWP',file_WP%unit
         write(out_unitp,*) ' name',file_WP%name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -409,7 +409,7 @@
               write(nioWP,*) psi(j)%RvecG
             END IF
           END IF
-          CALL flush_perso(nioWP)
+          flush(nioWP)
       END DO
 
       close(nioWP)
@@ -417,7 +417,7 @@
 !----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
        END IF
 !----------------------------------------------------------
 
@@ -595,7 +595,7 @@
         write(out_unitp,*) 'nb_basis_act1',WP0%nb_basis_act1
         write(out_unitp,*) 'nioWP',nioWP
         write(out_unitp,*) 'lformated',lformated
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -957,7 +957,7 @@ IF (debug) THEN
   write(out_unitp,*) 'nioPsi',nioPsi
   write(out_unitp,*) 'lformated',lformated
   write(out_unitp,*) 'version: ',version
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END IF
 !-----------------------------------------------------------
 
@@ -1175,7 +1175,7 @@ END SELECT
         write(out_unitp,*) 'nioPsi',nioPsi
         write(out_unitp,*) 'lformated',lformated
         write(out_unitp,*) 'version: ',version
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1302,7 +1302,7 @@ IMPLICIT NONE
 !----- variables for the WP propagation ----------------------------
 integer,              intent(inout) :: nb_read,Version_File
 TYPE (param_psi),     intent(inout) :: psi(:)
-TYPE (param_file),    intent(inout) :: file_WP
+TYPE (File_t),    intent(inout) :: file_WP
 integer, allocatable, intent(inout) :: list_nDindBasis1_TO_nDindBasis2(:)
 
 
@@ -1400,7 +1400,7 @@ END IF
 write(out_unitp,*) ' nb_readWP_file: ',nb_read
 write(out_unitp,*) ' nb_tot_file   : ',nb_tot
 write(out_unitp,*) ' Version_File  : ',Version_File
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 ! When nb_tot > 0, the list_nDindBasis1_TO_nDindBasis2(:) has to be read.
 IF (nb_tot > 0) THEN
@@ -1446,7 +1446,7 @@ END SUBROUTINE Read_header_saveFile_psi
 
 
 !----- variables for the WP propagation ----------------------------
-      TYPE (param_file), intent(in)  :: file_WP
+      TYPE (File_t), intent(in)  :: file_WP
       integer          , intent(in)  :: nb_save
       TYPE (param_psi) , intent(in)  :: psi(:)
 
@@ -1522,7 +1522,7 @@ END SUBROUTINE Read_header_saveFile_psi
         write(out_unitp,*) 'nioPsi',nioPsi
         write(out_unitp,*) 'lformated',lformated
         write(out_unitp,*) 'version: ',version
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1634,7 +1634,7 @@ END SELECT
         write(out_unitp,*) 'nioPsi',nioPsi
         write(out_unitp,*) 'lformated',lformated
         write(out_unitp,*) 'version: ',version
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 

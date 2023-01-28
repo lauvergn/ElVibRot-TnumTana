@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
       MODULE mod_memory
-      USE mod_NumParameters, only : Rkind, ILkind, out_unitp
+      USE QDUtil_NumParameters_m, only : Rkind, ILkind, out_unitp => out_unit
       IMPLICIT NONE
 
       PRIVATE

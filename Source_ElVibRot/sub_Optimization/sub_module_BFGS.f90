@@ -415,7 +415,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
 !!!!!!!!!!!!!!
  write(out_unitp,*) ' RMS Gradient = ',xxxg
  write(out_unitp,*) ' Test on gradient convergence = ',test
- call flush_perso(out_unitp)
+ flush(out_unitp)
 
  IF (associated(para_BFGS%hessian_inv_init)) THEN
    write(out_unitp,*) ' The initial hessian is transferred'
@@ -462,11 +462,11 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
   write(out_unitp,*) ' Energy',fret
   write(out_unitp,*) ' RMS Gradient',xxxg
   write(out_unitp,*) ' Test on gradient convergence = ', test
-  call flush_perso(out_unitp)
+  flush(out_unitp)
 
    if (test < tolx) then  !!! Testing what happen if this part is removed
    write(out_unitp,*) ' Geometry coordinates converged !! RMS step criteria'
-   call flush_perso(out_unitp)
+   flush(out_unitp)
    deallocate (g,hdg,pnew,dg,xi,hessin)
    return
   end if
@@ -546,7 +546,7 @@ SUBROUTINE dfpmin_new(Qact,dnMatOp,mole,PrimOp,para_Tnum,para_BFGS,    &
 !
 ! write(out_unitp,*) 'sum=', sum, 'stpmax=', stpmax
 !
- call flush_perso(6)
+ flush(6)
  if(sum.gt.stpmax)then
   do i=1,n
    p(i)=p(i)*(stpmax/sum)

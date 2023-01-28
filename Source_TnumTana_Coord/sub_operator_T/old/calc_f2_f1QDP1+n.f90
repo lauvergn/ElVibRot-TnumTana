@@ -113,7 +113,7 @@
       IF (mole%nb_inact2n > 0) THEN
         DO i=mole%nb_act1+1,mole%nb_act1+mole%nb_inact2n
 !         write(out_unitp,*) 'i',i,mole%nb_act,mole%nb_inact2n
-!         CALL flush_perso(out_unitp)
+!         flush(out_unitp)
           Tdef2(i,i) = -HALF
         END DO
       END IF

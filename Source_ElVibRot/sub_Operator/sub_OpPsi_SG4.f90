@@ -96,12 +96,12 @@ CONTAINS
    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-   !CALL flush_perso(out_unitp)
+   !flush(out_unitp)
    !CALL write_param_Op(para_Op)
    write(out_unitp,*)
    write(out_unitp,*) 'PsiBasisRep'
    write(out_unitp,*) 'Psi%RvecB',Psi%RvecB
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------------
   !CALL Check_mem()
@@ -126,7 +126,7 @@ CONTAINS
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**4 ) THEN
    write(out_unitp,'(a)')              'OpPsi SG4 (%): [-10-20-30-40-50-60-70-80-90-100]'
    write(out_unitp,'(a)',ADVANCE='no') 'OpPsi SG4 (%): ['
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
 
  IF (OpPsi_omp == 0) THEN
@@ -151,7 +151,7 @@ CONTAINS
      IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
          mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
        write(out_unitp,'(a)',ADVANCE='no') '---'
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
@@ -200,7 +200,7 @@ CONTAINS
      IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
          mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0) THEN
        write(out_unitp,'(a)',ADVANCE='no') '---'
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
@@ -212,7 +212,7 @@ END IF
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**4) THEN
    write(out_unitp,'(a)',ADVANCE='yes') '-]'
  END IF
- CALL flush_perso(out_unitp)
+ flush(out_unitp)
 
  iterm00 = para_Op%derive_term_TO_iterm(0,0)
  IF (associated(para_Op%OpGrid)) THEN
@@ -292,7 +292,7 @@ END IF
    write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------------
 
@@ -433,7 +433,7 @@ END IF
  !-----------------------------------------------------------
  IF (debug) THEN
    write(out_unitp,*) 'END ',name_sub
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
  !CALL UnCheck_mem() ; stop
@@ -496,7 +496,7 @@ END IF
     write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
     write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
     write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
   !CALL Check_mem()
@@ -665,7 +665,7 @@ END IF
  !-----------------------------------------------------------
  IF (debug) THEN
    write(out_unitp,*) 'END ',name_sub
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
  !CALL UnCheck_mem() ; stop
@@ -721,14 +721,14 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
     write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
     write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    !CALL flush_perso(out_unitp)
+    !flush(out_unitp)
     !CALL write_param_Op(para_Op)
     write(out_unitp,*)
     write(out_unitp,*) 'PsiBasisRep'
     !DO itab=1,size(Psi)
       !CALL ecri_psi(Psi=Psi(itab))
     !END DO
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------------------
   mole    => para_Op%mole
@@ -770,7 +770,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**4 ) THEN
     write(out_unitp,'(a)')              'OpPsi SG4 (%): [-10-20-30-40-50-60-70-80-90-100]'
     write(out_unitp,'(a)',ADVANCE='no') 'OpPsi SG4 (%): ['
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
 !  IF(openmpi) THEN
@@ -788,19 +788,19 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         DO itab=1,size(Psi)
           CALL tabPackedBasis_TO_tabR_AT_iG(PsiR(itab)%V,psi(itab)%RvecB,    &
                                             iG,BasisnD%para_SGType2)
-          !write(out_unitp,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V  ;    CALL flush_perso(out_unitp)
+          !write(out_unitp,*) 'iG,itab,PsiR',iG,itab,PsiR(itab)%V  ;    flush(out_unitp)
         END DO
-        !write(out_unitp,*) 'iG',iG, ' unpack done' ;    CALL flush_perso(out_unitp)
+        !write(out_unitp,*) 'iG',iG, ' unpack done' ;    flush(out_unitp)
 
         CALL sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_ompGrid(PsiR,iG,para_Op)
-        !write(out_unitp,*) 'iG',iG, ' TabOpPsi done' ;    CALL flush_perso(out_unitp)
+        !write(out_unitp,*) 'iG',iG, ' TabOpPsi done' ;    flush(out_unitp)
 
         !transfert back, PsiR(itab)%V (HPsi) to the psi(:)%RvecB(:)
         DO itab=1,size(Psi)
           CALL tabR_AT_iG_TO_tabPackedBasis(OpPsi(itab)%RvecB,PsiR(itab)%V,  &
                          iG,BasisnD%para_SGType2,BasisnD%WeightSG(iG))
         END DO
-        !write(out_unitp,*) 'iG',iG, ' pack done' ;    CALL flush_perso(out_unitp)
+        !write(out_unitp,*) 'iG',iG, ' pack done' ;    flush(out_unitp)
 
         !deallocate PsiR(:)
         DO itab=1,size(Psi)
@@ -811,7 +811,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND.    &
             mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='no') '---'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END DO
@@ -855,7 +855,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
             mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='no') '---'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
@@ -930,7 +930,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
         IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
             mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='no') '---'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
@@ -944,7 +944,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**4) THEN
     write(out_unitp,'(a)',ADVANCE='yes') '-]'
   END IF
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   iterm00 = para_Op%derive_term_TO_iterm(0,0)
   IF (associated(para_Op%OpGrid)) THEN
@@ -1012,7 +1012,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
  !-----------------------------------------------------------------
  IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------------
   BasisnD => para_Op%BasisnD
@@ -1056,7 +1056,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
      IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**4 .AND. &
          mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
        write(out_unitp,'(a)',ADVANCE='no') '---'
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    END DO
@@ -1131,7 +1131,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     write(out_unitp,*) 'iG, tab_l(:)',iG,':',tab_l(:)
     write(out_unitp,*) 'nq',para_Op%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
 
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
   !CALL Check_mem()
@@ -1344,7 +1344,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------
   !CALL UnCheck_mem() ; stop
@@ -1416,7 +1416,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
     write(out_unitp,*) 'nq',para_Op%BasisnD%para_SGType2%tab_nq_OF_SRep(iG)
     write(out_unitp,*) 'nb',para_Op%BasisnD%para_SGType2%tab_nb_OF_SRep(iG)
     IF (present(PsiROnGrid)) write(out_unitp,*) 'PsiROnGrid',PsiROnGrid
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
   !CALL Check_mem()
@@ -1661,7 +1661,7 @@ SUBROUTINE sub_TabOpPsi_FOR_SGtype4(Psi,OpPsi,para_Op)
   !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------
   !CALL UnCheck_mem() ; stop
@@ -2208,7 +2208,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
     write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
     write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
   !CALL Check_mem()
@@ -2312,7 +2312,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------
   !CALL UnCheck_mem() ; stop
@@ -2376,7 +2376,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
     write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
     write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
   !CALL Check_mem()
@@ -2529,7 +2529,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------
   !CALL UnCheck_mem() ; stop
@@ -2595,7 +2595,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
     write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
     write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
 
@@ -2677,7 +2677,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, FileName_RV',iG,nq,FileName_RV
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      ! this subroutine does not work because V as 3 dim (before 1)
@@ -2692,7 +2692,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
      END IF
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, read V',iG,nq
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
     !$OMP  END CRITICAL (get_OpGrid_type10_OF_ONEDP_FOR_SG4_CRIT2)
@@ -2742,7 +2742,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
         IF (iG == 1 .AND. debug) THEN
           write(out_unitp,*) 'iG,nq,V',iG,nq,V
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
      END IF
@@ -2760,7 +2760,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, save mem V',iG,nq
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    END IF
@@ -2780,7 +2780,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, save file V',iG,nq
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
 !    !$OMP  END CRITICAL (get_OpGrid_type10_OF_ONEDP_FOR_SG4_CRIT1)
@@ -2810,7 +2810,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
       CALL Write_Mat(GGiq(iq,:,:),out_unitp,6)
     END DO
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------
   END SUBROUTINE get_OpGrid_type10_OF_ONEDP_FOR_SG4
@@ -2873,7 +2873,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
     write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
     write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
 
@@ -2964,7 +2964,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
           IF (iG == 1 .AND. debug) THEN
             write(out_unitp,*) 'iG,nq,GridOp: from mem',iG,nq,GridOp(:,:,:,iterm)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
@@ -3010,7 +3010,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq,GridOp: calc',iG,nq,GridOp(:,:,:,iterm00)
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
    END IF
 
@@ -3035,7 +3035,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
          IF (iG == 1 .AND. debug) THEN
            write(out_unitp,*) 'iG,nq,GridOp: save mem Grid',iG,nq,para_Op%OpGrid(iterm)%SRep%SmolyakRep(iG)%V
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
          END IF
 
        ELSE IF (associated(para_Op%OpGrid(iterm)%Grid)) THEN
@@ -3050,7 +3050,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
          IF (iG == 1 .AND. debug) THEN
            write(out_unitp,*) 'iG,nq,GridOp: save mem Grid',iG,nq,para_Op%OpGrid(iterm)%Grid(itabR-nR+1:itabR,:,:)
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
          END IF
 
        END IF
@@ -3078,7 +3078,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     !  write(out_unitp,*) 'GridOp(:,:,:,iterm)',iterm,GridOp(:,:,:,iterm)
     !END DO
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------
   END SUBROUTINE get_OpGrid_type1_OF_ONEDP_FOR_SG4
@@ -3141,7 +3141,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
     write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
     write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
 
@@ -3213,7 +3213,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, FileName_RV',iG,nq,FileName_RV
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      ! the rank of V is 3 now, this subroutine work with rank 1
@@ -3228,7 +3228,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
      END IF
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, read V',iG,nq
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
      !$OMP  END CRITICAL (get_OpGrid_type0_OF_ONEDP_FOR_SG4_CRIT2)
 
@@ -3258,7 +3258,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
         IF (iG == 1 .AND. debug) THEN
           write(out_unitp,*) 'iG,nq,V',iG,nq,V
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
      END IF
@@ -3274,7 +3274,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, save mem V',iG,nq
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    END IF
@@ -3293,7 +3293,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, save file V',iG,nq
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
 !    !$OMP  END CRITICAL (get_OpGrid_type0_OF_ONEDP_FOR_SG4_CRIT1)
@@ -3315,7 +3315,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
   !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------
   END SUBROUTINE get_OpGrid_type0_OF_ONEDP_FOR_SG4

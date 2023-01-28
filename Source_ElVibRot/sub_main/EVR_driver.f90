@@ -338,7 +338,7 @@ SUBROUTINE init_EVR_new()
           write(out_unitp,*) '========================================='
         ENDIF ! for MPI_id=0
      close(in_unitp)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
   END DO
 
 END SUBROUTINE init_EVR_new
@@ -837,7 +837,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
             write(out_unitp,*)
           ENDIF
         END IF ! for para_ana%davidson .OR. para_ana%arpack .OR. para_ana%filter
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !===============================================================
         !===============================================================
 
@@ -882,12 +882,12 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         IF(keep_MPI) CALL sub_analyse(Tab_Psi,nb_diago,para_H,         &
                            tab_EVRT(ith)%para_ana,tab_EVRT(ith)%para_intensity, &
                                tab_EVRT(ith)%para_AllOp,tab_EVRT(ith)%const_phys)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF (.NOT. para_H%cplx .AND. tab_EVRT(ith)%para_ana%VibRot) THEN
           CALL sub_VibRot(Tab_Psi,tab_EVRT(ith)%para_ana%max_ana,para_H,tab_EVRT(ith)%para_ana)
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         !===============================================================
         ! Spectral representation of operator
@@ -906,7 +906,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                                    tab_EVRT(ith)%para_AllOp%tab_Op(iOp),.TRUE.,print_mat)
 
               write(out_unitp,*) '==========================================='
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
           END DO
         END IF
@@ -993,16 +993,16 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         ELSE ! for intensity_only
           write(out_unitp,*) 'write restart file for intensity: ',      &
                           tab_EVRT(ith)%para_intensity%file_resart_int%name
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           write(tab_EVRT(ith)%nio_res_int,*) para_H%nb_tot,tab_EVRT(ith)%para_ana%max_ana
           write(tab_EVRT(ith)%nio_res_int,*) 'ene'
           CALL Write_Vec(para_H%Rdiag,tab_EVRT(ith)%nio_res_int,5,Rformat='e30.23')
           write(tab_EVRT(ith)%nio_res_int,*) 'psi'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           CALL Write_Mat(para_H%Rvp,tab_EVRT(ith)%nio_res_int,5,Rformat='e30.23')
-          CALL flush_perso(tab_EVRT(ith)%nio_res_int)
+          flush(tab_EVRT(ith)%nio_res_int)
         END IF ! for intensity_only
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 !         -------------------------------------------------------------------
 
         iOp = 2
@@ -1023,7 +1023,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         close(tab_EVRT(ith)%nio_res_int)
         nullify(para_Dip)
       END IF !for .NOT. para_H%cplx .AND. para_ana%intensity
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. tab_EVRT(ith)%para_ana%Psi_ScalOp) THEN
         IF(MPI_id==0 .AND. print_level > -1) THEN
@@ -1050,7 +1050,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         ENDIF
         nullify(para_Dip)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. tab_EVRT(ith)%para_ana%NLO) THEN
         IF(MPI_id==0 .AND. print_level > -1) THEN
@@ -1077,7 +1077,7 @@ SUBROUTINE levels_EVR_new(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
         ENDIF
         nullify(para_Dip)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !=====================================================================
 !=====================================================================
@@ -1873,7 +1873,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
             write(out_unitp,*)
           ENDIF
         END IF ! for para_EVRT%para_ana%davidson .OR. para_EVRT%para_ana%arpack .OR. para_EVRT%para_ana%filter
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !===============================================================
         !===============================================================
 
@@ -1919,12 +1919,12 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                            para_EVRT%para_ana,para_EVRT%para_intensity, &
                                para_EVRT%para_AllOp,para_EVRT%const_phys)
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF (.NOT. para_H%cplx .AND. para_EVRT%para_ana%VibRot) THEN
           CALL sub_VibRot(Tab_Psi,para_EVRT%para_ana%max_ana,para_H,para_EVRT%para_ana)
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         !===============================================================
         ! Spectral representation of operator
@@ -1943,7 +1943,7 @@ SUBROUTINE levels_EVR(EigenVal,EigenVecB,EigenVecG,RhoWeight,nb,nq,nb_vec)
                                    para_EVRT%para_AllOp%tab_Op(iOp),.TRUE.,print_mat)
 
               write(out_unitp,*) '==========================================='
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
           END DO
         END IF
@@ -2032,16 +2032,16 @@ write(out_unitp,*) 'intensity',para_EVRT%para_ana%intensity ; flush(out_unitp)
         ELSE ! for intensity_only
           write(out_unitp,*) 'write restart file for intensity: ',      &
                            para_EVRT%para_intensity%file_resart_int%name
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           write(nio_res_int,*) para_H%nb_tot,para_EVRT%para_ana%max_ana
           write(nio_res_int,*) 'ene'
           CALL Write_Vec(para_H%Rdiag,nio_res_int,5,Rformat='e30.23')
           write(nio_res_int,*) 'psi'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           CALL Write_Mat(para_H%Rvp,nio_res_int,5,Rformat='e30.23')
-          CALL flush_perso(nio_res_int)
+          flush(nio_res_int)
         END IF ! for intensity_only
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !-------------------------------------------------------------------
 
         iOp = 2
@@ -2061,7 +2061,7 @@ write(out_unitp,*) 'intensity',para_EVRT%para_ana%intensity ; flush(out_unitp)
         close(nio_res_int)
         nullify(para_Dip)
       END IF !for .NOT. para_H%cplx .AND. para_EVRT%para_ana%intensity
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 RETURN
       IF (.NOT. para_H%cplx .AND. para_EVRT%para_ana%Psi_ScalOp) THEN
         IF(MPI_id==0 .AND. print_level > -1) THEN
@@ -2088,7 +2088,7 @@ RETURN
         ENDIF
         nullify(para_Dip)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. para_EVRT%para_ana%NLO) THEN
         IF(MPI_id==0 .AND. print_level > -1) THEN
@@ -2115,7 +2115,7 @@ RETURN
         ENDIF
         nullify(para_Dip)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !=====================================================================
 !=====================================================================

@@ -387,7 +387,7 @@ MODULE mod_CartesianTransfo
         STOP
       END IF
       write(out_unitp,Cartesian)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CartesianTransfo%New_Orient      = New_Orient
       CartesianTransfo%vAt1            = vAt1
@@ -916,7 +916,7 @@ MODULE mod_CartesianTransfo
           CALL write_dnx(1,CartesianTransfo%ncart_act,dnQin,nderiv_debug)
           write(out_unitp,*) 'Qact ',Qact
           CALL Write_CartesianTransfo(CartesianTransfo)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
         RMatIO_format_save = RMatIO_format
@@ -992,7 +992,7 @@ MODULE mod_CartesianTransfo
           CALL write_dnx(1,CartesianTransfo%ncart_act,dnQout,nderiv_debug)
 
           write(out_unitp,*) 'END ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
         RMatIO_format = RMatIO_format_save
 
@@ -1180,7 +1180,7 @@ MODULE mod_CartesianTransfo
 !-----------------------------------------------------------
         IF (debug) THEN
           write(out_unitp,*) 'BEGINNING ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
         CALL check_alloc_dnVec(dnXin,'dnXin',name_sub)
@@ -1219,7 +1219,7 @@ MODULE mod_CartesianTransfo
           CALL write_dnx(1,CartesianTransfo%ncart_act,dnXout,nderiv_debug)
 
           write(out_unitp,*) 'END ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END SUBROUTINE calc_dnTxdnXin_TO_dnXout
@@ -1248,7 +1248,7 @@ MODULE mod_CartesianTransfo
 
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       RMS_min  = huge(ONE)
@@ -1314,7 +1314,7 @@ MODULE mod_CartesianTransfo
       IF (debug) THEN
         write(out_unitp,*) 'RMS_min',irot_min,RMS_min,sign_Vec(:)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE calc_RMS_d0MWXout
@@ -1341,7 +1341,7 @@ MODULE mod_CartesianTransfo
 !$OMP  CRITICAL (calc_Analysis_dnMWXout_CRIT)
 
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 !-----------------------------------------------------------
         CALL check_alloc_dnVec(dnMWXout,'dnMWXout',name_sub)
         CALL check_alloc_MatOFdnS(dnT,'dnT',name_sub)
@@ -1428,7 +1428,7 @@ MODULE mod_CartesianTransfo
         END DO
 
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 !$OMP  END CRITICAL (calc_Analysis_dnMWXout_CRIT)
 
 
@@ -1606,7 +1606,7 @@ MODULE mod_CartesianTransfo
           write(out_unitp,*) 'dnXin'
           CALL write_dnx(1,CartesianTransfo%ncart_act,dnXin,nderiv_debug)
           CALL Write_CartesianTransfo(CartesianTransfo)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
         CALL check_alloc_dnVec(dnXin,'dnXin',name_sub)
@@ -1673,7 +1673,7 @@ MODULE mod_CartesianTransfo
         IF (debug) THEN
           write(out_unitp,*) 'eig1 ',(dnA1(i,i)%d0,i=1,3)
           write(out_unitp,*) 'eig2 ',(dnA2(i,i)%d0,i=1,3)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           write(out_unitp,*) 'dnVec1 before change sign (in column)'
           CALL Write_MatOFdnS(dnVec1,nderiv=0)
           write(out_unitp,*) 'dnVec2 before change sign (in column)'
@@ -1766,7 +1766,7 @@ MODULE mod_CartesianTransfo
             CALL Write_MatOFdnS(dnT,nderiv=nderiv_debug)
 
             write(out_unitp,*) 'END ',name_sub
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
         END IF
 
@@ -1816,7 +1816,7 @@ MODULE mod_CartesianTransfo
           DO iref_loc=1,CartesianTransfo%nb_RefGeometry
             write(out_unitp,*) 'MWQxyz ',CartesianTransfo%MWQxyz(:,:,iref_loc)
           END DO
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
         iref_loc = 1
@@ -1885,7 +1885,7 @@ MODULE mod_CartesianTransfo
           write(out_unitp,*) 'dnMWXref'
           CALL Write_MatOFdnS(dnMWXref)
           write(out_unitp,*) 'END ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END SUBROUTINE dnMWX_MultiRef
@@ -1914,7 +1914,7 @@ MODULE mod_CartesianTransfo
         IF (debug) THEN
           write(out_unitp,*) 'BEGINNING ',name_sub
           write(out_unitp,*) 'iQact ',iQact
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
 
@@ -1954,7 +1954,7 @@ MODULE mod_CartesianTransfo
           write(out_unitp,*) 'dnSwitch'
           CALL Write_VecOFdnS(dnSwitch)
           write(out_unitp,*) 'END ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END SUBROUTINE Switch_type0
@@ -1984,7 +1984,7 @@ MODULE mod_CartesianTransfo
         IF (debug) THEN
           write(out_unitp,*) 'BEGINNING ',name_sub
           write(out_unitp,*) 'iQact ',iQact
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
 
@@ -2081,7 +2081,7 @@ MODULE mod_CartesianTransfo
           write(out_unitp,*) 'dnSwitch'
           CALL Write_VecOFdnS(dnSwitch)
           write(out_unitp,*) 'END ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END SUBROUTINE Switch_type1
@@ -2113,7 +2113,7 @@ MODULE mod_CartesianTransfo
             write(out_unitp,*) 'MWQxyz ',CartesianTransfo%MWQxyz(:,:,iref)
           END DO
           write(out_unitp,*) 'dnx%d0 ',dnx%d0(:)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
 
@@ -2192,7 +2192,7 @@ MODULE mod_CartesianTransfo
           write(out_unitp,*) 'dnSwitch'
           CALL Write_VecOFdnS(dnSwitch)
           write(out_unitp,*) 'END ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END SUBROUTINE Switch_type3
@@ -2227,7 +2227,7 @@ MODULE mod_CartesianTransfo
             write(out_unitp,*) 'MWQxyz ',CartesianTransfo%MWQxyz(:,:,iref)
           END DO
           write(out_unitp,*) 'dnx%d0 ',dnx%d0(:)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
 
@@ -2319,7 +2319,7 @@ MODULE mod_CartesianTransfo
           write(out_unitp,*) 'dnSwitch'
           CALL Write_VecOFdnS(dnSwitch)
           write(out_unitp,*) 'END ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END SUBROUTINE Switch_type4

@@ -555,16 +555,16 @@
           write(out_unitp2,*) x,GWP%Cphase
         END IF
         write(out_unitp4,*) x,xfs,Y
-        CALL flush_perso(out_unitp)
-        CALL flush_perso(10)
-        CALL flush_perso(31)
-        CALL flush_perso(32)
-        CALL flush_perso(41)
-        CALL flush_perso(71)
-        CALL flush_perso(60)
-        CALL flush_perso(61)
-        CALL flush_perso(62)
-        CALL flush_perso(64)
+        flush(out_unitp)
+        flush(10)
+        flush(31)
+        flush(32)
+        flush(41)
+        flush(71)
+        flush(60)
+        flush(61)
+        flush(62)
+        flush(64)
 !       -------------------------------------------------
 
         IF (X > XEND) EXIT

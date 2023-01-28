@@ -101,7 +101,7 @@
         write(out_unitp,*) ' nb_ana <=0',nb_ana
         STOP
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
 
@@ -124,7 +124,7 @@
       CALL Write_Mat(Mat_Aif,out_unitp,5,Rformat='e30.23')
       write(out_unitp,*) '==================================================='
       write(out_unitp,*) '==================================================='
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       CALL dealloc_NParray(Mat_Aif,'Mat_Aif',name_sub)

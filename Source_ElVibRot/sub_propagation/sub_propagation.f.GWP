@@ -442,7 +442,7 @@ c       CALL calc_1Dweight(psi,25,T,' ',.TRUE.)
 
         it = it + 1
 
-        CALL flush_perso(6)
+        flush(6)
 
       END DO
 c----------------------------------------------------------
@@ -628,7 +628,7 @@ c------ read guess vectors ---------------------------------
           list_readWP(:) = 0
           read(5,*) list_readWP(1:nb_diago)
           write(6,*) list_readWP(1:nb_diago)
-        CALL flush_perso(6)
+        flush(6)
           ilist = 1 
           DO i=1,nb_readWP_file
             CALL lect_psiFBRnotall_nD(psiTemp,nioWP,cplx)
@@ -650,7 +650,7 @@ c------ read guess vectors ---------------------------------
           CALL ecri_psiFBRnotall_nD(psi(i),6,1.d-4,info)
         END DO
       END IF
-      CALL flush_perso(6)
+      flush(6)
 c------ read guess vectors ---------------------------------
 
 
@@ -813,7 +813,7 @@ c       Save psi(:) on psi0(:)
      *                 (Ene(1:nb_diago)-Ene0(1:nb_diago))*
      *                 para_H%const_phys%auTOcm_inv
 c       CALL ecriture(Vec,ndim,ndim,5,.true.,ndim)
-        CALL flush_perso(6)
+        flush(6)
 
 c       - built of H and diagonalization ------------------
 
@@ -840,7 +840,7 @@ c       - residual vector ---------------------------
 c       - residual vector ---------------------------      
         write(6,41) 'it tab_normeg ',it,tab_normeg
  41     format(a,i3,50(1x,e8.2))
-        CALL flush_perso(6)
+        flush(6)
 
 
 c       - new vectors -------------------------------      
@@ -909,7 +909,7 @@ c       write(6,*) 'it,ndim,conv',it,ndim,conv
 
         it = it + 1
       END DO
-      CALL flush_perso(6)
+      flush(6)
 
 c-----write eigenvectors ----------------------------------
       ndim = size(Vec,dim=1)
@@ -998,7 +998,7 @@ c----------------------------------------------------------
       write(6,*)
       write(6,*) '==========================================='
       write(6,*) '==========================================='
-      CALL flush_perso(6)
+      flush(6)
 c----------------------------------------------------------
 
 
@@ -1750,7 +1750,7 @@ c------- propagation loop ---------------------------------
       CALL file_open(para_propa%file_WP,nioWP)
 
       DO WHILE (it <= it_max)
-        CALL flush_perso(6)
+        flush(6)
         T_Delta = T + para_propa%WPdeltaT
 
 
@@ -1823,7 +1823,7 @@ c    *           (para_H%E0-para_H%pot0)*para_propa%WPdeltaT
          T  = T_Delta
 
        END DO ! loop on the Time iteration
-       CALL flush_perso(6)
+       flush(6)
 c----------------------------------------------------------
 c     - write the final WP---------------------------------
 
@@ -2084,7 +2084,7 @@ c         for the writting of the wp (DVR)
 
         END DO ! j loop (nb_WP)
       END IF
-      CALL flush_perso(6)
+      flush(6)
 
 c----------------------------------------------------------
 
@@ -2476,7 +2476,7 @@ c----------------------------------------------------------
      *                   para_Dip,para_propa)
       END IF
 
-       CALL flush_perso(6)
+       flush(6)
 c----------------------------------------------------------
 c     - write the final WP---------------------------------
 
@@ -2657,7 +2657,7 @@ c-----------------------------------------------------------
       T = ZERO
       it = 0
       write(6,*) 'para_H nb_tot',para_H%nb_tot
-      CALL flush_perso(6)
+      flush(6)
       CALL init0_psi(w1)
       CALL init_psi(w1,para_H,cplx=.FALSE.)
 c     CALL init_psi(w1,para_H,cplx=.TRUE.)

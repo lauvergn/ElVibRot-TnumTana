@@ -624,7 +624,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'BEGINNING ',name_sub
         CALL Write_FrameType(BFTransfo1)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -654,7 +654,7 @@
         write(out_unitp,*)
         CALL Write_FrameType(BFTransfo2)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE FrameType1TOBFrameType2
@@ -940,7 +940,7 @@
       END IF
 
       IF (debug .OR. print_level > 1) write(out_unitp,vector)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (iv_tot == 1) zmat_order_save = zmat_order
 
@@ -1492,7 +1492,7 @@
       END IF
 
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE RecWrite_BFTransfo
 
@@ -2591,7 +2591,7 @@
         write(out_unitp,*)
         write(out_unitp,*) 'BEGINNING RECURSIVE ',name_sub
         CALL RecWrite_BFTransfo(BFTransfo1,.FALSE.)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -2665,7 +2665,7 @@
         write(out_unitp,*)
         CALL RecWrite_BFTransfo(BFTransfo2,.FALSE.)
         write(out_unitp,*) 'END RECURSIVE ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE Rec_BFTransfo1TOBFTransfo2
@@ -2762,7 +2762,7 @@
       integer :: err_mem,memory
        character (len=*), parameter :: name_sub='dealloc_BunchTransfo'
 
-       !write(out_unitp,*) 'BEGINNING ',name_sub ; CALL flush_perso(out_unitp)
+       !write(out_unitp,*) 'BEGINNING ',name_sub ; flush(out_unitp)
 
       IF (.NOT. associated(BunchTransfo)) RETURN
 
@@ -2831,7 +2831,7 @@
        CALL error_memo_allo(err_mem,-memory,'BunchTransfo',name_sub,'Type_BunchTransfo')
        nullify(BunchTransfo)
 
-       !write(out_unitp,*) 'END dealloc_BunchTransfo'  ; CALL flush_perso(out_unitp)
+       !write(out_unitp,*) 'END dealloc_BunchTransfo'  ; flush(out_unitp)
 
       END SUBROUTINE dealloc_BunchTransfo
 
@@ -3852,7 +3852,7 @@
         CALL write_dnx(1,dnx%nb_var_vec,dnx,nderiv_debug)
         write(out_unitp,*) 'dnQvect: '
         CALL Write_dnSVM(dnQvect,nderiv_debug)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !--------------------------------------------------------
 
@@ -3903,7 +3903,7 @@
         CALL Write_dnSVM(dnQvect,nderiv_debug)
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !--------------------------------------------------------
 

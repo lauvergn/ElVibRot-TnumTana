@@ -81,7 +81,7 @@
       integer           :: Lebedev = 1
       character (len=3) :: name_i
       integer           :: nio
-      TYPE (param_file) :: Lebedev_file
+      TYPE (File_t) :: Lebedev_file
       real (kind=Rkind) :: theta,phi,thetaR
 
 
@@ -574,7 +574,7 @@
         IF (abs(im) <= il1 .AND. abs(im) <=il2) THEN
           ib = ib + 1
           !write(out_unitp,*) 'il1,il2,im,mmm',il1,il2,im,mmm
-          !CALL flush_perso(out_unitp)
+          !flush(out_unitp)
           DO iq=1,nq
             xq(:) = base%x(:,iq)
 

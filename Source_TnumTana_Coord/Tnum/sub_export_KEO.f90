@@ -169,7 +169,7 @@ MODULE mod_export_KEO
 !     ------------------------------------------------------
 
 !     ------------------------------------------------------
-      type (param_file) :: file_Ggrid
+      type (File_t) :: file_Ggrid
       character (len=Name_len) ::name_file
       integer :: no
 

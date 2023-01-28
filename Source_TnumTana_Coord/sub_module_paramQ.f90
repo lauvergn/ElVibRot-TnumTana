@@ -400,7 +400,7 @@ CONTAINS
       END IF
       read_xyz0 = (read_itQtransfo_OF_Qin0 == 0)
       IF (print_level > 1 .OR. debug) write(out_unitp,*) 'read_itQtransfo_OF_Qin0',read_itQtransfo_OF_Qin0
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       ! defined the "info" from read_itQtransfo_OF_Qin0
       IF (read_itQtransfo_OF_Qin0 == mole%nb_Qtransfo) THEN ! Qact
         info_Qread = ' Read Qact0 coordinates:'
@@ -520,7 +520,7 @@ CONTAINS
       IF (mole%Cart_transfo) THEN
         write(out_unitp,*) '===================================='
         write(out_unitp,*) '==== CartesianTransfo =============='
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         CALL alloc_dnSVM(dnx,mole%ncart,mole%nb_act,nderiv=0)
 
@@ -632,7 +632,7 @@ CONTAINS
         write(out_unitp,*)
         !CALL Write_mole(mole)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -----------------------------------------------------------------
 !      IF (size(Qact) == 0) THEN
@@ -674,7 +674,7 @@ CONTAINS
         IF (print_Qtransfo_loc .OR. debug) THEN
           CALL Write_d0Q(it,'Qin (Qact)',Qact,6)
           CALL Write_d0Q(0, 'Qit (Cart)',Qit,3)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         CALL dealloc_dnSVM(dnx)
@@ -699,7 +699,7 @@ CONTAINS
 
           CALL Write_d0Q(it,'Qin  (Qact)',dnQin%d0 ,6)
           CALL Write_d0Q(it,'Qout (Qdyn)',dnQout%d0,6)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
         END IF
 
@@ -729,7 +729,7 @@ CONTAINS
             write(out_unitp,*) 'name_transfo',it,mole%tab_Qtransfo(it)%name_transfo
             CALL Write_d0Q(it,'Qin ',dnQin%d0 ,6)
             CALL Write_d0Q(it,'Qout',dnQout%d0,6)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
           END IF
 
@@ -754,7 +754,7 @@ CONTAINS
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -----------------------------------------------------------------
 
@@ -817,14 +817,14 @@ CONTAINS
           IF (debug) THEN
             CALL Write_d0Q(it,'Qout ' // trim(adjustl(mole%tab_Qtransfo(it)%name_transfo)),dnQout%d0,6)
             write(out_unitp,*) 'Qout ',it,mole%tab_Qtransfo(it)%name_transfo,dnQout%d0
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
           CALL calc_Qtransfo(dnQin,dnQout,mole%tab_Qtransfo(it),0,inTOout=.FALSE.)
 
           IF (debug) THEN
             CALL Write_d0Q(it,'Qin  ' // trim(adjustl(mole%tab_Qtransfo(it)%name_transfo)),dnQin%d0,6)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
           CALL dealloc_dnSVM(dnQout)
@@ -847,7 +847,7 @@ CONTAINS
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       !-----------------------------------------------------------------
 
       END SUBROUTINE sub_QinRead_TO_Qact
@@ -922,7 +922,7 @@ CONTAINS
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE Set_NewOrient_CartesianTransfo
 
@@ -1072,7 +1072,7 @@ CONTAINS
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !     -----------------------------------------------------------------
 !=================================================
@@ -1192,7 +1192,7 @@ CONTAINS
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !     -----------------------------------------------------------------
 !=================================================
@@ -1322,7 +1322,7 @@ CONTAINS
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !     -----------------------------------------------------------------
 !=================================================
@@ -1346,7 +1346,7 @@ CONTAINS
       integer           :: Z_act(mole%nat)
 
       integer           :: i,iZ,iQ,niofreq
-      TYPE (param_file) :: file_freq
+      TYPE (File_t) :: file_freq
 
 
 !     -----------------------------------------------------------------
@@ -1657,7 +1657,7 @@ CONTAINS
           IF (mole%tab_Qtransfo(it)%skip_transfo) CYCLE
           IF (WriteCC_loc .OR. debug) write(out_unitp,*) 'name_transfo',it,&
                                   mole%tab_Qtransfo(it)%name_transfo
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           IF (WriteCC_loc .OR. debug) CALL Write_d0Q(it,'Qin ',dnQin%d0,6)
 
@@ -1688,7 +1688,7 @@ CONTAINS
           CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
           write(out_unitp,*) ' Cartesian coordinates without the Cartesian Transformation (ang):'
           CALL Write_Cartg98(dnx%d0,mole)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
         !=================================================
 
@@ -1708,7 +1708,7 @@ CONTAINS
             CALL write_dnx(1,mole%ncart,dnx,nderiv_debug)
             write(out_unitp,*) ' Cartesian coordinates after the Cartesian Transformation (ang):'
             CALL Write_Cartg98(dnx%d0,mole)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
           !=================================================
 
@@ -1861,14 +1861,14 @@ CONTAINS
           IF (debug) THEN
             CALL Write_d0Q(it,'Qout ' // trim(adjustl(mole%tab_Qtransfo(it)%name_transfo)),dnQout%d0,6)
             write(out_unitp,*) 'Qout ',it,mole%tab_Qtransfo(it)%name_transfo,dnQout%d0
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
           CALL calc_Qtransfo(dnQin,dnQout,mole%tab_Qtransfo(it),0,inTOout=.FALSE.)
 
           IF (debug) THEN
             CALL Write_d0Q(it,'Qin  ' // trim(adjustl(mole%tab_Qtransfo(it)%name_transfo)),dnQin%d0,6)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
           CALL dealloc_dnSVM(dnQout)
@@ -1890,7 +1890,7 @@ CONTAINS
         write(out_unitp,*) 'END ',name_sub
         write(out_unitp,*)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       !-----------------------------------------------------------------
 
       END SUBROUTINE sub_d0xTOQact
@@ -1926,7 +1926,7 @@ CONTAINS
           write(out_unitp,'(a,a,i0,1x,6(1x,f0.4))') name_info,',it_Qtransfo: ',it,d0Q(i:iend)
         END DO
         write(out_unitp,*) '-----------------------------------------'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       ENDIF
 
       !-----------------------------------------------------------------
@@ -1989,7 +1989,7 @@ CONTAINS
                   RWU_Write(QWU,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
       END DO
       write(out_unitp,*) '-----------------------------------------'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !-----------------------------------------------------------------
       IF (debug) THEN
@@ -2429,7 +2429,7 @@ CONTAINS
         write(out_unitp,*)
         write(out_unitp,*) 'Val, grad and hessian in CC'
         CALL Write_dnSVM(dnFCC)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2478,7 +2478,7 @@ CONTAINS
         write(out_unitp,*) 'E, grad and hessian in zmt'
         CALL Write_dnSVM(dnFcurvi)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2564,7 +2564,7 @@ CONTAINS
 
         write(out_unitp,*) 'Qact ',Qact
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE Set_paramQ_FOR_optimization

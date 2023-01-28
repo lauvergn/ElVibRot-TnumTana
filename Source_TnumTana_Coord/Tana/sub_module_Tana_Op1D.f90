@@ -1138,7 +1138,7 @@
        CALL write_op(F1_Sum1D)
        write(out_unitp,*) 'F2_Sum1D'
        CALL write_op(F2_Sum1D)
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      CALL allocate_op(Fres,size(F1_Sum1D%Sum_Op1D) + size(F2_Sum1D%Sum_Op1D))
@@ -1160,7 +1160,7 @@
        write(out_unitp,*) 'Fres'
        CALL write_op(Fres)
        write(out_unitp,*) 'END ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    end function F1_Sum1d_plus_F2_Sum1D
@@ -1234,7 +1234,7 @@ function Der1_OF_d0Op1D(d0Op1D) result(d1Op1D)
     IF (debug) THEN
        write(out_unitp,*) ' BEGINNING ',routine_name
        CALL write_op(d0Op1D)
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
    CALL check_allocate_op(d0Op1D)
@@ -1280,7 +1280,7 @@ function Der1_OF_d0Op1D(d0Op1D) result(d1Op1D)
     IF (debug) THEN
        CALL write_op(d1Op1D)
        write(out_unitp,*) ' END ',routine_name
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
  end function Der1_OF_d0Op1D
@@ -1301,7 +1301,7 @@ function Der1_OF_d0Op1D(d0Op1D) result(d1Op1D)
      write(out_unitp,*) 'BEGINNING ',routine_name
      write(out_unitp,*) 'd0SumOp1D',size(d0SumOp1D%Sum_Op1D)
      CALL write_op(d0SumOp1D)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    allocate(temp_d1SumOp1D(size(d0SumOp1D%Sum_Op1D)) )
@@ -1332,7 +1332,7 @@ function Der1_OF_d0Op1D(d0Op1D) result(d1Op1D)
      write(out_unitp,*) 'd1SumOp1D'
      CALL write_op(d1SumOp1D)
      write(out_unitp,*) 'END ',routine_name
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
  end function Der1_OF_d0SumOp1D
@@ -1361,7 +1361,7 @@ function Der1_OF_d0Op1D(d0Op1D) result(d1Op1D)
    IF (debug) THEN
      write(out_unitp,*) ' BEGINNING ',routine_name
      CALL write_op(d0Op1D,header=.TRUE.)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    CALL check_allocate_op(d0Op1D)
@@ -1499,7 +1499,7 @@ function Der1_OF_d0Op1D(d0Op1D) result(d1Op1D)
      write(out_unitp,*) 'd2Op1D',size(d2Op1D%Sum_op1D)
      CALL write_op(d2Op1D,header=.TRUE.)
      write(out_unitp,*) ' END ',routine_name
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
  end function Der2_OF_d0Op1D
@@ -1531,7 +1531,7 @@ subroutine Expand_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      write(out_unitp,*) ' BEGINNING ',routine_name
      CALL write_op(F_Op1D,header=.TRUE.)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    CALL check_allocate_op(F_Op1D)
@@ -1544,7 +1544,7 @@ subroutine Expand_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      write(out_unitp,*) ' SplitOp1D:'
      CALL write_op(SplitOp1D,header=.TRUE.)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
 
@@ -1624,7 +1624,7 @@ subroutine Expand_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        write(out_unitp,*) '   Term:',index_split
        CALL write_op(FS_Op1D(index_split),header=.TRUE.)
      END DO
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
 
@@ -1649,7 +1649,7 @@ subroutine Expand_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
 
    ELSE
      IF (debug)  write(out_unitp,*) ' # P terms: 2'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
 
      F2F3      = F1_1d_times_F2_1d (FS_Op1D(2) , FS_Op1D(3) )
@@ -1663,7 +1663,7 @@ subroutine Expand_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        CALL write_op(F2PF3,header=.TRUE.)
        write(out_unitp,*) ' Temp_F2F3: F2PF3 + Der1(F2F3)'
        CALL write_op(Temp_F2F3,header=.TRUE.)
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
 
      temp_Op1D = set_opel(4, idq, alfa=2, indexq=indexQ, coeff=cone)
@@ -1691,7 +1691,7 @@ subroutine Expand_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      write(out_unitp,*) ' SumOp1D:'
      CALL write_op(SumOp1D,header=.TRUE.)
      write(out_unitp,*) ' END ',routine_name
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
 
@@ -1732,7 +1732,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      write(out_unitp,*) ' BEGINNING ',routine_name
      CALL write_op(F_Op1D,header=.TRUE.)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    CALL check_allocate_op(F_Op1D)
@@ -1745,7 +1745,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      write(out_unitp,*) ' SplitOp1D:'
      CALL write_op(SplitOp1D,header=.TRUE.)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
 
@@ -1789,7 +1789,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        IF (debug) THEN
          write(out_unitp,*) ' SumOp1D_ExpandSin ',i
          CALL write_op(SumOp1D_ExpandSin)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 
        SumOp1D_ExpandSin = F_Op1_i * SumOp1D_ExpandSin
@@ -1797,7 +1797,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        IF (debug) THEN
          write(out_unitp,*) ' F_Op1_i * SumOp1D_ExpandSin ',i
          CALL write_op(SumOp1D_ExpandSin)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 
 
@@ -1807,7 +1807,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        IF (debug) THEN
          write(out_unitp,*) ' SumOp1D (temp) ',i
          CALL write_op(SumOp1D)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 
 
@@ -1819,7 +1819,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
        IF (debug) THEN
          write(out_unitp,*) ' F_Op1_i ',i
          CALL write_op(F_Op1_i)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 
 
@@ -1829,7 +1829,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      write(out_unitp,*) ' SumOp1D (not simplified): '
     CALL write_op(SumOp1D)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
    END IF
 
    CALL Simplify_Sum_OF_Op1D(SumOp1D)
@@ -1838,7 +1838,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      write(out_unitp,*) ' SumOp1D:'
      CALL write_op(SumOp1D,header=.TRUE.)
      write(out_unitp,*) ' END ',routine_name
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
 
@@ -1926,7 +1926,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      write(out_unitp,*) ' BEGINNING ',routine_name
      CALL write_op(F_1d)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
 
@@ -1973,7 +1973,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      CALL write_op(F_1d)
      write(out_unitp,*) ' END ',routine_name
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
 
@@ -1996,7 +1996,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      write(out_unitp,*) ' BEGINNING ',routine_name
      CALL write_op(F_1d)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    DO i=1,size(F_1d%Sum_Op1D)
@@ -2044,7 +2044,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
    IF (debug) THEN
      CALL write_op(F_1d)
      write(out_unitp,*) ' END ',routine_name
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
  end subroutine Simplify_Sum_OF_Op1D
@@ -2320,7 +2320,7 @@ subroutine Expand_Sin2_IN_Op1D_TO_SumOp1D(F_Op1D,SumOp1D)
      do i = 1, size(F_1d%prod_opel)
        call write_op(F_1d%prod_opel(i), i_open)
      end do
-     CALL flush_perso(i_open)
+     flush(i_open)
    END SUBROUTINE write_op1d
 
    SUBROUTINE write_Sum_OF_op1d(F_1d, i_file, header, append, close_file)

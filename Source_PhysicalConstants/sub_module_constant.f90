@@ -163,7 +163,6 @@
 !! \param Read_Namelist an optional logical flag to be able to read the namelist "constantes"
 !
   SUBROUTINE sub_constantes(const_phys,Read_Namelist,version,mass_version)
-  USE mod_MPI
   IMPLICIT NONE
 
   TYPE (constant),         intent(inout)            :: const_phys
@@ -632,7 +631,6 @@ END SUBROUTINE sub_ReadNMLconstantes
 !! The CODATA 2014 one in 2018. They can be download from
 !! the <a href="http://physics.nist.gov/constants">NIST</a>
   SUBROUTINE constantes_CODATA2018(c,mhu0,G,h,e,me,mp,Na,R)
-  USE mod_MPI
   IMPLICIT NONE
 
   !----- physical constants ---------------------------
@@ -695,7 +693,6 @@ END SUBROUTINE constantes_CODATA2018
 !! The CODATA 2014 one in 2018. They can be download from
 !! the <a href="http://physics.nist.gov/constants">NIST</a>
   SUBROUTINE constantes_CODATA2014(c,mhu0,G,h,e,me,mp,Na,R)
-  USE mod_MPI
   IMPLICIT NONE
 
   !----- physical constants ---------------------------
@@ -759,7 +756,6 @@ END SUBROUTINE constantes_CODATA2018
 !! The CODATA 2006 one in 2006. There are not available anymore, but they can be download from
 !! the <a href="http://physics.nist.gov/cuu/Constants/archive2006.html">NIST</a>
   SUBROUTINE constantes_CODATA2006(c,mhu0,G,h,e,me,mp,Na,R)
-  USE mod_MPI
   IMPLICIT NONE
 
   !----- physical constants ---------------------------
@@ -807,7 +803,6 @@ END SUBROUTINE constantes_CODATA2018
 
 
   SUBROUTINE constantes_HandBook70ed(c,mhu0,G,h,e,me,mp,Na,R)
-  USE mod_MPI
   IMPLICIT NONE
 
   !----- physical constants ---------------------------
@@ -861,7 +856,6 @@ END SUBROUTINE constantes_CODATA2018
 
 
   SUBROUTINE constantes_HandBook70ed_2001(c,mhu0,G,h,e,me,mp,Na,R)
-  USE mod_MPI
   IMPLICIT NONE
 
   !----- physical constants ---------------------------

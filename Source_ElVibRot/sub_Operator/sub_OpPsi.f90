@@ -145,7 +145,7 @@ CONTAINS
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
         CALL ecri_psi(Psi=Psi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -208,14 +208,14 @@ CONTAINS
         write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
         write(out_unitp,*) 'symab of para_Op,psi ',para_Op%symab,psi%symab
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL write_param_Op(para_Op)
         IF (allocated(para_Op%Cmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
         IF (allocated(para_Op%Rmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
         write(out_unitp,*)
         write(out_unitp,*) 'Psi'
         CALL ecri_psi(Psi=Psi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
       IF (present(derOp)) THEN
@@ -314,14 +314,14 @@ CONTAINS
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
         write(out_unitp,*) 'para_Op%... %Save_MemGrid_done',            &
                     para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !CALL write_param_Op(para_Op)
         !IF (allocated(para_Op%Cmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
         !IF (allocated(para_Op%Rmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
         write(out_unitp,*)
         write(out_unitp,*) 'Psi'
         CALL ecri_psi(Psi=Psi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-------------------------------------------------------------------------
 
@@ -376,7 +376,7 @@ CONTAINS
 !SGtype4=.FALSE.
 
       IF (debug) write(out_unitp,*) 'SGtype4,direct_KEO',SGtype4,direct_KEO
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       ! Number of Hamiltonian operation counter
       para_Op%nb_OpPsi = para_Op%nb_OpPsi + 1
@@ -601,7 +601,7 @@ CONTAINS
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build Op(:,i) ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       psi = ZERO
@@ -647,7 +647,7 @@ CONTAINS
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build Op(:,i) ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       CALL init_psi(Temp_OpPsi,para_Op,para_Op%cplx)
@@ -732,7 +732,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',n
         write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL write_param_Op(para_Op)
         IF (allocated(para_Op%Cmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
         IF (allocated(para_Op%Rmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
@@ -741,7 +741,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
         DO i=1,size(TabPsi)
           CALL ecri_psi(Psi=TabPsi(i))
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 !CALL Check_mem()
@@ -834,14 +834,14 @@ END SUBROUTINE sub_OpBasis_OneCBF
         write(out_unitp,*) 'BEGINNING ',name_sub,' ',n
         write(out_unitp,*) 'nb_bie,nb_baie',para_Op%nb_bie,para_Op%nb_baie
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         write(out_unitp,*)
         write(out_unitp,*) 'TabPsi'
         !DO i=1,size(TabPsi)
         DO i=1,size_TabPsi
           CALL ecri_psi(Psi=TabPsi(i))
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -883,7 +883,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
       END IF
 
       IF (debug) write(out_unitp,*) 'SGtype4,direct_KEO',SGtype4,direct_KEO
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       ! direct_KEO false by defult
       ! note this part is not modified for MPI yet
@@ -978,7 +978,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL write_param_Op(para_Op)
         IF (allocated(para_Op%Cmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Cmat,out_unitp,3)
         IF (allocated(para_Op%Rmat) .AND. para_Op%mat_done) CALL Write_Mat(para_Op%Rmat,out_unitp,5)
@@ -987,7 +987,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
         CALL ecri_psi(Psi=Psi)
         !write(out_unitp,*) 'ini OpPsiBasisRep'
         !CALL ecri_psi(Psi=OpPsi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -1113,14 +1113,14 @@ END SUBROUTINE sub_OpBasis_OneCBF
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL write_param_Op(para_Op)
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
         CALL ecri_psi(Psi=Psi)
         write(out_unitp,*) 'ini OpPsiBasisRep'
         CALL ecri_psi(Psi=OpPsi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -1350,13 +1350,13 @@ END SUBROUTINE sub_OpBasis_OneCBF
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
         write(out_unitp,*) 'para_Op...%Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
-        !CALL flush_perso(out_unitp)
+        !flush(out_unitp)
         !CALL write_param_Op(para_Op)
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
         CALL ecri_init_psi(Psi=Psi)
         !CALL ecri_psi(Psi=Psi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -1374,7 +1374,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
             write(out_unitp,*) 'PsiBasisRep'
             !CALL ecri_init_psi(Psi=Psi)
             CALL ecri_psi(Psi=Psi)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
         END IF
 
@@ -1579,12 +1579,12 @@ END SUBROUTINE sub_OpBasis_OneCBF
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
         write(out_unitp,*) 'para_Op...%Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
-        !CALL flush_perso(out_unitp)
+        !flush(out_unitp)
         !CALL write_param_Op(para_Op)
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
         !CALL ecri_psi(Psi=Psi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -1618,7 +1618,7 @@ END SUBROUTINE sub_OpBasis_OneCBF
             write(out_unitp,*) 'PsiGridRep done'
             write(out_unitp,*) 'PsiBasisRep'
             !CALL ecri_psi(Psi=Psi)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
         END IF
 
@@ -1855,14 +1855,14 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
    write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
    write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
    write(out_unitp,*) 'para_Op...%Save_MemGrid_done',para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
-   !CALL flush_perso(out_unitp)
+   !flush(out_unitp)
    !CALL write_param_Op(para_Op)
    write(out_unitp,*)
    write(out_unitp,*) 'PsiBasisRep'
    DO itab=1,size(Psi)
      CALL ecri_psi(Psi=Psi(itab))
    END DO
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------------
  IF (Psi(1)%cplx) STOP 'cplx in sub_TabOpPsi_WITH_MemGrid_BGG_Hamil10'
@@ -1902,7 +1902,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
      write(out_unitp,*) 'PsiGridRep done'
      write(out_unitp,*) 'PsiBasisRep'
      CALL ecri_psi(Psi=Psi(itab))
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    !CALL ecri_psi(Psi=Psi(itab),ecri_GridRep=.TRUE.)
@@ -2121,12 +2121,12 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
         write(out_unitp,*) 'para_Op...%Save_MemGrid_done',              &
                      para_Op%para_ReadOp%para_FileGrid%Save_MemGrid_done
-        !CALL flush_perso(out_unitp)
+        !flush(out_unitp)
         !CALL write_param_Op(para_Op)
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
         CALL ecri_psi(Psi=Psi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -2146,7 +2146,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
             write(out_unitp,*) 'PsiGridRep done'
             write(out_unitp,*) 'PsiBasisRep'
             CALL ecri_psi(Psi=Psi)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
         END IF
 
@@ -2360,14 +2360,14 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL write_param_Op(para_Op)
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
         CALL ecri_psi(Psi=Psi)
         write(out_unitp,*) 'ini OpPsiBasisRep'
         CALL ecri_psi(Psi=OpPsi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -2595,14 +2595,14 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
         write(out_unitp,*) 'nb_act1',para_Op%mole%nb_act1
         write(out_unitp,*) 'nb_var',para_Op%mole%nb_var
         write(out_unitp,*) 'para_Op%mat_done',para_Op%mat_done
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL write_param_Op(para_Op)
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
         CALL ecri_psi(Psi=Psi)
         write(out_unitp,*) 'ini OpPsiBasisRep'
         CALL ecri_psi(Psi=OpPsi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -3102,7 +3102,7 @@ STOP 'cplx in sub_OpPsi_WITH_MemGrid_BGG_Hamil10'
         write(out_unitp,*)
         write(out_unitp,*) 'PsiBasisRep'
         CALL ecri_psi(Psi=Psi)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------------
 
@@ -3226,12 +3226,12 @@ SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid(Psi,para_H)
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'nb_bie,nb_baie',para_H%nb_bie,para_H%nb_baie
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
     !CALL write_param_Op(para_H)
     write(out_unitp,*)
     write(out_unitp,*) 'PsiDia'
     CALL ecri_psi(Psi=Psi)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
 
@@ -3371,7 +3371,7 @@ END SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid
          write(out_unitp,"(i0,a,i0,a,2(i0,1x),2a,f15.9,1x,f15.9)") iPsi,  &
           ' H(',iOp,') der[',para_H%derive_termQact(:,iOp),']: ',info,avOp
 
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
        END DO
 
@@ -3380,7 +3380,7 @@ END SUBROUTINE sub_PsiDia_TO_PsiAdia_WITH_MemGrid
 !----------------------------------------------------------
         IF (debug) THEN
           write(out_unitp,*) 'END sub_psiHitermPsi'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !----------------------------------------------------------
 

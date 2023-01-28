@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_memory_NotPointer
-      USE mod_NumParameters, only : Rkind, Ikind, ILkind, ZERO, CZERO
+      USE QDUtil_NumParameters_m, only : Rkind, Ikind, ILkind, ZERO, CZERO
       use mod_memory,        only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, &
                                    error_memo_allo, write_error_null, error_lmemo_allo,    &
                                    sub_test_bigtab_ub, sub_test_bigtab_lb

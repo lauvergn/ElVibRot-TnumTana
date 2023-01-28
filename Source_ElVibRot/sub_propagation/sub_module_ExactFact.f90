@@ -135,7 +135,7 @@ SUBROUTINE sub_ExactFact_analysis(T,psi,ana_psi,para_H,Tmax,deltaT,para_field)
 !----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !----------------------------------------------------------
 
@@ -243,7 +243,7 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
 !----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !----------------------------------------------------------
 
@@ -330,7 +330,7 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
 !----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !----------------------------------------------------------
 
@@ -448,7 +448,7 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
 !----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !----------------------------------------------------------
 
@@ -625,7 +625,7 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
 !----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !----------------------------------------------------------
 

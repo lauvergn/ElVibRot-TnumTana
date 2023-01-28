@@ -23,7 +23,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_FiniteDiff
-  USE mod_NumParameters
+  USE QDUtil_NumParameters_m, out_unitp => out_unit
   IMPLICIT NONE
 
   PRIVATE

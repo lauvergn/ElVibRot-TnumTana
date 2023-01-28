@@ -193,7 +193,7 @@ IMPLICIT NONE
   IF (Read_Channel) CALL Read_Channel_AT_TS(para_CRP%Channel_AT_TS,ny)
 
   write(out_unitp,*)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 END SUBROUTINE read_CRP
 !================================================================
@@ -228,7 +228,7 @@ END SUBROUTINE read_CRP
       write(out_unitp,*) 'BEGINNING ',name_sub
       IF (debug) THEN
         write(out_unitp,*) 'shape tab_op',shape(tab_Op)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
@@ -366,13 +366,13 @@ END SUBROUTINE read_CRP
       write(out_unitp,*) 'BEGINNING ',name_sub
       IF (debug) THEN
         write(out_unitp,*) 'shape tab_op',shape(tab_Op)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
 
       write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (debug) THEN
         write(out_unitp,*) 'shape H',shape(tab_Op(1)%Rmat)
@@ -462,7 +462,7 @@ END SUBROUTINE read_CRP
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                             real(CRP,kind=Rkind),aimag(CRP)
         end if
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END DO
 
@@ -474,7 +474,7 @@ END SUBROUTINE read_CRP
       IF (debug) THEN
       END IF
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------
 
 END SUBROUTINE sub_CRP_BasisRep_WithMat
@@ -530,13 +530,13 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
       write(out_unitp,*) 'BEGINNING ',name_sub
       IF (debug) THEN
         write(out_unitp,*) 'shape tab_op',shape(tab_Op)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
 
       write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (debug) THEN
         write(out_unitp,*) 'shape H',shape(tab_Op(1)%Rmat)
@@ -640,7 +640,7 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                             real(CRP,kind=Rkind),aimag(CRP)
         end if
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END DO
 
@@ -652,7 +652,7 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
       IF (debug) THEN
       END IF
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------
 
 END SUBROUTINE sub_CRP_BasisRep_WithMat_testblock
@@ -707,26 +707,26 @@ SUBROUTINE sub_CRP_BasisRep_WithMatSpectral(tab_Op,nb_Op,print_Op,para_CRP)
       write(out_unitp,*) 'BEGINNING ',name_sub
       IF (debug) THEN
         write(out_unitp,*) 'shape tab_op',shape(tab_Op)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
 
       write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL alloc_NParray(Ginv,    shape(tab_Op(1)%Rmat),'Ginv',    name_sub)
       CALL alloc_NParray(VecPGinv,shape(tab_Op(1)%Rmat),'VecPGinv',name_sub)
       CALL alloc_NParray(ValPGinv,[tab_Op(1)%nb_tot],   'ValPGinv',name_sub)
       CALL alloc_NParray(ValPG,   [tab_Op(1)%nb_tot],   'ValPG',   name_sub)
 
-      write(out_unitp,*) 'Ginv calc' ; CALL flush_perso(out_unitp)
+      write(out_unitp,*) 'Ginv calc' ; flush(out_unitp)
       Ginv(:,:) = -tab_Op(1)%Rmat + EYE*HALF * (tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat+ &
                                                 tab_Op(para_CRP%iOp_CAP_Product)%Rmat)
 
-      write(out_unitp,*) 'Ginv diago' ; CALL flush_perso(out_unitp)
+      write(out_unitp,*) 'Ginv diago' ; flush(out_unitp)
       CALL sub_diago_CH(Ginv,ValPGinv,VecPGinv,tab_Op(1)%nb_tot)
-      write(out_unitp,*) 'Ginv diago: done' ; CALL flush_perso(out_unitp)
+      write(out_unitp,*) 'Ginv diago: done' ; flush(out_unitp)
 
       CALL dealloc_NParray(Ginv,'Ginv',name_sub)
 
@@ -765,7 +765,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMatSpectral(tab_Op,nb_Op,print_Op,para_CRP)
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                             real(CRP,kind=Rkind),aimag(CRP)
         end if
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END DO
 
@@ -778,7 +778,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMatSpectral(tab_Op,nb_Op,print_Op,para_CRP)
       IF (debug) THEN
       END IF
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------
 
 END SUBROUTINE sub_CRP_BasisRep_WithMatSpectral
@@ -836,13 +836,13 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_test(tab_Op,nb_Op,print_Op,para_CRP)
       write(out_unitp,*) 'BEGINNING ',name_sub
       IF (debug) THEN
         write(out_unitp,*) 'shape tab_op',shape(tab_Op)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
 
       write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL alloc_NParray(VecPro, shape(tab_Op(1)%Rmat),'VecPro',   name_sub)
       CALL alloc_NParray(VecRea, shape(tab_Op(1)%Rmat),'VecRea',   name_sub)
@@ -866,7 +866,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_test(tab_Op,nb_Op,print_Op,para_CRP)
       CALL alloc_NParray(Ginv,    shape(tab_Op(1)%Rmat),'Ginv',    name_sub)
       CALL alloc_NParray(G,       shape(tab_Op(1)%Rmat),'G',       name_sub)
 
-      write(out_unitp,*) 'Ginv calc' ; CALL flush_perso(out_unitp)
+      write(out_unitp,*) 'Ginv calc' ; flush(out_unitp)
       Ginv(:,:) = -tab_Op(1)%Rmat + EYE*HALF * (tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat+ &
                                                 tab_Op(para_CRP%iOp_CAP_Product)%Rmat)
 
@@ -915,7 +915,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_test(tab_Op,nb_Op,print_Op,para_CRP)
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                             real(CRP,kind=Rkind),aimag(CRP)
         end if
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END DO
 
@@ -933,7 +933,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_test(tab_Op,nb_Op,print_Op,para_CRP)
       IF (debug) THEN
       END IF
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------
 
 END SUBROUTINE sub_CRP_BasisRep_WithMat_test
@@ -989,7 +989,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
       write(out_unitp,*) 'BEGINNING ',name_sub
       IF (debug) THEN
         write(out_unitp,*) 'shape tab_op',shape(tab_Op)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
@@ -1047,7 +1047,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
           write(out_unitp,*) 'CRP at ',RWU_Write(RWU_E,WithUnit=.TRUE.,WorkingUnit=.FALSE.),&
                             real(CRP,kind=Rkind),aimag(CRP)
         end if
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         Ene = Ene + para_CRP%DEne
 
@@ -1066,7 +1066,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_flux(tab_Op,nb_Op,print_Op,para_CRP)
       IF (debug) THEN
       END IF
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------
 
 END SUBROUTINE sub_CRP_BasisRep_WithMat_flux
@@ -1258,7 +1258,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
            write(out_unitp,*) '######################'
            write(out_unitp,*) '# in KS iterations, n=',nks
            write(out_unitp,*) '# before p_multiply'
-           call flush_perso(out_unitp)
+           flush(out_unitp)
          end if
 
          SELECT CASE ( para_CRP%LinSolv_type )
@@ -1297,7 +1297,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
            write(out_unitp,*) '  You have to choose between: "MatInv" or "QMR".'
            STOP ' ERROR No Default for LinSolv_type'
          END SELECT
-         call flush_perso(out_unitp)
+         flush(out_unitp)
 
          ! Calculate matrix
          IF (debug) write(out_unitp,*) '# in KS iterations, buiding h'
@@ -1367,7 +1367,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
       IF (debug .OR. print_Op .OR. print_level > 0) Then
         write(out_unitp,*) 'CRP Energy iteration: Delta Real Time',RealTime
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !CALL Random_CplxVec(GuessVec)
       GuessVec(:) = ZERO
@@ -1577,7 +1577,7 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
         WRITE(out_unitp,*) 'precon = 1. DML'
      END IF
   END IF
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 !     %--------------------------------------------------%
 !     | The number N(=NX*NX) is the dimension of the     |
@@ -1959,7 +1959,7 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
   IF (debug .OR. print_Op .OR. print_level > 0) Then
     write(out_unitp,*) 'CRP Energy iteration: Delta Real Time',RealTime
   END IF
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   DEALLOCATE ( ax, d, &
        &     v, workd, &
@@ -2158,7 +2158,7 @@ SUBROUTINE calc_crp_p_lanczos_old(tab_Op,nb_Op,para_CRP,Ene)
            write(out_unitp,*) '######################'
            write(out_unitp,*) '# in KS iterations, n=',nks
            write(out_unitp,*) '# before p_multiply'
-           call flush_perso(out_unitp)
+           flush(out_unitp)
          end if
 
          SELECT CASE ( para_CRP%LinSolv_type )
@@ -2300,7 +2300,7 @@ SUBROUTINE p_multiplyLU(Vin,Vut,tab_Op,nb_Op,Ene,N,Ginv_LU,indx,                
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Vin',Vin(:)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2337,7 +2337,7 @@ SUBROUTINE p_multiplyLU(Vin,Vut,tab_Op,nb_Op,Ene,N,Ginv_LU,indx,                
         write(out_unitp,*) 'Vut',Vut(:)
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2417,7 +2417,7 @@ SUBROUTINE G_Mat(H,CAP_Reactif,CAP_Product,Ene,G)
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'Ene',Ene
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2439,7 +2439,7 @@ SUBROUTINE G_Mat(H,CAP_Reactif,CAP_Product,Ene,G)
 
     IF (debug) THEN
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
 END SUBROUTINE G_Mat
@@ -2628,13 +2628,13 @@ SUBROUTINE Calc_EigenVec_CAPs(tab_Op,para_CRP)
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'shape tab_op',shape(tab_Op)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         write(out_unitp,*)
       END IF
 !-----------------------------------------------------------
 
       write(out_unitp,*) 'nb_tot of H',tab_Op(1)%nb_tot
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL alloc_NParray(Mat, shape(tab_Op(1)%Rmat),'Mat',   name_sub)
       CALL alloc_NParray(Vec, shape(tab_Op(1)%Rmat),'Vec',   name_sub)
@@ -2683,7 +2683,7 @@ SUBROUTINE Calc_EigenVec_CAPs(tab_Op,para_CRP)
       IF (debug) THEN
       END IF
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !----------------------------------------------------------
 
 END SUBROUTINE Calc_EigenVec_CAPs
@@ -2802,7 +2802,7 @@ IMPLICIT NONE
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'ny',ny
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-----------------------------------------------------------
 
@@ -2836,7 +2836,7 @@ IMPLICIT NONE
     CALL Write_Channel_AT_TS(Channel_AT_TS_var)
     write(out_unitp,*)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
 
@@ -2859,7 +2859,7 @@ IMPLICIT NONE
 !-----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-----------------------------------------------------------
 
@@ -2880,7 +2880,7 @@ IMPLICIT NONE
   IF (debug) THEN
     write(out_unitp,*)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
 
@@ -2937,7 +2937,7 @@ IMPLICIT NONE
       write(out_unitp,*) 'size BasisnD%EneH0',size(BasisnD%EneH0)
       write(out_unitp,*) 'BasisnD%EneH0',BasisnD%EneH0
     END IF
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-----------------------------------------------------------
 
@@ -3085,7 +3085,7 @@ IMPLICIT NONE
   IF (debug) THEN
     write(out_unitp,*)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
 END FUNCTION ChannelNumber_AT_TS

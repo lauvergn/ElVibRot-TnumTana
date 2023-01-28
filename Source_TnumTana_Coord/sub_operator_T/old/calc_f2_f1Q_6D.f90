@@ -25,7 +25,7 @@
       real (kind=Rkind) ::  Qdyn(mole%nb_var)
 
 !-------------------------------------------------------------------------
-      TYPE (param_file) :: file_Tnum
+      TYPE (File_t) :: file_Tnum
       integer :: ni ! unit of the file
       integer :: n0,n1,n2 ! number of term in the Taylor expansion
       integer, parameter :: max_var = 6

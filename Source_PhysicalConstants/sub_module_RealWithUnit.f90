@@ -21,8 +21,7 @@
 !===========================================================================
 !===========================================================================
   MODULE mod_RealWithUnit
-  USE mod_NumParameters
-  USE mod_string
+  USE QDUtil_m, out_unitp => out_unit
   IMPLICIT NONE
 
   PRIVATE
@@ -641,7 +640,6 @@
 
   END FUNCTION get_Index_OF_Unit
   SUBROUTINE Test_RWU()
-
     TYPE(REAL_WU)     :: RWU1,RWU2 ! test the real with unit convertion
     real (kind=Rkind) :: Rval
 

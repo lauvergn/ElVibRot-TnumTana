@@ -351,7 +351,7 @@
       Temp_max = Norm_max-Norm_min
       Temp     = Temp_max
       write(out_unitp,*) 'Average Energy, Temp',NormA,Temp
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DTemp       = Temp_max/real(max(10,para_SimulatedAnnealing%nb_mc_tot),kind=Rkind)
 
@@ -376,7 +376,7 @@
         !write(out_unitp,*) 'Norm',imc,xOpt,NormA
         !write(out_unitp,*) 'Norm',imc,sqrt(sum((xOpt-xOpt_min)**2)),NormA
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF ( NormA < Norm_min) THEN
           nb_Norm_min   = nb_Norm_min + 1
@@ -416,7 +416,7 @@
 
           write(out_unitp,*) 'Temp_max,nb_Energy_min,Energy_min',           &
                                            Temp_max,nb_Norm_min,Norm_min
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           SQ(:)       = SQ(:)*para_SimulatedAnnealing%RangeScal
           Temp_max    = (ONE-para_SimulatedAnnealing%ResetTempScal)*Temp_max
           Temp        = Temp_max
@@ -611,7 +611,7 @@
       Temp_max = NormA
       Temp     = Temp_max
       write(out_unitp,*) 'Average Energy, Temp',NormA,Temp
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DTemp       = Temp_max/real(max(10,para_SimulatedAnnealing%nb_mc_tot),kind=Rkind)
 
@@ -645,7 +645,7 @@
 
         DNorm = NormA - NormB
         !write(out_unitp,*) 'Norm',imc,xOpt,NormA
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF ( NormA < Norm_min) THEN
           nb_Norm_min   = nb_Norm_min + 1
@@ -701,7 +701,7 @@
                                        imc,Temp_max,nb_Norm_min,Norm_min
           write(out_unitp,*) 'imc,Temp_max,nb_Accepted_...',imc,Temp_max,&
                 nb_Accepted_DNorm,nb_Accepted_proba,nb_NotAccepted_proba
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           SQ(:)       = SQ(:)*para_SimulatedAnnealing%RangeScal
           Temp_max    = (ONE-para_SimulatedAnnealing%ResetTempScal)*Temp_max
           DTemp       = Temp_max/real(max(10,para_SimulatedAnnealing%nb_mc_tot-imc),kind=Rkind)

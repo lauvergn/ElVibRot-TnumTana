@@ -191,7 +191,7 @@ CONTAINS
      write(out_unitp,*) ' LambdaMin,LambdaMax (cm-1): ',                &
                         para_propa%para_Davidson%LambdaMin * auTOcm_inv,&
                         para_propa%para_Davidson%LambdaMax * auTOcm_inv
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
 !-----------------------------------------------------------
 ! define the number of chebychev polynomials automatically
@@ -204,7 +204,7 @@ nq       = pi / abs(acos(B_filter)-acos(A_filter))/3
 nb0      = nq
 nb       = nb0
 write(out_unitp,*) ' nb,nq init: ',nb,nq
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 CALL alloc_NParray(x_cheby,[nq],'x_cheby',name_sub)
 CALL alloc_NParray(w_cheby,[nq],'w_cheby',name_sub)
@@ -242,7 +242,7 @@ DO
   !DO i=1,nb
   !DO j=i,nb
   !  write(out_unitp,*) 'Sij',i,j,dot_product(d0P_cheby(:,j),w_cheby*d0P_cheby(:,i))
-  !  CALL flush_perso(out_unitp)
+  !  flush(out_unitp)
   !END DO
   !END DO
   !-----------------------------------------------------------
@@ -298,7 +298,7 @@ DO
 
 
   write(out_unitp,*) 'nb,filter_err',nb,filter_err
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
   IF (filter_err < filter_err_thresh .OR. nb > para_propa%para_Davidson%M_filter) EXIT
 
 
@@ -326,7 +326,7 @@ nb = size(P0_cheby)
     !CALL Set_filter(filter,4,A=A_filter,B=B_filter)
 
     IF (debug) write(out_unitp,*) 'l,El',l,El
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
 
     ! l-filter values x weight on the grid
@@ -351,7 +351,7 @@ nb = size(P0_cheby)
     END DO
 
     IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(nb-10:nb,l)))/TEN
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
     !write(out_unitp,*) '========================================='
     !write(out_unitp,*) 'f(:,l)',l
     !write(out_unitp,'(10f10.6)') ,f(:,l)
@@ -366,7 +366,7 @@ nb = size(P0_cheby)
   CALL dealloc_NParray(P2_cheby,'P2_cheby',name_sub)
 
   IF (debug) write(out_unitp,*) 'chebychev coef: done',nb
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 !-----------------------------------------------------------
 
 !- vector initialization:  q1 -----------
@@ -387,7 +387,7 @@ nb = size(P0_cheby)
        !- chebychev recursion -------------------------------------------
        CALL sub_chebychev_recursion(Tnq1,q1,0,nb-1,para_H)
        IF (debug) write(out_unitp,*) 'chebychev recursion: done',nb
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        !- Coefficient of the chebychev expansion (with the filter)  -----
 
@@ -395,7 +395,7 @@ nb = size(P0_cheby)
        CALL sub_newZ_vectors_withf(z,Tnq1,nb,para_H,para_propa,f)
        nb_diago = count(abs(z(:)%CAvOp)>ONETENTH**9)
        IF (debug) write(out_unitp,*) 'ortho z vectors: done',nb_diago
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
        !- z vectors -------------------------------------------
 
         !- diagonalization -----------------------------------
@@ -409,7 +409,7 @@ nb = size(P0_cheby)
         END DO
         END DO
         !IF (debug) write(out_unitp,*) 'S matrix: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL sub_ana_S(H,nb_diago,max_Sii,max_Sij,.TRUE.)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
@@ -425,7 +425,7 @@ nb = size(P0_cheby)
           END DO
         END DO
         !IF (debug) write(out_unitp,*) 'H matrix: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         CALL sub_hermitic_H(H,nb_diago,non_hermitic,para_H%sym_Hamil)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
@@ -456,7 +456,7 @@ nb = size(P0_cheby)
         !----------------------------------------------------------
         !- residual vector ---------------------------
         IF (debug) write(out_unitp,*) 'residual'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         DO j=1,nb_diago
           g = ZERO
           DO i=1,nb_diago
@@ -490,7 +490,7 @@ nb = size(P0_cheby)
         write(out_unitp,*)  ' Converged levels in the windox: ',nb_ConvVec_IN_Window
         write(out_unitp,*)  ' Levels in the window:           ',nb_Vec_IN_Window
         write(out_unitp,*)  ' Convergence ?:                  ',Conv
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !- residual vector and convergence ------------------------
         !----------------------------------------------------------
         !IF (Conv .OR. mf >= para_propa%para_Davidson%Mmax_filter) EXIT
@@ -696,7 +696,7 @@ STOP
   !DO i=1,nb
   !DO j=i,nb
   !  write(out_unitp,*) 'Sij',i,j,dot_product(d0P_cheby(:,j),w_cheby*d0P_cheby(:,i))
-  !  CALL flush_perso(out_unitp)
+  !  flush(out_unitp)
   !END DO
   !END DO
 !-----------------------------------------------------------
@@ -712,7 +712,7 @@ STOP
 
     El = (El-para_H%E0)/para_H%Esc ! to scale the energy between [-1,1]
     IF (debug) write(out_unitp,*) 'l,El',l,El
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
 
     ! l-filter values x weight on the grid
@@ -725,7 +725,7 @@ STOP
     END DO
 
     IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(nb-10:nb,l)))/TEN
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
     !write(out_unitp,*) '========================================='
     !write(out_unitp,*) 'f(:,l)',l
     !write(out_unitp,'(10f10.6)') ,f(:,l)
@@ -738,7 +738,7 @@ STOP
 
   END DO
   IF (debug) write(out_unitp,*) 'chebychev coef: done',nb
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 !-----------------------------------------------------------
 
 !- vector initialization:  q1 -----------
@@ -761,7 +761,7 @@ STOP
        !- chebychev recursion -------------------------------------------
        CALL sub_chebychev_recursion(Tnq1,q1,0,nb-1,para_H)
        IF (debug) write(out_unitp,*) 'chebychev recursion: done',nb
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        !- Coefficient of the chebychev expansion (with the filter)  -----
 
@@ -769,7 +769,7 @@ STOP
        CALL sub_newZ_vectors_withf(z,Tnq1,nb,para_H,para_propa,f)
        nb_diago = count(abs(z(:)%CAvOp)>ONETENTH**9)
        IF (debug) write(out_unitp,*) 'ortho z vectors: done',nb_diago
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
        !- z vectors -------------------------------------------
 
         !- diagonalization -----------------------------------
@@ -783,7 +783,7 @@ STOP
         END DO
         END DO
         !IF (debug) write(out_unitp,*) 'S matrix: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL sub_ana_S(H,nb_diago,max_Sii,max_Sij,.TRUE.)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
@@ -799,7 +799,7 @@ STOP
           END DO
         END DO
         !IF (debug) write(out_unitp,*) 'H matrix: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         CALL sub_hermitic_H(H,nb_diago,non_hermitic,para_H%sym_Hamil)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
@@ -830,7 +830,7 @@ STOP
         !----------------------------------------------------------
         !- residual vector ---------------------------
         IF (debug) write(out_unitp,*) 'residual'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         DO j=1,nb_diago
           g = ZERO
           DO i=1,nb_diago
@@ -864,7 +864,7 @@ STOP
         write(out_unitp,*)  ' Converged levels in the windox: ',nb_ConvVec_IN_Window
         write(out_unitp,*)  ' Levels in the window:           ',nb_Vec_IN_Window
         write(out_unitp,*)  ' Convergence ?:                  ',Conv
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !- residual vector and convergence ------------------------
         !----------------------------------------------------------
         !IF (Conv .OR. mf >= para_propa%para_Davidson%Mmax_filter) EXIT
@@ -1075,7 +1075,7 @@ STOP
        !- chebychev recursion -------------------------------------------
        CALL sub_chebychev_recursion(Tnq1,q1,m0,mf,para_H)
        IF (debug) write(out_unitp,*) 'chebychev recursion: done',mf
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        !- Coefficient of the chebychev expansion (with the filter)  -----
        DO l=1,para_propa%para_Davidson%L_filter
@@ -1084,7 +1084,7 @@ STOP
          El = (El-para_H%E0)/para_H%Esc ! to scale the energy between [-1,1]
 
          IF (debug) write(out_unitp,*) 'l,El',l,El
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
          DO k=0,mf
            f(k,l) = ZERO
 
@@ -1103,7 +1103,7 @@ STOP
            END IF
          END DO
          IF (debug) write(out_unitp,*) 'l,end err of f',l,sum(abs(f(mf-10:mf,l)))/TEN
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
          !write(out_unitp,*) '========================================='
          !write(out_unitp,*) 'f(:,l)',l
          !write(out_unitp,'(10f10.6)') ,f(:,l)
@@ -1126,13 +1126,13 @@ STOP
          STOP
        END DO
        IF (debug) write(out_unitp,*) 'chebychev coef: done',mf
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        !- z vectors --------------------------------------------
        CALL sub_Z_vectors_withf(z,Tnq1,mf,para_H,para_propa,f)
        nb_diago = count(abs(z(:)%CAvOp)>ONETENTH**9)
        IF (debug) write(out_unitp,*) 'ortho z vectors: done',nb_diago
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
        !- z vectors -------------------------------------------
 
         !- diagonalization -----------------------------------
@@ -1146,7 +1146,7 @@ STOP
         END DO
         END DO
         !IF (debug) write(out_unitp,*) 'S matrix: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL sub_ana_S(H,nb_diago,max_Sii,max_Sij,.TRUE.)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
@@ -1162,7 +1162,7 @@ STOP
           END DO
         END DO
         !IF (debug) write(out_unitp,*) 'H matrix: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         CALL sub_hermitic_H(H,nb_diago,non_hermitic,para_H%sym_Hamil)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
@@ -1193,7 +1193,7 @@ STOP
         !----------------------------------------------------------
         !- residual vector ---------------------------
         IF (debug) write(out_unitp,*) 'residual'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         DO j=1,nb_diago
           g = ZERO
           DO i=1,nb_diago
@@ -1227,7 +1227,7 @@ STOP
         write(out_unitp,*)  ' Converged levels in the windox: ',nb_ConvVec_IN_Window
         write(out_unitp,*)  ' Levels in the window:           ',nb_Vec_IN_Window
         write(out_unitp,*)  ' Convergence ?:                  ',Conv
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !- residual vector and convergence ------------------------
         !----------------------------------------------------------
         IF (Conv .OR. mf >= para_propa%para_Davidson%Mmax_filter) EXIT
@@ -1443,13 +1443,13 @@ STOP
        !- chebychev recursion -------------------------------------------
        CALL sub_chebychev_recursion(Tnq1,q1,m0,mf,para_H)
        IF (debug) write(out_unitp,*) 'chebychev recursion: done',mf
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        !- z vectors --------------------------------------------
        CALL sub_Z_vectors(z,Tnq1,m0,mf,para_H,para_propa)
        nb_diago = count(abs(z(:)%CAvOp)>ONETENTH**9)
        IF (debug) write(out_unitp,*) 'ortho z vectors: done',nb_diago
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
        !- z vectors -------------------------------------------
 
         !- diagonalization -----------------------------------
@@ -1463,7 +1463,7 @@ STOP
         END DO
         END DO
         !IF (debug) write(out_unitp,*) 'S matrix: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         CALL sub_ana_S(H,nb_diago,max_Sii,max_Sij,.TRUE.)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
 
@@ -1479,7 +1479,7 @@ STOP
           END DO
         END DO
         !IF (debug) write(out_unitp,*) 'H matrix: done'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         CALL sub_hermitic_H(H,nb_diago,non_hermitic,para_H%sym_Hamil)
         !IF (debug) CALL Write_Mat(H,out_unitp,5)
@@ -1510,7 +1510,7 @@ STOP
         !----------------------------------------------------------
         !- residual vector ---------------------------
         IF (debug) write(out_unitp,*) 'residual'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         DO j=1,nb_diago
           g = ZERO
           DO i=1,nb_diago
@@ -1544,7 +1544,7 @@ STOP
         write(out_unitp,*)  ' Converged levels in the windox: ',nb_ConvVec_IN_Window
         write(out_unitp,*)  ' Levels in the window:           ',nb_Vec_IN_Window
         write(out_unitp,*)  ' Convergence ?:                  ',Conv
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !- residual vector and convergence ------------------------
         !----------------------------------------------------------
         IF (Conv .OR. mf >= para_propa%para_Davidson%Mmax_filter) EXIT
@@ -1754,7 +1754,7 @@ STOP
        phi_j(j) = acos((Lambda-para_H%E0)/para_H%Esc)
      END DO
      IF (debug) write(out_unitp,*) 'phi_j(:): done'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
 !----------------------------------------------------------
 
@@ -1770,7 +1770,7 @@ STOP
         Tnq1(n) = Tnq1(n) - Tnq1(n-2)
       END DO
      IF (debug) write(out_unitp,*) 'chebychev recursion: done'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
       !- chebychev recursion -------------------------------------------
 
@@ -1782,7 +1782,7 @@ STOP
         END DO
       END DO
      IF (debug) write(out_unitp,*) 'z vectors: done'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
       !- z vectors -------------------------------------------
 
       !- z vectors (orthonormalized) -----------------------------------
@@ -1791,7 +1791,7 @@ STOP
 
 
      IF (debug) write(out_unitp,*) 'ortho z vectors: done',nb_diago
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
       !- z vectors -------------------------------------------
 
       !- diagonalization -----------------------------------
@@ -1805,7 +1805,7 @@ STOP
       END DO
       END DO
       !IF (debug) write(out_unitp,*) 'H matrix: done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL sub_ana_S(H,nb_diago,max_Sii,max_Sij,.TRUE.)
 
       !IF (debug) CALL Write_Mat(H,out_unitp,5)
@@ -1823,7 +1823,7 @@ STOP
         END DO
       END DO
       !IF (debug) write(out_unitp,*) 'H matrix: done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL sub_hermitic_H(H,nb_diago,non_hermitic,para_H%sym_Hamil)
       !IF (debug) CALL Write_Mat(H,out_unitp,5)
@@ -1859,7 +1859,7 @@ STOP
       !----------------------------------------------------------
       !- residual vector ---------------------------
       IF (debug) write(out_unitp,*) 'residual'
-      IF (debug) CALL flush_perso(out_unitp)
+      IF (debug) flush(out_unitp)
       DO j=1,nb_diago
           g = ZERO
           DO i=1,nb_diago
@@ -1878,7 +1878,7 @@ STOP
       IF (debug) write(out_unitp,*) 'residual: done'
       write(out_unitp,*)  ' number of converged levels: ',count(convergeResi(1:nb_diago))
 
-      IF (debug) CALL flush_perso(out_unitp)
+      IF (debug) flush(out_unitp)
       !- residual vector and convergence ------------------------
       !----------------------------------------------------------
 
@@ -2044,7 +2044,7 @@ STOP
        Lambda = Lambda + Delta_Lambda
      END DO
      IF (debug) write(out_unitp,*) 'phi_j(:): done'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
 !----------------------------------------------------------
 
@@ -2062,7 +2062,7 @@ STOP
         Tnq1(n) = Tnq1(n) - Tnq1(n-2)
       END DO
      IF (debug) write(out_unitp,*) 'chebychev recursion: done'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
       !- chebychev recursion -------------------------------------------
 
@@ -2074,7 +2074,7 @@ STOP
         END DO
       END DO
      IF (debug) write(out_unitp,*) 'z vectors: done'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
       !- z vectors -------------------------------------------
 
 
@@ -2112,7 +2112,7 @@ STOP
       END DO
       nb_diago = jorth
      IF (debug) write(out_unitp,*) 'ortho z vectors: done',jorth
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
       !- z vectors -------------------------------------------
 
       !- diagonalization -----------------------------------
@@ -2126,7 +2126,7 @@ STOP
       END DO
       END DO
       !IF (debug) write(out_unitp,*) 'H matrix: done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL sub_ana_S(H,nb_diago,max_Sii,max_Sij,.TRUE.)
 
       !IF (debug) CALL Write_Mat(H,out_unitp,5)
@@ -2144,7 +2144,7 @@ STOP
         END DO
       END DO
       !IF (debug) write(out_unitp,*) 'H matrix: done'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL sub_hermitic_H(H,nb_diago,non_hermitic,para_H%sym_Hamil)
       !IF (debug) CALL Write_Mat(H,out_unitp,5)
@@ -2177,7 +2177,7 @@ STOP
       !----------------------------------------------------------
       !- residual vector ---------------------------
       IF (debug) write(out_unitp,*) 'residual'
-      IF (debug) CALL flush_perso(out_unitp)
+      IF (debug) flush(out_unitp)
       DO j=1,nb_diago
           g = ZERO
           psi(j) = ZERO
@@ -2198,7 +2198,7 @@ STOP
       IF (debug) write(out_unitp,*) 'residual: done'
       write(out_unitp,*)  ' number of converged levels: ',count(convergeResi(1:nb_diago))
 
-      IF (debug) CALL flush_perso(out_unitp)
+      IF (debug) flush(out_unitp)
       !- residual vector and convergence ------------------------
       !----------------------------------------------------------
 
@@ -2266,7 +2266,7 @@ STOP
 
      !- chebychev recursion -------------------------------------------
      IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'cheby rec (%): '
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
 
      IF (m0_loc == 0) THEN
         Tnq1(0)  = q1                                              ! => T0=q1
@@ -2284,11 +2284,11 @@ STOP
 
        IF (mod(n-m0,max(1,int((mf-m0)/10))) == 0 .AND. print_level>-1) THEN
          write(out_unitp,'(a,i3)',ADVANCE='no') ' -',(n-m0)*100/(mf-m0)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
      END DO
      IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' end'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
      CALL dealloc_psi(w1)
 
       IF (debug) THEN

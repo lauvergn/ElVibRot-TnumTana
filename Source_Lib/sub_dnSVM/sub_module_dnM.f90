@@ -518,19 +518,19 @@
 
         IF (nderiv_loc >= 0 .AND. associated(dnMat%d0)) THEN
           write(out_unitp,*) 'd0'
-          CALL Write_VecMat(dnMat%d0,out_unitp,5)
+          CALL Write_Mat(dnMat%d0(:,:),out_unitp,5)
         END IF
         IF (nderiv_loc > 0 .AND. associated(dnMat%d1)) THEN
           DO i=1,dnMat%nb_var_deriv
             write(out_unitp,*) 'd1',i
-            CALL Write_VecMat(dnMat%d1(:,:,i),out_unitp,5)
+            CALL Write_Mat(dnMat%d1(:,:,i),out_unitp,5)
           END DO
         END IF
         IF (nderiv_loc > 1 .AND. associated(dnMat%d2)) THEN
           DO i=1,dnMat%nb_var_deriv
           DO j=i,dnMat%nb_var_deriv
             write(out_unitp,*) 'd2',i,j
-            CALL Write_VecMat(dnMat%d2(:,:,i,j),out_unitp,5)
+            CALL Write_Mat(dnMat%d2(:,:,i,j),out_unitp,5)
           END DO
           END DO
         END IF
@@ -539,7 +539,7 @@
           DO j=i,dnMat%nb_var_deriv
           DO k=j,dnMat%nb_var_deriv
             write(out_unitp,*) 'd3',i,j,k
-            CALL Write_VecMat(dnMat%d3(:,:,i,j,k),out_unitp,5)
+            CALL Write_Mat(dnMat%d3(:,:,i,j,k),out_unitp,5)
           END DO
           END DO
           END DO
@@ -576,19 +576,19 @@
 
         IF (nderiv_loc >= 0 .AND. associated(dnMat%d0)) THEN
           write(out_unitp,*) 'd0'
-          CALL Write_VecMat(dnMat%d0,out_unitp,5)
+          CALL Write_Mat(dnMat%d0(:,:),out_unitp,5)
         END IF
         IF (nderiv_loc > 0 .AND. associated(dnMat%d1)) THEN
           DO i=1,dnMat%nb_var_deriv
             write(out_unitp,*) 'd1',i
-            CALL Write_VecMat(dnMat%d1(:,:,i),out_unitp,5)
+            CALL Write_Mat(dnMat%d1(:,:,i),out_unitp,5)
           END DO
         END IF
         IF (nderiv_loc > 1 .AND. associated(dnMat%d2)) THEN
           DO i=1,dnMat%nb_var_deriv
           DO j=i,dnMat%nb_var_deriv
             write(out_unitp,*) 'd2',i,j
-            CALL Write_VecMat(dnMat%d2(:,:,i,j),out_unitp,5)
+            CALL Write_Mat(dnMat%d2(:,:,i,j),out_unitp,5)
           END DO
           END DO
         END IF
@@ -597,7 +597,7 @@
           DO j=i,dnMat%nb_var_deriv
           DO k=j,dnMat%nb_var_deriv
             write(out_unitp,*) 'd3',i,j,k
-            CALL Write_VecMat(dnMat%d3(:,:,i,j,k),out_unitp,5)
+            CALL Write_Mat(dnMat%d3(:,:,i,j,k),out_unitp,5)
           END DO
           END DO
           END DO

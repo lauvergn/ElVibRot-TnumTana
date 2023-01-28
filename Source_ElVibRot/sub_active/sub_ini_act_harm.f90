@@ -300,7 +300,7 @@
          print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
         write(out_unitp,'(a)') 'Grid (%): [--0-10-20-30-40-50-60-70-80-90-100]'
         write(out_unitp,'(a)',ADVANCE='no') 'Grid (%): ['
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       max_Sii = ZERO
@@ -357,7 +357,7 @@
         END IF
       END DO
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       !- END multidimentional loop ---------------------------------------
       !-------------------------------------------------------------------
 
@@ -491,7 +491,7 @@
 
   END DO
   write(out_unitp,*) '   Tuning with ',max_nq,' grid points'
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
   CALL dealloc_OldParam(OldPara)
   !now we have an optimal max_nq (about 10 seconds of calculation)
 !-----------------------------------------------------
@@ -504,7 +504,7 @@
   DO i_maxth=1,Grid_maxth
 
     IF (debug) write(out_unitp,*) '   i_maxth ',i_maxth
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     !$OMP   PARALLEL                                  &
     !$OMP   DEFAULT(NONE)                             &
@@ -527,7 +527,7 @@
 
     RealTime(i_maxth) = Delta_RealTime(GridTime)
     write(out_unitp,*) 'With ',i_maxth,'threads, Delta Real Time',RealTime(i_maxth)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
     IF (RealTime(i_maxth) < Opt_RealTime) THEN
       IF (RealTime(i_maxth) > 0) THEN
         Opt_RealTime   = RealTime(i_maxth)

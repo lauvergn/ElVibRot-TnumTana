@@ -630,7 +630,7 @@
 
       cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
       CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      flush(no)
 
       CALL dealloc_psi(w1)
       CALL dealloc_psi(w2)
@@ -748,7 +748,7 @@ END SUBROUTINE march_Euler
       IF(MPI_id==0) THEN
         cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       ENDIF
 
       IF(keep_MPI) THEN
@@ -906,7 +906,7 @@ SUBROUTINE march_RK4(T,no,WP,WP0,para_H,para_propa)
       IF(MPI_id==0) THEN
         cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       ENDIF
 
       IF(keep_MPI) THEN
@@ -1077,7 +1077,7 @@ SUBROUTINE march_RK4_old(T,no,WP,WP0,para_H,para_propa)
       IF(MPI_id==0) THEN
         cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       ENDIF
 
       IF(keep_MPI) THEN
@@ -1259,7 +1259,7 @@ END SUBROUTINE march_RK4_old
       IF(MPI_id==0) THEN
         cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       ENDIF
 
 !----------------------------------------------------------
@@ -1409,7 +1409,7 @@ END SUBROUTINE march_RK4_old
       IF(MPI_id==0) THEN
         cdot = Calc_AutoCorr(WP0,WP,para_propa,T,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       ENDIF
 
 !----------------------------------------------------------
@@ -2211,11 +2211,11 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           cdot = cdot * exp(-EYE*phase)
           CALL Write_AutoCorr(no,T+microT,cdot)
         END DO
-        CALL flush_perso(no)
+        flush(no)
       ELSE
         cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       END IF
 
 
@@ -2378,7 +2378,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       psi   = psi * exp(-EYE*phase)
       cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
       CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      flush(no)
 
 
       ! deallocation
@@ -2604,7 +2604,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       psi   = psi * exp(-EYE*phase)
       cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
       CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      flush(no)
 
 
       ! deallocation
@@ -2867,7 +2867,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       psi   = psi * exp(-EYE*phase)
       cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
       CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      flush(no)
 
 
       ! deallocation
@@ -3072,11 +3072,11 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
           cdot = cdot * exp(-EYE*phase)
           CALL Write_AutoCorr(no,T+microT,cdot)
         END DO
-        CALL flush_perso(no)
+        flush(no)
       ELSE
         cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       END IF
       ENDIF
 
@@ -3773,11 +3773,11 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 !        cdot = cdot * cmplx( cos(phase),-sin(phase),kind=Rkind)
 !        CALL Write_AutoCorr(no,T+microT,cdot)
 !      END DO
-!      CALL flush_perso(no)
+!      flush(no)
 
       cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
       CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      flush(no)
 
 
       ! deallocation
@@ -3983,7 +3983,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
       CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      flush(no)
 
 
 !-----------------------------------------------------------
@@ -4082,7 +4082,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
           cdot = Calc_AutoCorr(psi0,psi,para_propa,T+microT,Write_AC=.FALSE.)
           CALL Write_AutoCorr(no,T+microT,cdot)
-          CALL flush_perso(no)
+          flush(no)
 
         END DO
       ELSE
@@ -4115,7 +4115,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         CALL dealloc_NParray(HPsiOnSpectral,'HPsiOnSpectral',name_sub)
         cdot = Calc_AutoCorr(psi0,psi,para_propa,T,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,T + para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       END IF
 
 
@@ -4419,7 +4419,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         !write(out_unitp,*) 'T,cdot,no,type_corr',T+microT,cdot,no,para_propa%type_corr
         IF(MPI_id==0) CALL Write_AutoCorr(no,T+microT,cdot)
       END DO
-      IF(MPI_id==0) CALL flush_perso(no)
+      IF(MPI_id==0) flush(no)
       ENDIF ! keep_MPI
 
 !-----------------------------------------------------------
@@ -4642,7 +4642,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         !write(out_unitp,*) 'T,cdot,no,type_corr',T+microT,cdot,no,para_propa%type_corr
         IF(MPI_id==0) CALL Write_AutoCorr(no,T+microT,cdot)
       END DO
-      IF(MPI_id==0) CALL flush_perso(no)
+      IF(MPI_id==0) flush(no)
       ENDIF ! keep_MPI
 
       CALL dealloc_psi(w1)
@@ -5558,7 +5558,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
          write(out_unitp,*) 'Hmax',para_poly%Hmax
          write(out_unitp,*) 'DHmax',para_poly%DHmax
          write(out_unitp,*) 'Hmin',para_poly%Hmin
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -5591,7 +5591,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         write(out_unitp,*) 'deltaE',para_poly%deltaE
         write(out_unitp,*) 'E0,Esc',para_poly%E0,para_poly%Esc
         write(out_unitp,*) 'alpha (r)',para_poly%alpha
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     ------------------------------------------------------
 
@@ -5619,7 +5619,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
          write(out_unitp,*) 'END ',name_sub
        END IF
 !-----------------------------------------------------------
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        END SUBROUTINE initialisation1_poly
 
@@ -5653,14 +5653,14 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
          write(out_unitp,*) 'BEGINNING cofcheb'
          write(out_unitp,*) 'r,tol',r,tol
          write(out_unitp,*) 'nchmx',nchmx
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
 !----------------------------------------------
       ncheb = max(ONE,r)
       IF (debug) write(out_unitp,*) 'r, ncheb : ',r,ncheb
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (ncheb > nchmx) THEN
          write(out_unitp,*) ' ERROR in cofcheb'
@@ -5675,7 +5675,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       IF (debug) THEN
         write(out_unitp,*) 'Chebychev coefficients',ncheb
         write(out_unitp,2009) (i,cf(i),i=1,ncheb)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -----------------------------------------
 !----------------------------------------------
@@ -5719,7 +5719,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         write(out_unitp,*) 'END cofcheb'
       END IF
 !-----------------------------------------------------------
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE cofcheb
 !==============================================================

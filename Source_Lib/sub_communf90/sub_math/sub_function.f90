@@ -1660,7 +1660,7 @@
        DO kl=1,nn
          z = z + F(kl) * v(x,ndim,kl,n,ntyp)
          !write(out_unitp,*) z,F(kl),ndim,nn,n
-         !CALL flush_perso(6)
+         !flush(6)
        END DO
 
        vgene_inter2 = z

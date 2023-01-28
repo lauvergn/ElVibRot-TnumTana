@@ -289,7 +289,7 @@
 
               write(out_unitp,*) ' calculation Mu|WP0> with: ',para_Dip(ip)%name_Op
               write(out_unitp,*) ' th_WP0: ',para_propa%para_WP0%th_WP0
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
 
               WP0tmp = WP0(1)
               CALL sub_OpPsi(WP0tmp,MuWP0,para_Dip(ip))
@@ -355,7 +355,7 @@
             write(out_unitp,*) '================================================='
             write(out_unitp,*)
           ENDIF
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF ! .NOT. para_ana%control .AND. para_propa%type_WPpropa /=100
 
         !================================================================
@@ -661,7 +661,7 @@
             write(out_unitp,*)
           ENDIF
         END IF ! for .NOT. para_H%cplx .AND. para_ana%CRP > 0
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         !================================================================
         !===== Diagonalisation ==========================================
@@ -842,7 +842,7 @@
             write(out_unitp,*)
           ENDIF
         END IF ! for para_ana%davidson .OR. para_ana%arpack .OR. para_ana%filter
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !===============================================================
         !===============================================================
 
@@ -861,12 +861,12 @@
                               para_ana,para_intensity,para_AllOp,const_phys)
           ENDIF
 
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           IF (.NOT. para_H%cplx .AND. para_ana%VibRot) THEN
             CALL sub_VibRot(Tab_Psi,para_ana%max_ana,para_H,para_ana)
           END IF
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           !===============================================================
           ! Spectral representation of operator
@@ -885,7 +885,7 @@
                                      para_AllOp%tab_Op(iOp),.TRUE.,print_mat)
 
                 write(out_unitp,*) '==========================================='
-                CALL flush_perso(out_unitp)
+                flush(out_unitp)
               END IF
             END DO
           END IF
@@ -977,16 +977,16 @@
         ELSE ! for intensity_only
           write(out_unitp,*) 'write restart file for intensity: ',                     &
                  para_intensity%file_resart_int%name
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           write(nio_res_int,*) para_H%nb_tot,para_ana%max_ana
           write(nio_res_int,*) 'ene'
           CALL Write_Vec(para_H%Rdiag,nio_res_int,5,Rformat='e30.23')
           write(nio_res_int,*) 'psi'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           CALL Write_Mat(para_H%Rvp,nio_res_int,5,Rformat='e30.23')
-          CALL flush_perso(nio_res_int)
+          flush(nio_res_int)
         END IF ! for intensity_only
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 !         -------------------------------------------------------------------
 
         iOp = 2
@@ -1006,7 +1006,7 @@
         IF(MPI_id==0) close(nio_res_int)
         nullify(para_Dip)
       END IF !for .NOT. para_H%cplx .AND. para_ana%intensity
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. para_ana%Psi_ScalOp) THEN
         write(out_unitp,*)
@@ -1032,7 +1032,7 @@
 
         nullify(para_Dip)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (.NOT. para_H%cplx .AND. para_ana%NLO) THEN
         write(out_unitp,*)
@@ -1058,7 +1058,7 @@
 
         nullify(para_Dip)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !=====================================================================
 !=====================================================================

@@ -108,7 +108,7 @@
       IF (debug) THEN
         write(out_unitp,*)
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !-----------------------------------------------------------
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
@@ -132,7 +132,7 @@
             write(out_unitp,*) '======================================='
             write(out_unitp,*) '======================================='
             write(out_unitp,*) "iterm_Op,iv",iterm_Op,iv
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
           CALL sub_OpPsi(Tab_Psi(iv),OpPsi,para_H,MatRV%derive_termQact(:,iterm_Op))
@@ -145,12 +145,12 @@
         END DO
       END DO
       IF (debug) CALL Write_d0MatOp(MatRV)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !SET Rotational basis
       CALL init_RotBasis_Param(para_H%BasisnD%RotBasis,Jrot)
       IF (debug) CALL Write_RotBasis_Param(para_H%BasisnD%RotBasis)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nb_bRot = para_H%BasisnD%RotBasis%nb_Rot
       nb_bVR  = nb_psi*nb_bRot
@@ -214,7 +214,7 @@
         IF (print_level>-1 .AND. MPI_id==0) write(out_unitp,21) non_hermitic*auTOcm_inv
  21     format(' Hamiltonien: ',f16.12,' cm-1')
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       IF (para_H%sym_Hamil) THEN
@@ -257,7 +257,7 @@
         write(out_unitp,'(A,10f5.2)') ' densVib:',rho_V(1:min(10,nb_psi))
 
       END DO
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL dealloc_NParray(H_VR,  'H_VR',  name_sub)
       CALL dealloc_NParray(Vec_VR,'Vec_VR',name_sub)
@@ -269,7 +269,7 @@
       IF (debug) THEN
       END IF
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !----------------------------------------------------------
 

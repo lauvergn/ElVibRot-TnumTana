@@ -231,12 +231,12 @@
            write(out_unitp,*) 'BEGINNING ',name_sub
            write(out_unitp,*) 'WARNING: "SymAbelian" is not associated!'
            write(out_unitp,*) 'END ',name_sub
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
            RETURN
          END IF
 
          write(out_unitp,*) 'BEGINNING ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
 
          write(out_unitp,*) 'nb',P_SymAbelian%nb
@@ -252,7 +252,7 @@
          END IF
 
          write(out_unitp,*) 'END ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
        END SUBROUTINE Write_SymAbelian
 

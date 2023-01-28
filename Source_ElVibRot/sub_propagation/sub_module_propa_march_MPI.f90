@@ -235,13 +235,13 @@ MODULE mod_march_MPI
         cdot=cdot*exp(-EYE*phase)
         IF(MPI_id==0) CALL Write_AutoCorr(no,TT+micro_T,cdot)
       ENDDO 
-      CALL flush_perso(no)
+      flush(no)
     ELSE
       !cdot=Calc_AutoCorr_SR_MPI(psi0,psi,para_propa,TT,Write_AC=.FALSE.)
       IF(MPI_id==0) THEN
         cdot=Calc_AutoCorr(psi0,psi,para_propa,TT,Write_AC=.FALSE.)
         CALL Write_AutoCorr(no,TT+para_propa%WPdeltaT,cdot)
-        CALL flush_perso(no)
+        flush(no)
       ENDIF
     ENDIF
 
@@ -487,11 +487,11 @@ MODULE mod_march_MPI
         cdot=cdot*exp(-EYE*phase)
         CALL Write_AutoCorr(no,TT+micro_T,cdot)
       ENDDO 
-      CALL flush_perso(no)
+      flush(no)
     ELSE
       cdot=Calc_AutoCorr_SR_MPI(psi0,psi,para_propa,TT,Write_AC=.FALSE.)
       CALL Write_AutoCorr(no,TT+para_propa%WPdeltaT,cdot)
-      CALL flush_perso(no)
+      flush(no)
     ENDIF
 
     ! deallocation  

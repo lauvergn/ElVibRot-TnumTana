@@ -69,7 +69,7 @@
 
 
           logical :: init_grid,init_spline,allo_grid
-          TYPE (param_file) :: file
+          TYPE (File_t) :: file
           integer :: nb_T
           real (kind=Rkind) :: Tmin,Tmax,DeltaT
           real (kind=Rkind), pointer :: grid_T(:) => null()    ! grid_T(nb_T)
@@ -339,7 +339,7 @@
         write(out_unitp,*) 'E0',para_field%E0(:,1:para_field%nb_pulse)
         write(out_unitp,*) 'w',para_field%w(:,1:para_field%nb_pulse)
         write(out_unitp,*) 't1',para_field%t1(:,1:para_field%nb_pulse)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 
@@ -423,7 +423,7 @@
             STOP
           END IF
           IF (debug) write(out_unitp,*) ' field : ',i,T,para_field%grid_E(i,:)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 !         T = T + abs(WPdeltaT)
         END DO
         close(nio)

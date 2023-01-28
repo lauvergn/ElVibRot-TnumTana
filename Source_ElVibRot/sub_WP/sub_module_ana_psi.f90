@@ -84,7 +84,7 @@ SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia,Write_psi)
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
    END IF
 !-------------------------------------------------------
 
@@ -106,7 +106,7 @@ SUBROUTINE sub_analyze_tab_Psi(tab_psi,ana_psi,adia,Write_psi)
 !----------------------------------------------------------
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !----------------------------------------------------------
 END SUBROUTINE sub_analyze_tab_Psi
@@ -156,7 +156,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'ana_psi%GridDone',ana_psi%GridDone
     CALL ecri_psi(psi=psi)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   IF (adia .AND. .NOT. ana_psi%GridDone) STOP 'adia=t and GridDone=f'
 
@@ -295,7 +295,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
   !----------------------------------------------------------------------
 
   !----------------------------------------------------------------------
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   IF (psi%nb_bi > 1 .AND. .NOT. ana_psi%propa) THEN
 
@@ -441,7 +441,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
   END IF
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 END SUBROUTINE sub_analyze_psi
 !================================================================
@@ -476,7 +476,7 @@ END SUBROUTINE sub_analyze_psi
       !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING sub_Qmoy'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -567,7 +567,7 @@ END SUBROUTINE sub_analyze_psi
       !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -761,7 +761,7 @@ END SUBROUTINE sub_analyze_psi
       END DO
       END DO
  21   format(2a,' ',f0.4,' ',2(i0,' '),100(' ',f0.3))
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL dealloc_OldParam(OldPara)
 
@@ -820,7 +820,7 @@ END SUBROUTINE sub_analyze_psi
       integer :: nDval0ib(psi%BasisnD%nb_basis)
 
 !------ working variables ---------------------------------
-      TYPE (param_file)              :: file_psi
+      TYPE (File_t)              :: file_psi
       integer                        :: nio,nqi,nqj
       character (len=:), allocatable  :: state_name
 
@@ -1092,7 +1092,7 @@ END SUBROUTINE sub_analyze_psi
 
 
 !------ working variables ---------------------------------
-      TYPE (param_file)              :: file_Rho
+      TYPE (File_t)              :: file_Rho
       integer                        :: i_basis_act1,j_basis_act1,nioRho
       real (kind=Rkind), allocatable :: rho2D(:,:,:,:)
       real (kind=Rkind), allocatable :: rho1D(:,:,:)
@@ -1394,7 +1394,7 @@ END SUBROUTINE sub_analyze_psi
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         CALL RecWrite_basis(psi%BasisnD,write_all=.TRUE.)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1455,7 +1455,7 @@ END SUBROUTINE sub_analyze_psi
         write(out_unitp,*) 'nb_bi,nb_be',psi%nb_bi,psi%nb_be
         write(out_unitp,*) 'nb_bie',psi%nb_bi*psi%nb_be
         !write(out_unitp,*) 'tab_WeightChannels',tab_WeightChannels
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       !IF (ana_psi%adia) RETURN
@@ -1560,7 +1560,7 @@ END SUBROUTINE sub_analyze_psi
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'asso psi%BasisnD',associated(psi%BasisnD)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       IF (psi%nb_baie*psi%nb_bRot /= psi%nb_tot .AND.                   &
@@ -1725,7 +1725,7 @@ END SUBROUTINE sub_analyze_psi
       write(out_unitp,*) 'nb_baie,nb_tot',psi%nb_baie,psi%nb_tot
     END IF
 !---------------------------------------------------------
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
     IF (psi%nb_baie /= psi%nb_tot) RETURN
     !IF (ana_psi%adia) RETURN
 
@@ -1812,7 +1812,7 @@ END SUBROUTINE sub_analyze_psi
           write(out_unitp,21) state_name // ' ',trim(info),iq,T,        &
                             weight1Dact(iq,1:min(max_1D,ndim_AT_ib(iq)))
  21       format(a,a,i3,1x,f17.4,300(1x,e10.3))
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           !---- RD analysis --------------------------------------------
           ! RD analysis
@@ -1830,7 +1830,7 @@ END SUBROUTINE sub_analyze_psi
                 n = min(ndim_AT_ib(iq),size(CRD,dim=1))
                 write(out_unitp,21) state_name // 'new',trim(info),iq,T,  &
                             real([(CRD(i,i),i=1,min(max_1D,n))],kind=Rkind)
-                CALL flush_perso(out_unitp)
+                flush(out_unitp)
                 CALL dealloc_NParray(CRD,'CRD',name_sub)
               END IF
 
@@ -1839,7 +1839,7 @@ END SUBROUTINE sub_analyze_psi
                 weight1Dact(iq,1:n) = real([(CRDcontrac(i,i),i=1,n)],kind=Rkind)
                 write(out_unitp,21) state_name // 'c',trim(info),iq,T,  &
                            weight1Dact(iq,1:min(max_1D,n))
-                CALL flush_perso(out_unitp)
+                flush(out_unitp)
                 CALL dealloc_NParray(CRDcontrac,'CRDcontrac',name_sub)
               END IF
             ELSE
@@ -1849,7 +1849,7 @@ END SUBROUTINE sub_analyze_psi
                 !n = min(ndim_AT_ib(iq),size(RD,dim=1))
                 !write(out_unitp,21) state_name // 'new',trim(info),iq,T,  &
                 !                      [(RD(i,i),i=1,min(max_1D,n))]
-                !CALL flush_perso(out_unitp)
+                !flush(out_unitp)
                 CALL dealloc_NParray(RD,'RD',name_sub)
               END IF
 
@@ -1858,7 +1858,7 @@ END SUBROUTINE sub_analyze_psi
                 weight1Dact(iq,1:n) = [(RDcontrac(i,i),i=1,n)]
                 write(out_unitp,21) state_name // 'c',trim(info),iq,T,  &
                            weight1Dact(iq,1:min(max_1D,n))
-                CALL flush_perso(out_unitp)
+                flush(out_unitp)
                 CALL dealloc_NParray(RDcontrac,'RDcontrac',name_sub)
               END IF
             END IF
@@ -1877,7 +1877,7 @@ END SUBROUTINE sub_analyze_psi
         END DO
         write(out_unitp,'(1X,i0)') max_indGr(size(max_indGr))
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       !write(out_unitp,*) 'max_RedDensity
@@ -1894,7 +1894,7 @@ END SUBROUTINE sub_analyze_psi
       END DO
       !write(out_unitp,*) 'max_RedDensity ',ana_psi%max_RedDensity(:)
       CALL Write_Vec(ana_psi%max_RedDensity,out_unitp,6,Rformat='e9.2',info='max_RedDensity of ' // state_name)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
     END DO
     END DO
@@ -2280,7 +2280,7 @@ END SUBROUTINE sub_analyze_psi
     write(out_unitp,*) 'alloc tab_WeightChannels',allocated(tab_WeightChannels)
     !write(out_unitp,*) 'psi'
     !CALL ecri_psi(psi=psi)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-------------------------------------------------------
 
@@ -3066,8 +3066,8 @@ END SUBROUTINE Channel_weight_SG4_basis
       END DO
       write(998,*)
       write(999,*)
-      CALL flush_perso(998)
-      CALL flush_perso(999)
+      flush(998)
+      flush(999)
 
       CALL dealloc_NParray(w_ei,"w_ei",name_sub)
       CALL dealloc_NParray(Ek_ei,"Ek_ei",name_sub)

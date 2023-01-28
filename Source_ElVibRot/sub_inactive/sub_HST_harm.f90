@@ -335,7 +335,7 @@
           IF (mod(iq,max(1,int(para_AllOp%tab_Op(1)%nb_qa/10))) == 0 .AND. MPI_id==0)  &
             write(out_unitp,'(a)',ADVANCE='no') '---'
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------
       !-----------------------------------------------------------
@@ -564,7 +564,7 @@
             CALL Write_Mat(d0MatHADAOp(iOp)%ImVal(:,:),out_unitp,5)
           END IF
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !-------------------------------------------------------
 
 !       -----------------------------------------------------
@@ -574,7 +574,7 @@
 !       -----------------------------------------------------
 
         CALL RecWrite_basis(Basis2n)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -644,7 +644,7 @@
 
         write(out_unitp,13) Qact(1:nb_act1),pot0_corgrad
  13     format('pot0_corgrad',10(' ',f10.6))
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !-----------------------------------------------------------------
@@ -673,7 +673,7 @@
       nq = get_nq_FROM_basis(Basis2n)
       IF (print_level > 0 .AND. nq > nq_write_HADA) &
                 write(out_unitp,'(a)',ADVANCE='no') 'Grid_HADA (%): 0'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       DO i_point=1,nq
@@ -683,7 +683,7 @@
 
           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                  &
               int(real(i_point,kind=Rkind)*HUNDRED/real(nq,kind=Rkind))
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
 
@@ -833,7 +833,7 @@
       END DO
       IF (print_level > 0 .AND. nq > nq_write_HADA)                     &
                            write(out_unitp,'(a)',ADVANCE='yes') ' - 100'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !     --- END Gauss-Hermite quadrature loop ---------------------
 !     -------------------------------------------------------
@@ -871,7 +871,7 @@
             CALL Write_Mat(d0MatHADAOp(iOp)%ImVal(:,:),out_unitp,5)
           END IF
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !     ------ free memory -----------------------------------------

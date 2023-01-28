@@ -235,7 +235,7 @@
           write(out_unitp,'(a,l1)' ) ' inTOout:               ',Qtransfo%inTOout
           write(out_unitp,'(a)'   )  '------------------------------------------'
         ENDIF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         name_transfo = Qtransfo%name_transfo
         CALL string_uppercase_TO_lowercase(name_transfo)
@@ -786,7 +786,7 @@
 
 
        !write(nio,*) '""'
-        CALL flush_perso(nio)
+        flush(nio)
       END SUBROUTINE Write_list_Qtransfo
 
       SUBROUTINE dealloc_Qtransfo(Qtransfo)
@@ -800,7 +800,7 @@
         name_transfo = Qtransfo%name_transfo
         IF (debug) THEN
           write(out_unitp,*) 'BEGINNING : ',name_sub,' : ',name_transfo
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         Qtransfo%print_done      = .FALSE.
@@ -911,7 +911,7 @@
 
         IF (debug) THEN
           write(out_unitp,*) 'END : ',name_sub,' : ',name_transfo
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
       END SUBROUTINE dealloc_Qtransfo
 
@@ -991,7 +991,7 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'name_transfo: ',Qtransfo1%name_transfo
         CALL Write_Qtransfo(Qtransfo1)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -----------------------------------------------------------------
       Qtransfo2%print_done      = .FALSE.
@@ -1197,7 +1197,7 @@
       IF (debug) THEN
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -----------------------------------------------------------------
       END SUBROUTINE Qtransfo1TOQtransfo2
@@ -1488,14 +1488,14 @@
           write(out_unitp,*) 'nb_Qin,nb_Qout',                            &
                            Qtransfo%nb_Qin,Qtransfo%nb_Qout
 
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           write(out_unitp,*) '---------------------------------------'
           IF (associated(Qtransfo%name_Qout) .AND. associated(Qtransfo%type_Qout)) THEN
             DO i_Q=1,Qtransfo%nb_Qout
               write(out_unitp,*) 'i_Q,name_Qout,type_Qout',i_Q," ",       &
                      trim(Qtransfo%name_Qout(i_Q)),                       &
                      Qtransfo%type_Qout(i_Q)
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
 
             END DO
           ELSE
@@ -1628,7 +1628,7 @@
         END SELECT
         write(out_unitp,*) 'END ',name_sub
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END SUBROUTINE Write_Qtransfo
 !===============================================================================
 

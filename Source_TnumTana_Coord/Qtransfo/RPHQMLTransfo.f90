@@ -139,7 +139,7 @@ SUBROUTINE Read_RPHQMLTransfo(RPHQMLTransfo,nb_Qin,option)
       STOP
     END IF
   END DO
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
   RPHQMLTransfo%nb_inact21_out  = count(RPHQMLTransfo%list_act_OF_Qout(:) == 21)
   RPHQMLTransfo%nb_act1_in      = nb_act1
@@ -287,7 +287,7 @@ IMPLICIT NONE
     write(out_unitp,*) 'list_QoutTOQin',RPHQMLTransfo%list_QMLMapping(:)
   END IF
   write(out_unitp,*) 'END ',name_sub
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 END SUBROUTINE Write_RPHQMLTransfo
 
 
@@ -308,7 +308,7 @@ IMPLICIT NONE
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'RPHQMLTransfo1'
     CALL Write_RPHQMLTransfo(RPHQMLTransfo1)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !---------------------------------------------------------------------
 
@@ -346,7 +346,7 @@ IMPLICIT NONE
     write(out_unitp,*) 'RPHTransfo2'
     CALL Write_RPHQMLTransfo(RPHQMLTransfo2)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !---------------------------------------------------------------------
 
@@ -398,7 +398,7 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
 
     write(out_unitp,*) 'dnQin'
     CALL Write_dnVec(dnQin,nderiv=nderiv_debug)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !---------------------------------------------------------------------
 
@@ -499,7 +499,7 @@ SUBROUTINE calc_RPHQMLTransfo(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
     write(out_unitp,*) 'dnQout'
     CALL Write_dnVec(dnQout,nderiv=nderiv_debug)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !---------------------------------------------------------------------
 
@@ -549,7 +549,7 @@ SUBROUTINE calc_RPHQMLTransfo_v0(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
 
     write(out_unitp,*) 'dnQin'
     CALL Write_dnVec(dnQin,nderiv=nderiv_debug)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !---------------------------------------------------------------------
 
@@ -645,7 +645,7 @@ SUBROUTINE calc_RPHQMLTransfo_v0(dnQin,dnQout,RPHQMLTransfo,nderiv,inTOout)
     write(out_unitp,*) 'dnQout'
     CALL Write_dnVec(dnQout,nderiv=nderiv_debug)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !---------------------------------------------------------------------
 

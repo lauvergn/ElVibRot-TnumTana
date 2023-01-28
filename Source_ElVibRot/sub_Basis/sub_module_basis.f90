@@ -183,7 +183,7 @@ MODULE mod_basis
       IF (debug) THEN
         write(out_unitp,*) 'nb_OptParam ',para_FOR_optimization%nb_OptParam
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE Set_basis_para_FOR_optimization
@@ -225,7 +225,7 @@ MODULE mod_basis
       !-----------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
     END FUNCTION get_nb_TDParam_FROM_basis
@@ -307,7 +307,7 @@ MODULE mod_basis
       !-----------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
     END SUBROUTINE Set_TDParam_FROM_basis
@@ -381,7 +381,7 @@ MODULE mod_basis
       !-----------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
     END SUBROUTINE Get_TDParam_FROM_basis
@@ -427,7 +427,7 @@ MODULE mod_basis
         write(out_unitp,*) 'No construct for ',basis_primi%name
         IF (debug) write(out_unitp,*) 'No basis set construct'
         IF (debug) write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         RETURN
       END IF
       write(out_unitp,*) 'Construct for ',basis_primi%name
@@ -739,11 +739,11 @@ MODULE mod_basis
       !write(out_unitp,*) 'x (grid points)',basis_primi%x
 
       IF (basis_primi%xPOGridRep_done) RETURN
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !     - d1b => d1BasisRep and  d2b => d2BasisRep ------------
       CALL sub_dnGB_TO_dnBB(basis_primi)
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 !     - d1b => dnBGG%d1 and  d2b => dnBGG%d2 ------------
       CALL sub_dnGB_TO_dnGG(basis_primi)
 
@@ -775,7 +775,7 @@ MODULE mod_basis
           CALL RecWrite_basis(basis_primi)
         END IF
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -1019,7 +1019,7 @@ MODULE mod_basis
           write(out_unitp,*) ' contraction basis'
           write(out_unitp,*)
           CALL Write_Mat(Mat_read,out_unitp,nb_col)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !       -------------------------------------------------
         IF (basis_set%read_contrac_file) close(nio)
@@ -2081,7 +2081,7 @@ MODULE mod_basis
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'nb,nq',basis_set%nb,nq
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2240,7 +2240,7 @@ MODULE mod_basis
 
         write(out_unitp,*) 'dnRGB'
         CALL write_dnSVM(basis_set%dnRGB)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2270,7 +2270,7 @@ MODULE mod_basis
           IF (debug) THEN
             write(out_unitp,*) 'd0bxd0bT'
             CALL Write_VecMat(d0bxd0bT,out_unitp,5)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
           epsi = ONETENTH**10
@@ -2290,7 +2290,7 @@ MODULE mod_basis
 
             IF (debug) THEN
               write(out_unitp,*) 'diago : ValP(:)',ValP(:)
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
             d0bxd0bT(:,:) = ZERO
             DO i=1,nb
@@ -2328,7 +2328,7 @@ MODULE mod_basis
           IF (debug) THEN
             write(out_unitp,*) 'd0bxd0bT_inv'
             CALL Write_VecMat(d0bxd0bT_inv,out_unitp,5)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
 
@@ -2337,7 +2337,7 @@ MODULE mod_basis
           IF (debug) THEN
             write(out_unitp,*) 'True d0b_pseudoInv'
             CALL Write_VecMat(d0b_pseudoInv,out_unitp,5)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
         ELSE
 
@@ -2352,7 +2352,7 @@ MODULE mod_basis
           IF (debug) THEN
             write(out_unitp,*) 'Standard d0b_pseudoInv'
             CALL Write_VecMat(d0b_pseudoInv,out_unitp,5)
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
         END IF
 
@@ -2362,7 +2362,7 @@ MODULE mod_basis
           !write(out_unitp,*) 'dnRGG%d0'
           !CALL Write_VecMat(basis_set%dnRGG%d0,out_unitp,5)
           write(out_unitp,*) 'dnRGG%d0 done'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         IF (.NOT. associated(basis_set%dnRGB%d1) .OR.                   &
@@ -2383,7 +2383,7 @@ MODULE mod_basis
           !  CALL Write_VecMat(basis_set%dnRGG%d1(:,:,i),out_unitp,5)
           END DO
           write(out_unitp,*) 'dnRGG%d1 done'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         DO i=1,basis_set%ndim
@@ -2393,14 +2393,14 @@ MODULE mod_basis
         END DO
         IF (debug) THEN
           write(out_unitp,*) 'dnRGG%d2 done'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         IF (Check) THEN
           IF (debug) THEN
             write(out_unitp,*) '-------------------------------------------'
             write(out_unitp,*) 'Check dnRGG, nb,nq',nb,nq
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
           Check_bGB = basis_set%dnRGB%d0(:,1:nb)-matmul(basis_set%dnRGG%d0,basis_set%dnRGB%d0(:,1:nb))
           Max_err_Check_bGB = maxval(abs(Check_bGB))
@@ -2408,7 +2408,7 @@ MODULE mod_basis
             write(out_unitp,'(a,4x,e9.2)') 'Check_bGB%d0',maxval(abs(Check_bGB))
             !CALL Write_VecMat(Check_bGB,out_unitp,5)
           END IF
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           DO i=1,basis_set%ndim
             Check_bGB = basis_set%dnRGB%d1(:,1:nb,i)-matmul(basis_set%dnRGG%d1(:,:,i),basis_set%dnRGB%d0(:,1:nb))
@@ -2418,7 +2418,7 @@ MODULE mod_basis
               !CALL Write_VecMat(Check_bGB,out_unitp,5)
             END IF
           END DO
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           DO i=1,basis_set%ndim
           DO j=1,basis_set%ndim
@@ -2431,7 +2431,7 @@ MODULE mod_basis
           END DO
           END DO
           IF (debug) write(out_unitp,*) '-------------------------------------------'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           IF (Max_err_Check_bGB > ONETENTH**6) THEN
             write(out_unitp,*) 'ERROR in ',name_sub
@@ -2454,7 +2454,7 @@ MODULE mod_basis
       IF (debug) THEN
         CALL alloc_dnMat(basis_set%dnRGG)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       END SUBROUTINE sub_dnGB_TO_dnGG
@@ -3584,7 +3584,7 @@ END SUBROUTINE pack_basis_old
          write(out_unitp,*) 'BasisnD%SparseGrid_type',BasisnD%SparseGrid_type
          write(out_unitp,*) 'BasisnD%packed_done',BasisnD%packed_done
          write(out_unitp,*) 'iq',iq
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -3656,7 +3656,7 @@ END SUBROUTINE pack_basis_old
         write(out_unitp,*) ' rhonD',rhonD
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -------------------------------------------------------
 
@@ -3811,7 +3811,7 @@ END SUBROUTINE pack_basis_old
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'BEGINNING ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
       !write(out_unitp,*) ' in ',name_sub,'iq',iq
@@ -3907,7 +3907,7 @@ END SUBROUTINE pack_basis_old
         write(out_unitp,*) ' Qbasis, x',x
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -------------------------------------------------------
 
@@ -3940,7 +3940,7 @@ END SUBROUTINE pack_basis_old
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     CALL Write_nDindex(nDind_DPG,' in ' // name_sub // ': ')
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------
 
@@ -3968,7 +3968,7 @@ END SUBROUTINE pack_basis_old
     write(out_unitp,*) ' Qbasis, x',x
     write(out_unitp,*)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 ! -------------------------------------------------------
 
@@ -4004,7 +4004,7 @@ END SUBROUTINE pack_basis_old
     write(out_unitp,*) 'nb_act1',mole%nb_act1
     write(out_unitp,*) 'iq',iq
     write(out_unitp,*) 'BasisnD%ndim',BasisnD%ndim
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
    END IF
   !-------------------------------------------------------
 
@@ -4039,7 +4039,7 @@ END SUBROUTINE pack_basis_old
     write(out_unitp,*) ' Qact',Qact
     write(out_unitp,*)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   ! -------------------------------------------------------
 
@@ -4074,7 +4074,7 @@ END SUBROUTINE pack_basis_old
          write(out_unitp,*) 'iq',iq
          write(out_unitp,*) 'tab_l',tab_l
          CALL Write_nDindex(nDind_DPG,' in ' // name_sub // ': ')
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
        ndim = 0
@@ -4122,7 +4122,7 @@ END SUBROUTINE pack_basis_old
         write(out_unitp,*) ' Qact',Qact
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -------------------------------------------------------
 
@@ -4154,7 +4154,7 @@ END SUBROUTINE pack_basis_old
     write(out_unitp,*) 'nb_act1',mole%nb_act1
     write(out_unitp,*) 'tab_l',tab_l
     write(out_unitp,*) 'tab_iq',tab_iq
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-----------------------------------------------------------
 
@@ -4194,7 +4194,7 @@ END SUBROUTINE pack_basis_old
     write(out_unitp,*) ' Qact',Qact
     write(out_unitp,*)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 ! -------------------------------------------------------
 
@@ -4226,7 +4226,7 @@ END SUBROUTINE pack_basis_old
          write(out_unitp,*) 'nb_act1',mole%nb_act1
          write(out_unitp,*) 'tab_l',tab_l
          write(out_unitp,*) 'tab_iq',tab_iq
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
        ndim = 0
@@ -4262,7 +4262,7 @@ END SUBROUTINE pack_basis_old
         write(out_unitp,*) ' Qact',Qact
         write(out_unitp,*)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !     -------------------------------------------------------
 

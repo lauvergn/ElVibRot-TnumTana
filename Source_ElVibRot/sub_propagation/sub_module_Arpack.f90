@@ -120,7 +120,7 @@ CONTAINS
       real(kind=Rkind) ::  dnrm2,dlapy2
       external         dnrm2, dlapy2, daxpy
 
-      TYPE(param_file)     :: Log_file
+      TYPE(File_t)     :: Log_file
       integer              :: iunit
       logical              :: cplx
       complex (kind=Rkind) :: cplxE
@@ -137,7 +137,7 @@ CONTAINS
         write(out_unitp,*) ' max_diago',max_diago
         write(out_unitp,*) ' para_Davidson',para_propa%para_Davidson
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -309,13 +309,13 @@ CONTAINS
         IF(MPI_id==0) THEN
           write(iunit,*) 'Arpack <psi H psi>:',                                        &
                   dot_product(workd(ipntr(1):ipntr(1)-1+n),workd(ipntr(2):ipntr(2)-1+n))
-          CALL flush_perso(iunit)
+          flush(iunit)
         ENDIF
       END DO
 
       IF(MPI_id==0) THEN
         write(iunit,*) 'End Arpack ' 
-        CALL flush_perso(iunit)
+        flush(iunit)
         CALL file_close(Log_file)
       ENDIF
 !---------------------------------------------------------------------------------------
@@ -637,7 +637,7 @@ CONTAINS
         write(out_unitp,*) ' para_Davidson',para_propa%para_Davidson
         write(out_unitp,*)
         write(out_unitp,*) 'n',n
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -746,7 +746,7 @@ CONTAINS
       external                       daxpy
 
 
-      TYPE(param_file)  :: Log_file
+      TYPE(File_t)  :: Log_file
       integer           :: iunit
       logical           :: cplx
 
@@ -763,7 +763,7 @@ CONTAINS
         write(out_unitp,*) ' max_diago',max_diago
         write(out_unitp,*) ' para_Davidson',para_propa%para_Davidson
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -934,12 +934,12 @@ CONTAINS
         IF(MPI_id==0) THEN  
           write(iunit,*) 'Arpack <psi H psi>:',                          &
            dot_product(workd(ipntr(1):ipntr(1)-1+n),workd(ipntr(2):ipntr(2)-1+n))
-          CALL flush_perso(iunit)
+          flush(iunit)
         ENDIF
       END DO
 
       IF(MPI_id==0) THEN
-        write(iunit,*) 'End Arpack ' ; CALL flush_perso(iunit)
+        write(iunit,*) 'End Arpack ' ; flush(iunit)
         CALL file_close(Log_file)
       ENDIF
 
@@ -1176,7 +1176,7 @@ CONTAINS
 
    write(out_unitp,*) ' para_Davidson',para_Davidson
    write(out_unitp,*)
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
 

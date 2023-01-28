@@ -128,7 +128,7 @@
        TYPE (Type_RectilinearNM_Transfo), intent(inout) :: RectilinearNM_Transfo
 
       character (len=*), parameter :: name_sub='dealloc_RectilinearNM_Transfo'
-       !write(out_unitp,*) 'BEGINNING ',name_sub; call flush_perso(out_unitp)
+       !write(out_unitp,*) 'BEGINNING ',name_sub; flush(out_unitp)
 
       RectilinearNM_Transfo%ncart     = 0
       RectilinearNM_Transfo%ncart_act = 0
@@ -154,7 +154,7 @@
 
       RectilinearNM_Transfo%inv                 = .FALSE.
 
-       !write(out_unitp,*) 'END ',name_sub; call flush_perso(out_unitp)
+       !write(out_unitp,*) 'END ',name_sub; flush(out_unitp)
 
       END SUBROUTINE dealloc_RectilinearNM_Transfo
 

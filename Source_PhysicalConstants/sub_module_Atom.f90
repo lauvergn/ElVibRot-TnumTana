@@ -33,7 +33,8 @@
 !!   with the "construct_table_at" subroutine.
 !!  This subroutine uses an internal file "internal_data/IsotopicMass.txt" download in 2012 from NIST.
 MODULE mod_Atom
-  use mod_system
+  USE QDUtil_NumParameters_m
+  USE mod_system
   IMPLICIT NONE
 
 PRIVATE
@@ -85,7 +86,7 @@ PRIVATE
     integer                                         :: max_Z       = 0 !< upper bound of the 2d dimension of at(:,:)
     logical                                         :: construct   = .FALSE. !< flag to check if the tables have been build
 
-    TYPE(param_file)                                :: List_Isotope !< file where the list of the isotopes are read
+    TYPE(File_t)                                    :: List_Isotope !< file where the list of the isotopes are read
 
   END TYPE table_atom
 
@@ -111,6 +112,7 @@ PRIVATE
 
   SUBROUTINE construct_atom(at,isotope,Z,A,mass,mass_unit,spin,   &
                             average_mass,abundance,MainIsotope)
+    IMPLICIT NONE
 
     TYPE (atom), intent(inout)                   :: at
 
@@ -149,7 +151,6 @@ PRIVATE
 
     END IF
 
-
   END SUBROUTINE construct_atom
 
 !> @brief Subroutine which reads isotpic masses from the
@@ -163,6 +164,7 @@ PRIVATE
 !! @param err        integer to handle err
 
   SUBROUTINE Read_atom(at,nio,err)
+    IMPLICIT NONE
 
     TYPE (atom), intent(inout)    :: at
     integer, intent(in)           :: nio
@@ -181,18 +183,19 @@ PRIVATE
 
     IF (at%A > 0) THEN
     IF (abs(real(at%A,kind=Rkind)/at%mass-ONE) > TEN**(-2)) THEN
-      write(out_unitp,*) '  WARNNING in Read_atom'
-      write(out_unitp,*) '  The atomic mass in g/mol is probably too different from A (> 1%)'
-      write(out_unitp,*) '  mass, A: ',at%mass,at%A
-      write(out_unitp,*) '  atom: ',at
+      write(out_unit,*) '  WARNNING in Read_atom'
+      write(out_unit,*) '  The atomic mass in g/mol is probably too different from A (> 1%)'
+      write(out_unit,*) '  mass, A: ',at%mass,at%A
+      write(out_unit,*) '  atom: ',at
       !STOP
     END IF
     END IF
 
-    !write(out_unitp,*) 'at: ',at
+    !write(out_unit,*) 'at: ',at
 
   END SUBROUTINE Read_atom
   SUBROUTINE Read2018_atom(at,nio,err)
+    IMPLICIT NONE
 
     TYPE (atom), intent(inout)    :: at
     integer, intent(in)           :: nio
@@ -200,7 +203,7 @@ PRIVATE
 
     err = 0
     read(nio,*,IOSTAT=err) at%Z,at%symbol,at%A,at%mass,at%abundance
-    !write(out_unitp,*) err,'Z,symbol,A,mass,abundance',at%Z,at%symbol,at%A,at%mass,at%abundance
+    !write(out_unit,*) err,'Z,symbol,A,mass,abundance',at%Z,at%symbol,at%A,at%mass,at%abundance
     IF (err /= 0) RETURN
 
     at%isotope    = int_TO_char(at%A) // trim(adjustl(at%symbol))
@@ -212,21 +215,21 @@ PRIVATE
 
     IF (at%Z > 0) THEN
     IF (abs(real(at%A,kind=Rkind)/at%mass-ONE) > TEN**(-2)) THEN
-      write(out_unitp,*) '  WARNNING in Read_atom'
-      write(out_unitp,*) '  The atomic mass in g/mol is probably too different from A (> 1%)'
-      write(out_unitp,*) '  mass, A: ',at%mass,at%A
-      write(out_unitp,*) '  atom: ',at
+      write(out_unit,*) '  WARNNING in Read_atom'
+      write(out_unit,*) '  The atomic mass in g/mol is probably too different from A (> 1%)'
+      write(out_unit,*) '  mass, A: ',at%mass,at%A
+      write(out_unit,*) '  atom: ',at
       !STOP
     END IF
     END IF
 
     IF (at%abundance > ONE .AND. at%abundance < ZERO) THEN
-      write(out_unitp,*) '  ERROR in Read_atom'
-      write(out_unitp,*) '  The abundance is greater than ONE or lower than ZERO!!'
-      write(out_unitp,*) ' Z,symbol,A,mass,abundance',at%Z,at%symbol,at%A,at%mass,at%abundance
+      write(out_unit,*) '  ERROR in Read_atom'
+      write(out_unit,*) '  The abundance is greater than ONE or lower than ZERO!!'
+      write(out_unit,*) ' Z,symbol,A,mass,abundance',at%Z,at%symbol,at%A,at%mass,at%abundance
       STOP
     END IF
-    !write(out_unitp,*) 'at: ',at
+    !write(out_unit,*) 'at: ',at
 
   END SUBROUTINE Read2018_atom
 
@@ -240,6 +243,8 @@ PRIVATE
 !! @param auTOgPmol     conversion factor: au to g.mol-1
 !! @param mass_unit     name of the mass unit (eg gPmol)
   SUBROUTINE construct_table_at_NIST2012(mendeleev,auTOgPmol,mass_unit)
+    USE QDUtil_m, ONLY : file_open, file_close
+    IMPLICIT NONE
 
     TYPE (table_atom), intent(inout) :: mendeleev
     character (len=*), intent(in)    :: mass_unit
@@ -251,10 +256,8 @@ PRIVATE
     integer           :: Z,A,err_mem,A_OF_Max_abundance
     real (kind=Rkind) :: Max_abundance
 
-    character (len=*), parameter ::                               &
-       alphab1="ABCBEFGHIJKLMNOPQRSTUVWXYZ"
-    character (len=*), parameter ::                               &
-       alphab2="abcdefghijklmnopqrstuvwxyz"
+    character (len=*), parameter :: alphab1="ABCBEFGHIJKLMNOPQRSTUVWXYZ"
+    character (len=*), parameter :: alphab2="abcdefghijklmnopqrstuvwxyz"
 
     integer :: i,pos1,pos2,pos3,isot
 
@@ -264,7 +267,7 @@ PRIVATE
       !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unit,*) 'BEGINNING ',name_sub
       END IF
 !---------------------------------------------------------------------
 
@@ -275,18 +278,18 @@ PRIVATE
 
       CALL file_open(mendeleev%List_Isotope,nio,old=.TRUE.,err_file=err)
       IF (err /= 0) THEN
-        write(out_unitp,*) ' WARNNING in ',name_sub
-        write(out_unitp,*) ' The file "Internal_data/IsotopicMass_2012.txt" can not be open'
-        write(out_unitp,*) ' Two main raisons:'
-        write(out_unitp,*) '  -1- the ElVibRot directory has been moved after the compilation'
-        write(out_unitp,*) '  -2- the "EVRT_path" is badly defined in the namelist "system"'
-        write(out_unitp,*) '      EVRT_path: ',trim(EVRT_path)
+        write(out_unit,*) ' WARNNING in ',name_sub
+        write(out_unit,*) ' The file "Internal_data/IsotopicMass_2012.txt" can not be open'
+        write(out_unit,*) ' Two main raisons:'
+        write(out_unit,*) '  -1- the ElVibRot directory has been moved after the compilation'
+        write(out_unit,*) '  -2- the "EVRT_path" is badly defined in the namelist "system"'
+        write(out_unit,*) '      EVRT_path: ',trim(EVRT_path)
 
-        write(out_unitp,*) ' Two solutions:'
-        write(out_unitp,*) '  -1- recompile ElVibRot: "make clean ; make"'
-        write(out_unitp,*) '  -2- set-up the "EVRT_path" in the namelist "system"'
+        write(out_unit,*) ' Two solutions:'
+        write(out_unit,*) '  -1- recompile ElVibRot: "make clean ; make"'
+        write(out_unit,*) '  -2- set-up the "EVRT_path" in the namelist "system"'
 
-        write(out_unitp,*) ' WARNNING the old table (construct_table_at_HandBook70ed) is used'
+        write(out_unit,*) ' WARNNING the old table (construct_table_at_HandBook70ed) is used'
         CALL construct_table_at_HandBook70ed(mendeleev,auTOgPmol,mass_unit)
         RETURN
       END IF
@@ -320,10 +323,10 @@ PRIVATE
         IF (A < lbound(mendeleev%at,dim=2) .OR. A > ubound(mendeleev%at,dim=2)) CYCLE
 
         mendeleev%at(Z,A) = at
-        IF (debug) write(out_unitp,*) 'at: ',mendeleev%at(Z,A)
+        IF (debug) write(out_unit,*) 'at: ',mendeleev%at(Z,A)
 
       END DO
-      IF(MPI_id==0) write(out_unitp,*) 'The number of read isotopes:',isot
+      IF(MPI_id==0) write(out_unit,*) 'The number of read isotopes:',isot
       CALL file_close(mendeleev%List_Isotope)
 
       DO Z=0,mendeleev%max_Z
@@ -345,7 +348,7 @@ PRIVATE
 
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
+        write(out_unit,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
 
@@ -360,7 +363,7 @@ PRIVATE
 !! @param auTOgPmol     conversion factor: au to g.mol-1
 !! @param mass_unit     name of the mass unit (eg gPmol)
   SUBROUTINE construct_table_at_NIST2018(mendeleev,auTOgPmol,mass_unit)
-    USE mod_MPI
+    IMPLICIT NONE
 
     TYPE (table_atom), intent(inout) :: mendeleev
     character (len=*), intent(in)    :: mass_unit
@@ -385,7 +388,7 @@ PRIVATE
       !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unit,*) 'BEGINNING ',name_sub
       END IF
 !---------------------------------------------------------------------
 
@@ -396,18 +399,18 @@ PRIVATE
 
       CALL file_open(mendeleev%List_Isotope,nio,old=.TRUE.,err_file=err)
       IF (err /= 0) THEN
-        write(out_unitp,*) ' WARNNING in ',name_sub
-        write(out_unitp,*) ' The file "Internal_data/IsotopicMass_2018.txt" can not be open'
-        write(out_unitp,*) ' Two main raisons:'
-        write(out_unitp,*) '  -1- the ElVibRot directory has been moved after the compilation'
-        write(out_unitp,*) '  -2- the "EVRT_path" is badly defined in the namelist "system"'
-        write(out_unitp,*) '      EVRT_path: ',trim(EVRT_path)
+        write(out_unit,*) ' WARNNING in ',name_sub
+        write(out_unit,*) ' The file "Internal_data/IsotopicMass_2018.txt" can not be open'
+        write(out_unit,*) ' Two main raisons:'
+        write(out_unit,*) '  -1- the ElVibRot directory has been moved after the compilation'
+        write(out_unit,*) '  -2- the "EVRT_path" is badly defined in the namelist "system"'
+        write(out_unit,*) '      EVRT_path: ',trim(EVRT_path)
 
-        write(out_unitp,*) ' Two solutions:'
-        write(out_unitp,*) '  -1- recompile ElVibRot: "make clean ; make"'
-        write(out_unitp,*) '  -2- set-up the "EVRT_path" in the namelist "system"'
+        write(out_unit,*) ' Two solutions:'
+        write(out_unit,*) '  -1- recompile ElVibRot: "make clean ; make"'
+        write(out_unit,*) '  -2- set-up the "EVRT_path" in the namelist "system"'
 
-        write(out_unitp,*) ' WARNNING the old table (construct_table_at_HandBook70ed) is used'
+        write(out_unit,*) ' WARNNING the old table (construct_table_at_HandBook70ed) is used'
         CALL construct_table_at_HandBook70ed(mendeleev,auTOgPmol,mass_unit)
         RETURN
       END IF
@@ -426,12 +429,12 @@ PRIVATE
       END DO
       END DO
 
-      IF (debug) write(out_unitp,*) '-----------------------------------------------------'
+      IF (debug) write(out_unit,*) '-----------------------------------------------------'
       read(nio,*)   ! first line
       isot = 0
       DO
         CALL Read2018_atom(at,nio,err)
-        IF (debug)  write(out_unitp,*) 'Read2018_atom, err',err
+        IF (debug)  write(out_unit,*) 'Read2018_atom, err',err
         IF (err /= 0) EXIT
         isot = isot + 1
         Z = at%Z
@@ -440,11 +443,11 @@ PRIVATE
         IF (A < lbound(mendeleev%at,dim=2) .OR. A > ubound(mendeleev%at,dim=2)) CYCLE
 
         mendeleev%at(Z,A) = at
-        IF (debug) write(out_unitp,*) 'at: ',mendeleev%at(Z,A)
-        IF (debug) write(out_unitp,*) '-----------------------------------------------------'
+        IF (debug) write(out_unit,*) 'at: ',mendeleev%at(Z,A)
+        IF (debug) write(out_unit,*) '-----------------------------------------------------'
 
       END DO
-      IF(MPI_id==0) write(out_unitp,*) 'The number of read isotopes:',isot
+      IF(MPI_id==0) write(out_unit,*) 'The number of read isotopes:',isot
       CALL file_close(mendeleev%List_Isotope)
 
 
@@ -468,7 +471,7 @@ PRIVATE
 
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
+        write(out_unit,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
 
@@ -483,6 +486,7 @@ PRIVATE
 !! @param auTOgPmol     conversion factor: au to g.mol-1
 !! @param mass_unit     name of the mass unit (eg gPmol)
   SUBROUTINE construct_table_at_HandBook70ed(mendeleev,auTOgPmol,mass_unit)
+    IMPLICIT NONE
 
     TYPE (table_atom), intent(inout) :: mendeleev
     character (len=*), intent(in)    :: mass_unit
@@ -497,7 +501,7 @@ PRIVATE
       !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unit,*) 'BEGINNING ',name_sub
       END IF
 !---------------------------------------------------------------------
 
@@ -672,7 +676,7 @@ PRIVATE
         IF (.NOT. mendeleev%at(Z,A)%SetIsotope) CYCLE
         mendeleev%at(Z,A)%mass = mendeleev%at(Z,A)%mass/auTOgPmol
         mendeleev%at(Z,A)%mass_unit = mass_unit
-        IF (debug) write(out_unitp,*) mendeleev%at(Z,A)
+        IF (debug) write(out_unit,*) mendeleev%at(Z,A)
       END DO
       END DO
 
@@ -682,7 +686,7 @@ PRIVATE
 
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
+        write(out_unit,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
 
@@ -706,6 +710,8 @@ PRIVATE
 !! @li   Dummy atom is defined with the symbol "X" and/or Z=0.
 !!
   FUNCTION get_mass_Tnum(mendeleev,Z,A,name,err_mass)
+    IMPLICIT NONE
+
     real (kind=Rkind)                          :: get_mass_Tnum !< the isotopic mass in au (atomic unit)
     integer,           intent(inout), optional :: Z !< number of electrons
     integer,           intent(inout), optional :: A !< number of nucleons
@@ -725,10 +731,10 @@ PRIVATE
     IF (present(err_mass)) err_mass = 0
 
     get_mass_Tnum = -ONE
-    !IF (present(A)) write(out_unitp,*) 'A present',A
-    !IF (present(Z)) write(out_unitp,*) 'Z present',Z
-    !IF (present(name)) write(out_unitp,*) 'name present: ',name
-    !flush(out_unitp)
+    !IF (present(A)) write(out_unit,*) 'A present',A
+    !IF (present(Z)) write(out_unit,*) 'Z present',Z
+    !IF (present(name)) write(out_unit,*) 'name present: ',name
+    !flush(out_unit)
 
     AA = -1
     IF (present(A)) AA = A
@@ -738,8 +744,8 @@ PRIVATE
     MainIsotope = (AA == -1)
 
     IF (present(A) .AND. .NOT. present(Z) .AND. .NOT. present(name)) THEN
-      write(out_unitp,*) ' ERROR : get_mass_Tnum'
-      write(out_unitp,*) ' Only A is present !!!'
+      write(out_unit,*) ' ERROR : get_mass_Tnum'
+      write(out_unit,*) ' Only A is present !!!'
       IF (present(err_mass)) THEN
             err_mass = -1
       ELSE
@@ -751,7 +757,7 @@ PRIVATE
 
 
     IF ( present(name) ) THEN
-       name2 = String_TO_String(name)
+       name2 = trim(name)
 
       ! name has the value of the mass....
       IF (index(name2,".") .NE. 0) THEN
@@ -760,8 +766,8 @@ PRIVATE
         !============================================================
         read(name2,*,IOSTAT=err_mass_loc) mass
         IF (err_mass_loc /= 0) THEN
-          write(out_unitp,*) ' ERROR in : get_mass_Tnum'
-          write(out_unitp,*) ' I CANNOT read the mass in "',trim(adjustl(name2)),'"'
+          write(out_unit,*) ' ERROR in : get_mass_Tnum'
+          write(out_unit,*) ' I CANNOT read the mass in "',trim(adjustl(name2)),'"'
           IF (present(err_mass)) THEN
             mass = -ONE
             err_mass = err_mass_loc
@@ -775,7 +781,7 @@ PRIVATE
         IF (present(Z)) Z = ZZ
         IF (present(A)) A = AA
         IF (print_level > 1)                                      &
-            write(out_unitp,*) 'get_mass_Tnum (read): ',ZZ,AA,mass
+            write(out_unit,*) 'get_mass_Tnum (read): ',ZZ,AA,mass
         RETURN
 
       ELSE IF (index(name2,"_") > 0) THEN
@@ -817,7 +823,7 @@ PRIVATE
 
         ! first the symbol, then ZZ
         symb = name2(pos+1:len(name2))
-        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !write(out_unit,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
 
         DO ZZ=0,mendeleev%max_Z
           DO AA=0,mendeleev%max_A ! find the first isotope with Z
@@ -835,20 +841,20 @@ PRIVATE
         IF (pos > 0) THEN ! isotope defined as: AX (2H or 13C or 28Si)
           read(name2(1:pos),*,IOSTAT=err_mass_loc) AA
         END IF
-        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !write(out_unit,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
 
         deallocate(name2)
       END IF
     END IF
 
     IF (ZZ < 0 .OR. ZZ > ubound(mendeleev%at,dim=1)) THEN
-       write(out_unitp,*) ' ERROR in : get_mass_Tnum'
-       write(out_unitp,*) 'ZZ,AA',ZZ,AA
+       write(out_unit,*) ' ERROR in : get_mass_Tnum'
+       write(out_unit,*) 'ZZ,AA',ZZ,AA
        IF (present(name)) THEN
-          write(out_unitp,*) ' I CANNOT find Z in "',trim(adjustl(name)),'"'
+          write(out_unit,*) ' I CANNOT find Z in "',trim(adjustl(name)),'"'
        END IF
        IF (present(Z)) THEN
-         write(out_unitp,*) ' ... or Z (from the argument) is out of range'
+         write(out_unit,*) ' ... or Z (from the argument) is out of range'
        END IF
        err_mass_loc = -1
     END IF
@@ -858,24 +864,24 @@ PRIVATE
         DO AA=0,mendeleev%max_A ! find the first isotope with Z
           IF (mendeleev%at(ZZ,AA)%MainIsotope) EXIT
         END DO
-        !write(out_unitp,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
-        !flush(out_unitp)
+        !write(out_unit,*) 'pos,MainIsotope,ZZ,AA,symb',pos,MainIsotope,ZZ,AA,symb
+        !flush(out_unit)
 
       ELSE IF (AA < 0 .OR. AA > ubound(mendeleev%at,dim=2)) THEN
-        write(out_unitp,*) ' ERROR in : get_mass_Tnum'
-        write(out_unitp,*) 'ZZ,AA',ZZ,AA
+        write(out_unit,*) ' ERROR in : get_mass_Tnum'
+        write(out_unit,*) 'ZZ,AA',ZZ,AA
         IF (present(name)) THEN
-          write(out_unitp,*) ' I CANNOT read A in "',trim(adjustl(name)),'"'
+          write(out_unit,*) ' I CANNOT read A in "',trim(adjustl(name)),'"'
         END IF
         IF (present(A)) THEN
-          write(out_unitp,*) ' ... or A (from the argument) is out of range'
+          write(out_unit,*) ' ... or A (from the argument) is out of range'
         END IF
         err_mass_loc = -1
       ELSE IF (.NOT. mendeleev%at(ZZ,AA)%SetIsotope) THEN
-        write(out_unitp,*) 'ZZ,AA',ZZ,AA
-        write(out_unitp,*) ' ERROR in : get_mass_Tnum'
+        write(out_unit,*) 'ZZ,AA',ZZ,AA
+        write(out_unit,*) ' ERROR in : get_mass_Tnum'
         IF (present(name)) THEN
-          write(out_unitp,*) ' This isotope is not defined in "',trim(adjustl(name)),'"'
+          write(out_unit,*) ' This isotope is not defined in "',trim(adjustl(name)),'"'
         END IF
         err_mass_loc = -1
       END IF
@@ -886,18 +892,18 @@ PRIVATE
     IF (present(A)) A = AA
 
     IF (err_mass_loc == 0) THEN
-      !write(out_unitp,*) 'atom: ',mendeleev%at(ZZ,AA)
+      !write(out_unit,*) 'atom: ',mendeleev%at(ZZ,AA)
       IF (print_level > 1)                                        &
-        write(out_unitp,*) 'get_mass_Tnum: ',ZZ,AA,mendeleev%at(ZZ,AA)%mass
+        write(out_unit,*) 'get_mass_Tnum: ',ZZ,AA,mendeleev%at(ZZ,AA)%mass
 
       get_mass_Tnum = mendeleev%at(ZZ,AA)%mass
     ELSE
-      write(out_unitp,*) ' ERROR : get_mass_Tnum'
-      write(out_unitp,*) ' I CANNOT get the right isotope'
-      write(out_unitp,*) ' Your atom is NOT in my list !!'
-        write(out_unitp,*) 'ZZ,AA',ZZ,AA
+      write(out_unit,*) ' ERROR : get_mass_Tnum'
+      write(out_unit,*) ' I CANNOT get the right isotope'
+      write(out_unit,*) ' Your atom is NOT in my list !!'
+        write(out_unit,*) 'ZZ,AA',ZZ,AA
       IF (present(name)) THEN
-        write(out_unitp,*) ' Your atom: "',trim(name),'"'
+        write(out_unit,*) ' Your atom: "',trim(name),'"'
       END IF
       CALL List_OF_table_at(mendeleev)
       IF (present(err_mass)) THEN
@@ -915,6 +921,8 @@ PRIVATE
 !! @date 29/11/2018
 !! @param mendeleev     table of "atoms" with known isotopes
   SUBROUTINE dealloc_table_at(mendeleev)
+    IMPLICIT NONE
+
     TYPE (table_atom), intent(inout) :: mendeleev
 
     integer :: err_mem,memory
@@ -931,6 +939,7 @@ PRIVATE
 !! @date 29/11/2018
 !! @param mendeleev     table of "atoms" with known isotopes
   SUBROUTINE List_OF_table_at(mendeleev)
+    IMPLICIT NONE
 
     TYPE (table_atom), intent(in) :: mendeleev
 
@@ -945,14 +954,14 @@ PRIVATE
       !logical, parameter :: debug = .TRUE.
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'BEGINNING ',name_sub
+        write(out_unit,*) 'BEGINNING ',name_sub
       END IF
 !---------------------------------------------------------------------
 
     IF (.NOT. mendeleev%construct) RETURN
 
-      write(out_unitp,*) '---------------------------------------------'
-      write(out_unitp,*) 'Isotopes list:'
+      write(out_unit,*) '---------------------------------------------'
+      write(out_unit,*) 'Isotopes list:'
 
       DO Z=0,mendeleev%max_Z
 
@@ -964,28 +973,28 @@ PRIVATE
         END DO
 
         IF (SetIsotope) THEN
-          write(out_unitp,'(i4,":")',advance='no') Z
+          write(out_unit,'(i4,":")',advance='no') Z
 
           DO A=0,mendeleev%max_A
             IF (.NOT. mendeleev%at(Z,A)%SetIsotope) CYCLE
             IF (Z == 0) THEN
-              write(out_unitp,'(1x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
+              write(out_unit,'(1x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
             ELSE IF (Z == 1 .AND. (A == 2 .OR. A == 3)) THEN
-              write(out_unitp,'(1x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
-              write(out_unitp,'(" (or ",i0,a,")")',advance='no') A,trim(mendeleev%at(Z,1)%symbol)
+              write(out_unit,'(1x,a)',advance='no') trim(mendeleev%at(Z,A)%symbol)
+              write(out_unit,'(" (or ",i0,a,")")',advance='no') A,trim(mendeleev%at(Z,1)%symbol)
             ELSE
-              write(out_unitp,'(1x,i0,a)',advance='no') A,trim(mendeleev%at(Z,A)%symbol)
+              write(out_unit,'(1x,i0,a)',advance='no') A,trim(mendeleev%at(Z,A)%symbol)
             END IF
           END DO
-          write(out_unitp,*)
+          write(out_unit,*)
         END IF
       END DO
-      write(out_unitp,*) 'END Isotopes list'
-      write(out_unitp,*) '---------------------------------------------'
+      write(out_unit,*) 'END Isotopes list'
+      write(out_unit,*) '---------------------------------------------'
 
 !---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'END ',name_sub
+        write(out_unit,*) 'END ',name_sub
       END IF
 !---------------------------------------------------------------------
 

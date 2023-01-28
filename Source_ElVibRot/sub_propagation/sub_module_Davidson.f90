@@ -105,7 +105,7 @@ CONTAINS
       real (kind=Rkind)         :: tab_a(max_diago)
 
       !------ working parameters --------------------------------
-      TYPE(param_file)  :: Log_file
+      TYPE(File_t)  :: Log_file
       integer           :: iunit
 
       complex (kind=Rkind) :: Overlap
@@ -149,7 +149,7 @@ CONTAINS
 
         write(out_unitp,*) ' para_Davidson',para_Davidson
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------
       auTOcm_inv = get_Conv_au_TO_unit('E','cm-1')
@@ -220,7 +220,7 @@ CONTAINS
       write(out_unitp,*) '  sub_save_psi: psi done'
       RealTime = Delta_RealTime(DavidsonTime)
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       IF(openmpi .AND. MPI_scheme/=1) THEN
         CALL MPI_Bcast_(nb_diago,size1_MPI,root_MPI)
         CALL MPI_Bcast_param_Davidson(para_Davidson)
@@ -257,10 +257,10 @@ CONTAINS
 
       write(out_unitp,*) 'nb_thread in ',name_sub,' : ',nb_thread
       write(out_unitp,*) 'Beginning Davidson iteration'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF(MPI_id==0) THEN
-        write(iunit,*) 'Beginning Davidson iteration' ; CALL flush_perso(iunit)
+        write(iunit,*) 'Beginning Davidson iteration' ; flush(iunit)
       ENDIF
 
       !--------------------------------------------------------------------------------
@@ -270,7 +270,7 @@ CONTAINS
 
         IF(MPI_id==0) THEN
           write(out_unitp,*) '--------------------------------------------------'
-          write(iunit,*) 'Davidson iteration',it ; CALL flush_perso(iunit)
+          write(iunit,*) 'Davidson iteration',it ; flush(iunit)
         ENDIF
 
         !CALL time_perso('Beginining it')
@@ -278,21 +278,21 @@ CONTAINS
         !---------------------------------------------------------------
         !- Hpsi(:) -----------------------------------------------------
         IF (debug) write(out_unitp,*) 'Hpsi(:)',it,ndim,ndim0
-        IF (debug) CALL flush_perso(out_unitp)
+        IF (debug) flush(out_unitp)
         CALL sub_MakeHPsi_Davidson(it,psi(1:ndim),Hpsi(1:ndim),Ene,ndim0,para_H,       &
                                    para_Davidson,iunit,H_overlap,S_overlap,save_WP)
         save_WP = .FALSE.
         !CALL time_perso('MakeHPsi done') 
 
         IF (debug) write(out_unitp,*) 'Hpsi(:) done',it,ndim,ndim0
-        IF (debug) CALL flush_perso(out_unitp)
+        IF (debug) flush(out_unitp)
         !- Hpsi(:) -----------------------------------------------------
         !---------------------------------------------------------------
 
         !---------------------------------------------------------------
         !- build H
         IF (debug) write(out_unitp,*) 'H mat',it,ndim,ndim0
-        IF (debug) CALL flush_perso(out_unitp)
+        IF (debug) flush(out_unitp)
 
         ! H built from psi and Hpsi
         ! MPI: H is now assigned from H_overlap directly on all the threads
@@ -324,14 +324,14 @@ CONTAINS
         !CALL time_perso('MakeH done')
 
         IF (debug) write(out_unitp,*) 'H mat',it,ndim,ndim0
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         !- build H
         !----------------------------------------------------------
 
         !----------------------------------------------------------
         !- diagonalization
         IF (debug) write(out_unitp,*) 'diago',it,ndim,ndim0
-        IF (debug) CALL flush_perso(out_unitp)
+        IF (debug) flush(out_unitp)
 
         CALL dealloc_NParray(vec,"vec",name_sub)
         CALL alloc_NParray(vec,[ndim,ndim],"vec",name_sub)
@@ -357,14 +357,14 @@ CONTAINS
         IF (it == 0) Ene0(:) = Ene(:) + conv_Ene
         !CALL time_perso('diago done')
         IF (debug) write(out_unitp,*) 'diago',it,ndim,ndim0
-        IF (debug) CALL flush_perso(out_unitp)
+        IF (debug) flush(out_unitp)
         !- diagonalization
         !----------------------------------------------------------
 
         !----------------------------------------------------------
         ! Save vec(:) on vec0(:)
         IF (debug) write(out_unitp,*) 'selec',it,ndim,ndim0
-        IF (debug) CALL flush_perso(out_unitp)
+        IF (debug) flush(out_unitp)
         CALL sub_projec_Davidson(Ene,VecToBeIncluded,nb_diago,min_Ene,  &
                                  para_H%para_ReadOp%min_pot,            &
                                  psi,psi0,Vec,Vec0,para_Davidson,it,.TRUE.)
@@ -378,7 +378,7 @@ CONTAINS
         ZPE = para_H%ZPE
 
           IF (debug) write(out_unitp,*) 'selec',it,ndim,ndim0
-          IF (debug) CALL flush_perso(out_unitp)
+          IF (debug) flush(out_unitp)
           ! CALL Write_Mat(Vec,out_unitp,5)
           ! Save vec(:) on vec0(:)
           !----------------------------------------------------------
@@ -411,16 +411,16 @@ CONTAINS
                            DEne(1:nb_diago) * auTOene
           write(out_unitp,42) 'it convergenceEne(:):  ',it,               &
                                                     convergeEne(1:nb_diago)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           IF(MPI_id==0) THEN
             write(iunit,21) it,ndim,norm2g/epsi,iresidu,Ene(1:ndim)*auTOene
-            CALL flush_perso(iunit)
+            flush(iunit)
           ENDIF
           !----------------------------------------------------------
           !- residual vector ---------------------------
           !-  and convergence --------------------------
           IF (debug) write(out_unitp,*) 'residual',it,ndim,ndim0
-          IF (debug) CALL flush_perso(out_unitp)
+          IF (debug) flush(out_unitp)
           norm2g    = -ONE
           fresidu   = 0
 
@@ -462,7 +462,7 @@ CONTAINS
           !CALL time_perso('residual done')
 
           IF (debug) write(out_unitp,*) 'residual',it,ndim,ndim0
-          IF (debug) CALL flush_perso(out_unitp)
+          IF (debug) flush(out_unitp)
           !- residual vector and convergence ------------------------
           !----------------------------------------------------------
 
@@ -473,7 +473,7 @@ CONTAINS
           write(out_unitp,*) 'it, conv',it,conv
           write(out_unitp,*) 'it, nb   converged state(s)',it,nb_conv_states
           write(out_unitp,*) 'it, nb unconverged state(s)',it,nb_unconv_states
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           !- convergence ? ------------------------------------------
           !----------------------------------------------------------
 
@@ -509,7 +509,7 @@ CONTAINS
             write(out_unitp,*) 'mod(it,para_Davidson%num_resetH)',  &
                                 mod(it,para_Davidson%num_resetH)
           END IF
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           !----------------------------------------------------------
           !- save psi(:) on file
@@ -527,7 +527,7 @@ CONTAINS
             !CALL time_perso('projec done')
 
             write(out_unitp,*) 'save psi(:)',it,ndim,ndim0
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             !- check the orthogonality ------------------------
             CALL sub_MakeS_Davidson(it,psi(1:ndim),With_Grid,debug,S_overlap)
@@ -539,7 +539,7 @@ CONTAINS
               CALL sub_LCpsi_TO_psi(psi,Vec,ndim0,nb_diago)
             ENDIF
             write(out_unitp,*) '  sub_LCpsi_TO_psi: psi done',ndim0,nb_diago
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             IF(keep_MPI) THEN
             ! move the new vectors (nb_added_states), after the nb_diago ones
@@ -547,7 +547,7 @@ CONTAINS
               psi(nb_diago+i) = psi(ndim0+i)
             END DO
             write(out_unitp,*) '  move psi done'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
             ENDIF ! for keep_MPI
 
             ! deallocation
@@ -556,12 +556,12 @@ CONTAINS
               CALL dealloc_psi(psi(i))
             END DO
             write(out_unitp,*) '  deallocation psi done'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             ! save the nb_diago wp
             IF(MPI_id==0) CALL sub_save_psi(psi,nb_diago,para_propa%file_WP)
             write(out_unitp,*) '  sub_save_psi: psi done'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             IF(openmpi) THEN
               CALL sub_LCpsi_TO_psi_MPI(Hpsi,Vec,ndim0,nb_diago)
@@ -569,7 +569,7 @@ CONTAINS
               CALL sub_LCpsi_TO_psi(Hpsi,Vec,ndim0,nb_diago)
             ENDIF
             write(out_unitp,*) '  sub_LCpsi_TO_psi: Hpsi done',ndim0,nb_diago
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             DO i=nb_diago+1,ndim
               !write(out_unitp,*) 'dealloc psi(i), Hpsi(i)',i
@@ -577,7 +577,7 @@ CONTAINS
             END DO
 
             write(out_unitp,*) '  deallocation Hpsi done'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             CALL mat_id(Vec,ndim0,ndim0)
 
@@ -613,7 +613,7 @@ CONTAINS
           ELSE
             write(out_unitp,'(a,i0,a,i0)') 'At Davidson iteration: ',it,', Delta Real time (s): ',int(RealTime)
           END IF
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
         IF (conv) EXIT
 
@@ -640,7 +640,7 @@ CONTAINS
       !===================================================================
       !===================================================================
       IF(MPI_id==0) THEN
-        write(iunit,*) 'End Davidson ' ; CALL flush_perso(iunit)
+        write(iunit,*) 'End Davidson ' ; flush(iunit)
       ENDIF
 
  21   format(' Davidson: ',2(i5,1x),e10.3,i5,1x,50(1x,f18.4))
@@ -653,7 +653,7 @@ CONTAINS
       ELSE
         write(out_unitp,*) ' WARNNING: Davidson has NOT converged after',it,' iterations'
       END IF
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (para_H%para_ReadOp%Op_Transfo) THEN
         ! The energies have to be recalculated without T(Op)
@@ -703,7 +703,7 @@ CONTAINS
       write(out_unitp,*)
       write(out_unitp,*) '==========================================='
       write(out_unitp,*) '==========================================='
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !----------------------------------------------------------
       IF (allocated(Vec))  THEN
@@ -787,7 +787,7 @@ CONTAINS
 
    write(out_unitp,*) ' para_Davidson',para_Davidson
    write(out_unitp,*)
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
 
@@ -924,7 +924,7 @@ CONTAINS
    write(out_unitp,*) 'para_Davidson%With_Grid',para_Davidson%With_Grid
    write(out_unitp,*) 'para_Davidson%Op_Transfo',para_Davidson%Op_Transfo
    write(out_unitp,*) 'MatOp_omp',MatOp_omp
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
 
@@ -949,7 +949,7 @@ CONTAINS
  !----------------------------------------------------------
  !- Hpsi(:) ------------------------------------------
  IF (debug) write(out_unitp,*) 'Hpsi(:)',it,ndim,ndim0
- IF (debug) CALL flush_perso(out_unitp)
+ IF (debug) flush(out_unitp)
 
  CALL sub_TabOpPsi(psi(ndim0+1:ndim),Hpsi(ndim0+1:ndim),para_H,With_Grid=With_Grid,TransfoOp=Op_Transfo)
 
@@ -990,7 +990,7 @@ CONTAINS
    IF(MPI_id==0) THEN
      write(iunit,*) 'Davidson Hpsi done',i,                               &
                       Ene(i)*auTOene,(Ene(i)-Ene(1))*auTOene
-     CALL flush_perso(iunit)
+     flush(iunit)
    ENDIF
  END DO
 
@@ -1006,12 +1006,12 @@ CONTAINS
 !
 !     write(iunit,*) 'Davidson Hpsi done',i,                      &
 !                    Ene(i)*auTOene,(Ene(i)-Ene(1))*auTOene
-!     CALL flush_perso(iunit)
+!     flush(iunit)
 !   END DO
 ! END IF
 
  IF (debug) write(out_unitp,*) 'Hpsi(:) done ',it,ndim,ndim0
- IF (debug) CALL flush_perso(out_unitp)
+ IF (debug) flush(out_unitp)
  !- Hpsi(:) ------------------------------------------
  !----------------------------------------------------------
 
@@ -1058,7 +1058,7 @@ CONTAINS
  IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
    CALL sub_MakeS_Davidson(it,psi,para_Davidson%With_Grid,.FALSE.,S_overlap)
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
 
@@ -1095,7 +1095,7 @@ CONTAINS
  IF (debug) write(out_unitp,*) 'H mat',it,ndim,ndim0
  IF (debug) write(out_unitp,*) 'shape H mat',it,shape(H)
 
- IF (debug) CALL flush_perso(out_unitp)
+ IF (debug) flush(out_unitp)
 
  !block 1,1: ndim0*ndim0
  IF (ndim0 > 0) THEN
@@ -1173,7 +1173,7 @@ CONTAINS
  IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
    write(out_unitp,*)
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
 ndim = size(psi)
@@ -1183,7 +1183,7 @@ ndim = size(psi)
 IF(openmpi) THEN
   CALL sub_ana_S(S_overlap(1:ndim,1:ndim),ndim,max_Sii,max_Sij,.TRUE.)
   IF (Print_Mat ) CALL Write_Mat(S_overlap(1:ndim,1:ndim),out_unitp,5)
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 ELSE
  CALL alloc_NParray(S,[ndim,ndim],"S",name_sub)
 
@@ -1196,7 +1196,7 @@ ELSE
 
  CALL sub_ana_S(S,ndim,max_Sii,max_Sij,.TRUE.)
  IF (Print_Mat) CALL Write_Mat(S,out_unitp,5)
- CALL flush_perso(out_unitp)
+ flush(out_unitp)
  CALL dealloc_NParray(S,"S",name_sub)
 ENDIF ! openmpi
 
@@ -1205,7 +1205,7 @@ ENDIF ! openmpi
  !----------------------------------------------------------
  IF (debug) THEN
    write(out_unitp,*) 'END ',name_sub
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !----------------------------------------------------------
 
@@ -1239,7 +1239,7 @@ ENDIF ! openmpi
  IF (debug) THEN
    write(out_unitp,*) 'BEGINNING ',name_sub
    write(out_unitp,*) '  ndim',size(Vec,dim=1)
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
 
@@ -1346,7 +1346,7 @@ END SUBROUTINE MakeResidual_Davidson
    write(out_unitp,*) '  max_diago  ',max_diago
    write(out_unitp,*) '  NewVec_type',para_Davidson%NewVec_type
    write(out_unitp,*) '  VecToBeIncluded',VecToBeIncluded(1:ndim)
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  !-----------------------------------------------------------
 
@@ -1358,7 +1358,7 @@ END SUBROUTINE MakeResidual_Davidson
  !----------------------------------------------------------
  !- new vectors ------------------------------
  IF (debug) write(out_unitp,*) '  new psi',it,ndim,ndim0
- IF (debug) CALL flush_perso(out_unitp)
+ IF (debug) flush(out_unitp)
  IF (para_Davidson%residual_max_nb == 1) THEN
    j_ini = fresidu
    j_end = fresidu
@@ -1556,7 +1556,7 @@ END SUBROUTINE MakeResidual_Davidson
    END IF
 
    IF (debug) write(out_unitp,*) '  new psi',it,ndim,ndim0
-   IF (debug) CALL flush_perso(out_unitp)
+   IF (debug) flush(out_unitp)
  END DO
 
  nb_added_states = ndim-ndim0

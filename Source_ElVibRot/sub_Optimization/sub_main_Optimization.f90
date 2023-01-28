@@ -542,7 +542,7 @@
                RWU_Write(RWU_E, WithUnit=.FALSE.,WorkingUnit=.FALSE.),  &
                RWU_Write(RWU_DE,WithUnit=.TRUE., WorkingUnit=.FALSE.)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (debug) THEN
@@ -589,7 +589,7 @@
     IF (debug) THEN
       write(out_unitp,*) 'xOpt,Energ',xOpt,':',Energ
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
 
@@ -641,7 +641,7 @@
         write(out_unitp,*) 'nb_OptParam ',para_FOR_optimization%nb_OptParam
 
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       END SUBROUTINE Set_ALL_para_FOR_optimization
@@ -764,7 +764,7 @@
 !---------------------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 !---------------------------------------------------------------------
 
@@ -870,7 +870,7 @@
 !---------------------------------------------------------------------
     IF (debug) THEN
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 !---------------------------------------------------------------------
 

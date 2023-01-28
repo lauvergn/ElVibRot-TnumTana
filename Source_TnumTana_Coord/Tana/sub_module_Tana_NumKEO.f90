@@ -68,7 +68,7 @@
    IF (debug) THEN
      write(out_unitp,*) 'BEGINNING ',routine_name
      CALL write_op(TWOxKEO)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
 

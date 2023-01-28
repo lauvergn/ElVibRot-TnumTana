@@ -505,7 +505,7 @@
       TYPE (param_d0MatOp)     :: d0MatOp
 
       integer, intent(in)                     :: iq,nb_qa,nb_var,n_Op,nb_act1
-      TYPE (param_file), intent(inout)        :: file_HADA
+      TYPE (File_t), intent(inout)        :: file_HADA
 
       real (kind=Rkind), intent(inout)        :: Qdyn(nb_var),Qact(nb_act1)
       real (kind=Rkind), intent(inout)        :: w
@@ -720,10 +720,10 @@
         DO i=1,nb_Op
 
           !write(out_unitp,*) name_sub,',iqr,i,nb_Op,i_term',iqr,i,nb_Op,i_term
-          !call flush_perso(out_unitp)
+          !flush(out_unitp)
           read(nio,*) name1,n_OP_lect,id1,id2,cplx
           !write(out_unitp,*) name_sub,name1,n_OP_lect,derive_lect(:),cplx
-          !call flush_perso(out_unitp)
+          !flush(out_unitp)
 
           CALL Read_Mat(work_bhe,nio,5,err)
           IF (err /= 0) THEN
@@ -769,7 +769,7 @@
 !        ELSE
 !          write(out_unitp,*) 'name_SHADA',file_HADA%name
 !        END IF
-!        CALL flush_perso(out_unitp)
+!        flush(out_unitp)
         IF (iocond > 0 .OR. iocond < 0 .AND. .NOT. file_is_para) THEN
           write(out_unitp,*) ' ERROR in ',name_sub
           write(out_unitp,*) ' Problem with the SH_HADA file'
@@ -877,7 +877,7 @@
         write(out_unitp,*) 'Op',n_Op
         CALL Write_d0MatOp(d0MatOp)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1043,7 +1043,7 @@
       USE mod_Op
       IMPLICIT NONE
 
-      TYPE (param_file)  :: file_HADA
+      TYPE (File_t)  :: file_HADA
 
 
       integer :: i,iq,iqf

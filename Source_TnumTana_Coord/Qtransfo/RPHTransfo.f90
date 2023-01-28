@@ -235,7 +235,7 @@
          write(out_unitp,*) ' Check your data !!'
          STOP
        END IF
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        nb_inact21 = count(list_act_OF_Qdyn(:) == 21)
 
@@ -590,7 +590,7 @@
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -920,7 +920,7 @@
       END IF
 
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       END SUBROUTINE Write_RPHTransfo
 
 
@@ -945,7 +945,7 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'RPHTransfo1'
         CALL Write_RPHTransfo(RPHTransfo1)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -1047,7 +1047,7 @@
         write(out_unitp,*) 'RPHTransfo2'
         CALL Write_RPHTransfo(RPHTransfo2)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -1096,14 +1096,14 @@
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'list_act_OF_Qdyn',RPHTransfo%list_act_OF_Qdyn(:)
         write(out_unitp,*) 'list_QactTOQdyn ',RPHTransfo%list_QactTOQdyn(:)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         write(out_unitp,*) 'Qact1',dnQin%d0(1:RPHTransfo%nb_act1)
 
 
         write(out_unitp,*) 'dnQin'
         CALL Write_dnVec(dnQin,nderiv=nderiv_debug)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -1315,7 +1315,7 @@
         write(out_unitp,*) 'dnQout'
         CALL Write_dnVec(dnQout,nderiv=nderiv_debug)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -1359,7 +1359,7 @@
 
         write(out_unitp,*) 'dnQin'
         CALL Write_dnVec(dnQin)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -1539,7 +1539,7 @@
         write(out_unitp,*) 'dnQout'
         CALL Write_dnVec(dnQout)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
       END SUBROUTINE calc_RPHTransfo_BeforeActive_v1
@@ -1582,7 +1582,7 @@
 
         write(out_unitp,*) 'dnQin'
         CALL Write_dnVec(dnQin)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -1811,7 +1811,7 @@
         write(out_unitp,*) 'dnQout'
         CALL Write_dnVec(dnQout)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -2421,7 +2421,7 @@ SUBROUTINE Read_RPHpara2(RPHpara2,nb_Ref,Switch_Type,nb_var,nb_act1)
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
 
@@ -2457,7 +2457,7 @@ END SUBROUTINE Read_RPHpara2
           DO iref=1,size(QrefQact(1,:))
             write(out_unitp,*) 'QrefQact ',QrefQact(:,iref)
           END DO
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 !-----------------------------------------------------------
         nb_ref  = size(QrefQact(1,:))
@@ -2532,7 +2532,7 @@ END SUBROUTINE Read_RPHpara2
           write(out_unitp,*) 'dnSwitch'
           CALL Write_VecOFdnS(dnSwitch)
           write(out_unitp,*) 'END ',name_sub
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       END SUBROUTINE Switch_RPH
@@ -2679,7 +2679,7 @@ implicit NONE
         write(out_unitp,*) 'CoefQref: not allocated'
       END IF
     END IF
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) 'nb_pts for Grad ',CurviRPH%nb_pts_ForGrad
     write(out_unitp,*) 'nb_dev for Grad ',CurviRPH%nb_dev_ForGrad
@@ -2699,7 +2699,7 @@ implicit NONE
         write(out_unitp,*) 'CoefGrad: not allocated'
       END IF
     END IF
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     write(out_unitp,*) 'nb_pts for Hess ',CurviRPH%nb_pts_ForHess
     write(out_unitp,*) 'nb_dev for Hess ',CurviRPH%nb_dev_ForHess
@@ -2723,7 +2723,7 @@ implicit NONE
     END IF
     write(out_unitp,*) 'END Write_CurviRPH'
     write(out_unitp,*) '-----------------------------------------------'
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
   END SUBROUTINE Write_CurviRPH
   SUBROUTINE CurviRPH1_TO_CurviRPH2(CurviRPH1,CurviRPH2)
@@ -2828,7 +2828,7 @@ implicit NONE
 
   !IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   !END IF
 
   IF (nb_Qpath /= 1) STOP 'ERROR in Init_CurviRPH: nb_Qpath /= 1'
@@ -2857,7 +2857,7 @@ implicit NONE
     write(out_unitp,*) 'nb_pts,nb_dev  ',nb_pts,nb_dev
     write(out_unitp,*) 'nb_Qpath,nb_Q21',CurviRPH2%nb_Qpath,CurviRPH2%nb_Q21
     write(out_unitp,*) 'gradient       ',gradient
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     ig = 0
     ih = 0
@@ -2952,7 +2952,7 @@ implicit NONE
     IF (debug)     CALL Write_CurviRPH(CurviRPH2)
   !IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   !END IF
 
   END SUBROUTINE Init_CurviRPH
@@ -2973,7 +2973,7 @@ implicit NONE
 
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
     CALL Write_CurviRPH(CurviRPH)
   END IF
 
@@ -3090,7 +3090,7 @@ implicit NONE
   IF (debug) THEN
     CALL Write_CurviRPH(CurviRPH)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   END SUBROUTINE CalcCoef_CurviRPH
@@ -3113,7 +3113,7 @@ implicit NONE
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'Qpath ',Qpath
     CALL Write_CurviRPH(CurviRPH)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
 
@@ -3223,7 +3223,7 @@ implicit NONE
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   END SUBROUTINE get_CurviRPH
@@ -3244,7 +3244,7 @@ implicit NONE
 
   !IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   !END IF
 
 
@@ -3257,7 +3257,7 @@ implicit NONE
       fQpath(j) = funcQpath(CurviRPH%Qpath_ForQref(i),j)
     END DO
     IF (debug) write(out_unitp,*) 'points fQpath():',i,fQpath(:)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     DO iq=1,CurviRPH%nb_Q21
       val = dot_product(fQpath,CurviRPH%CoefQref(:,iq))
@@ -3269,7 +3269,7 @@ implicit NONE
   END DO
   CALL dealloc_NParray(fQpath,  'fQpath',name_sub)
   write(out_unitp,*) 'Largest error on Qref ',ErrQref
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
 
 
   !for the gradient
@@ -3282,7 +3282,7 @@ implicit NONE
         fQpath(j) = funcQpath(CurviRPH%Qpath_ForGrad(i),j)
       END DO
       IF (debug) write(out_unitp,*) 'points fQpath(;)',i,fQpath(:)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DO iq=1,CurviRPH%nb_Q21
         val     = dot_product(fQpath,CurviRPH%CoefGrad(:,iq))
@@ -3291,7 +3291,7 @@ implicit NONE
     END DO
     CALL dealloc_NParray(fQpath,  'fQpath',name_sub)
     write(out_unitp,*) 'Largest error on Grad ',ErrGrad
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   !for the hessian
@@ -3305,7 +3305,7 @@ implicit NONE
         fQpath(j) = funcQpath(CurviRPH%Qpath_ForHess(i),j)
       END DO
       IF (debug) write(out_unitp,*) 'points fQpath(:)',i,fQpath(:)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DO iq=1,CurviRPH%nb_Q21
       DO jq=1,CurviRPH%nb_Q21
@@ -3318,12 +3318,12 @@ implicit NONE
     END DO
     CALL dealloc_NParray(fQpath,  'fQpath',name_sub)
     write(out_unitp,*) 'Largest error on Hess ',ErrHess
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   !IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   !END IF
 
   END SUBROUTINE check_CurviRPH

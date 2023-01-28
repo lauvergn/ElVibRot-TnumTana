@@ -120,7 +120,7 @@
             nb_nosym = 2*base%nb
           END IF
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         SELECT CASE (base%Nested)
         CASE(1)
@@ -153,7 +153,7 @@
           END IF
           CALL Set_nq_OF_basis(base,nq)
           IF (Print_basis) write(out_unitp,*) '      new nb_quadra',nq
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           CALL alloc_xw_OF_basis(base)
           CALL hercom(nq,base%x(1,:),base%w)
@@ -221,7 +221,7 @@
       logical                       :: deriv
       integer                       :: i,iq,nq,nb_nosym
       logical                       :: Print_basis
-      TYPE (param_file)             :: herm_file
+      TYPE (File_t)             :: herm_file
       integer                       :: idum,nio,err_io
       real(kind=Rkind)              :: wdum
       logical, parameter            :: WithRead = .TRUE.
@@ -284,7 +284,7 @@
             nb_nosym = 2*base%nb
           END IF
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         SELECT CASE (base%Nested)
         CASE(1)
@@ -318,7 +318,7 @@
             IF (nq < nb_nosym) nq = nb_nosym + 1
           END IF
           IF (Print_basis) write(out_unitp,*) '      new nb_quadra',nq
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           CALL alloc_NParray(x_loc,[1,nq],'x_loc',name_sub)
           CALL alloc_NParray(w_loc,[nq],  'w_loc',name_sub)
@@ -426,7 +426,7 @@
       logical                       :: deriv
       integer                       :: i,iq,nq
       logical                       :: Print_basis
-      TYPE (param_file)             :: herm_file
+      TYPE (File_t)             :: herm_file
       integer                       :: idum,nio,err_io
       real(kind=Rkind)              :: wdum
       logical, parameter            :: WithRead = .TRUE.
@@ -482,13 +482,13 @@
 
         IF (Print_basis) write(out_unitp,*) '      nb_hermite',base%nb
         IF (Print_basis) write(out_unitp,*) '      old nb_quadra',nq
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF (base%check_nq_OF_basis) THEN
           IF (nq < base%nb) nq = base%nb+1
         END IF
         IF (Print_basis) write(out_unitp,*) '      new nb_quadra',nq
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         !nb_nosym = 2*base%nb
         !nq_nosym = 2*nq
@@ -1278,7 +1278,7 @@ end subroutine sub_quadra_hermite_half
       integer                  :: LB,LG
       character (len=Name_len) :: name_i,name_j
       integer                  :: nio,err_io
-      TYPE (param_file)        :: cubature_file
+      TYPE (File_t)        :: cubature_file
       logical                  :: err_grid
 
 !----- for debuging --------------------------------------------------

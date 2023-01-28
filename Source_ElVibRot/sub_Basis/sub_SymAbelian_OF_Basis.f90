@@ -61,7 +61,7 @@
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         CALL Write_SymAbelian(basis_DP%P_SymAbelian)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------------------
 
@@ -169,7 +169,7 @@
       IF (debug) THEN
         CALL Write_SymAbelian(basis_DP%P_SymAbelian)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------------------
 

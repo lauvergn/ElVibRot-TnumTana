@@ -23,13 +23,13 @@
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) 'nb_act',nb_act
       write(out_unitp,*) 'nb_var',nb_var
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !---------------------------------------------------------------------
 
     write(out_unitp,*) 'The subroutine ',name_sub
     write(out_unitp,*) ' must be adapted to the sytem'
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
     STOP ' ERROR in calc_Tab_dnQflex: the subroutine must be adapted.'
 
     !---------------------------------------------------------------------
@@ -39,7 +39,7 @@
         CALL write_dnS(tab_dnQflex(iQ),nderiv)
       END DO
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     !---------------------------------------------------------------------
 

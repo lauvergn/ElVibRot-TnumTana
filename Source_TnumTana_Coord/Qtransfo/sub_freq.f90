@@ -61,7 +61,7 @@ MODULE mod_freq
         END IF
 
         write(out_unitp,*) 'END Write_degenerate_freq'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END SUBROUTINE Write_degenerate_freq
       SUBROUTINE Read_degenerate_freq(degene_freq,n)
@@ -104,12 +104,12 @@ MODULE mod_freq
            STOP
          END IF
        END IF
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
 
        CALL Write_degenerate_freq(degene_freq)
 
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END SUBROUTINE Read_degenerate_freq
       SUBROUTINE Init_degenerate_freq(degene_freq,n)
@@ -126,7 +126,7 @@ MODULE mod_freq
         degene_freq%option = 0
 
         write(out_unitp,*) 'END Init_degenerate_freq'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END SUBROUTINE Init_degenerate_freq
       SUBROUTINE dealloc_degenerate_freq(degene_freq)
@@ -194,7 +194,7 @@ MODULE mod_freq
          CALL Write_Mat(d0k,out_unitp,5)
          write(out_unitp,*) 'd0c_ini',nb_var
          CALL Write_Mat(d0c_ini,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
       END IF
 
       !-----------------------------------------------------------
@@ -228,7 +228,7 @@ MODULE mod_freq
        IF (debug) THEN
          write(out_unitp,*) 'vp de d0k'
          write(out_unitp,*) (d0ek(i),i=1,nb_var)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
        DO i=1,nb_var
@@ -251,7 +251,7 @@ MODULE mod_freq
          write(out_unitp,*)
          write(out_unitp,*) 'd0ck(:,i)*sqrt(d0ek(i))'
          CALL Write_Mat(d0ck,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -273,7 +273,7 @@ MODULE mod_freq
          write(out_unitp,*)
          write(out_unitp,*) 'd0h dans la nouvelle base'
          CALL Write_Mat(d0k,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -307,7 +307,7 @@ MODULE mod_freq
          write(out_unitp,*)
          write(out_unitp,*) 'modes normaux: d0ch'
          CALL Write_Mat(d0ch,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -384,7 +384,7 @@ MODULE mod_freq
          END DO
          END DO
          write(out_unitp,*) ' max_err: ',max_err
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -436,7 +436,7 @@ MODULE mod_freq
        IF (debug) THEN
          write(out_unitp,*) 'determinants :',norme
          write(out_unitp,*) 'END calc_freq_new'
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 !stop
@@ -492,7 +492,7 @@ end subroutine calc_freq_new
          CALL Write_Mat(d0k,out_unitp,5)
          write(out_unitp,*) 'd0c_ini',nb_var
          CALL Write_Mat(d0c_ini,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
       END IF
       !-----------------------------------------------------------
 
@@ -525,7 +525,7 @@ end subroutine calc_freq_new
        IF (debug) THEN
          write(out_unitp,*) 'vp de d0k'
          write(out_unitp,*) (d0ek(i),i=1,nb_var)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
        DO i=1,nb_var
@@ -548,7 +548,7 @@ end subroutine calc_freq_new
          write(out_unitp,*)
          write(out_unitp,*) 'd0ck(:,i)*sqrt(d0ek(i))'
          CALL Write_Mat(d0ck,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -570,7 +570,7 @@ end subroutine calc_freq_new
          write(out_unitp,*)
          write(out_unitp,*) 'd0h dans la nouvelle base'
          CALL Write_Mat(d0k,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -604,7 +604,7 @@ end subroutine calc_freq_new
          write(out_unitp,*)
          write(out_unitp,*) 'modes normaux: d0ch'
          CALL Write_Mat(d0ch,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -671,7 +671,7 @@ end subroutine calc_freq_new
          END DO
          END DO
          write(out_unitp,*) ' max_err: ',max_err
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -723,7 +723,7 @@ end subroutine calc_freq_new
        IF (debug) THEN
          write(out_unitp,*) 'determinants :',norme
          write(out_unitp,*) 'END calc_freq'
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 !stop
@@ -910,7 +910,7 @@ end subroutine calc_freq_new
           write(out_unitp,*) '========================================='
           write(out_unitp,*) '===== END Block: ',i_Block
           write(out_unitp,*) '========================================='
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
 
@@ -987,7 +987,7 @@ end subroutine calc_freq_new
          CALL Write_Mat(d0k,out_unitp,5)
          write(out_unitp,*) 'd0c',nb_var
          CALL Write_Mat(d0c,out_unitp,5)
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -1038,7 +1038,7 @@ end subroutine calc_freq_new
          write(out_unitp,*) 'ZPE   (au): ',HALF*sum(d0eh(:))
 
          write(out_unitp,*) 'frequencies (cm-1): ',d0eh(:)*get_Conv_au_TO_unit('E','cm-1')
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -1047,7 +1047,7 @@ end subroutine calc_freq_new
        IF (debug) THEN
          write(out_unitp,*) 'determinants :',norme
          write(out_unitp,*) 'END calc_freq_WITH_d0c'
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 

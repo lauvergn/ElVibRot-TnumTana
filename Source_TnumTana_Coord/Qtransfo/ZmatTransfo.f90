@@ -151,7 +151,7 @@
 
        TYPE (Type_ZmatTransfo), intent(inout) :: ZmatTransfo
 
-       !write(out_unitp,*) 'BEGINNING dealloc_ZmatTransfo'; call flush_perso(out_unitp)
+       !write(out_unitp,*) 'BEGINNING dealloc_ZmatTransfo'; flush(out_unitp)
 
        IF (associated(ZmatTransfo%ind2_zmat))  THEN
          CALL dealloc_array(ZmatTransfo%ind2_zmat,                      &
@@ -196,7 +196,7 @@
        nullify(ZmatTransfo%type_Qin)
        nullify(ZmatTransfo%name_Qin)
 
-       !write(out_unitp,*) 'END dealloc_ZmatTransfo'; call flush_perso(out_unitp)
+       !write(out_unitp,*) 'END dealloc_ZmatTransfo'; flush(out_unitp)
 
       END SUBROUTINE dealloc_ZmatTransfo
 

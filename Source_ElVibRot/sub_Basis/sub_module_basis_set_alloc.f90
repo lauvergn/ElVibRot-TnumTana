@@ -152,7 +152,7 @@
           logical                        :: Restart_make_cubature  = .FALSE.
           logical                        :: read_para_cubature     = .FALSE.
           logical                        :: read_contrac_file      = .FALSE.  ! .T. if the basis set is contracted
-          TYPE(param_file)               :: file_contrac                      ! file for read contraction coef
+          TYPE(File_t)               :: file_contrac                      ! file for read contraction coef
           real (kind=Rkind), allocatable :: Rvec(:,:)                     ! real eigenvectors for the contraction
 
           integer                        :: type      = 0     ! basis type
@@ -415,7 +415,7 @@
          !----- for debuging --------------------------------------------------
 
          IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
          nq = get_nq_FROM_basis(basis_set)
 
@@ -451,7 +451,7 @@
          END IF
 
          !write(out_unitp,*) 'cplx,nb,nq,ndim',basis_set%cplx,basis_set%nb,nq,basis_set%ndim
-         CALL flush_perso(6)
+         flush(6)
 
          IF (basis_set%cplx) THEN
 
@@ -472,7 +472,7 @@
 
          END IF
          IF (debug) write(out_unitp,*) 'END ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
        END SUBROUTINE alloc_dnb_OF_basis
        SUBROUTINE dealloc_dnb_OF_basis(basis_set)
@@ -486,7 +486,7 @@
          !----- for debuging --------------------------------------------------
 
          IF (debug) write(out_unitp,*) 'BEGINNING ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
          IF (allocated(basis_set%tab_ndim_index)) THEN
            CALL dealloc_NParray(basis_set%tab_ndim_index,                 &
@@ -506,7 +506,7 @@
          !CALL dealloc_dnCplxMat(basis_set%dnCGG) !not yet in the type
 
          IF (debug) write(out_unitp,*) 'END ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
 
        END SUBROUTINE dealloc_dnb_OF_basis
        SUBROUTINE alloc_xw_OF_basis(basis_set)
@@ -1989,7 +1989,7 @@
         write(out_unitp,*) 'shape(MatRGG)',shape(MatRGG)
         write(out_unitp,*) 'alloc dnRGG',basis_set%dnRGG%alloc
         CALL write_dnSVM(basis_set%dnRGG)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2215,7 +2215,7 @@
         write(out_unitp,*) 'nb',nb
         write(out_unitp,*) 'shape(MatRBB)',shape(MatRBB)
         write(out_unitp,*) 'alloc dnRBB',basis_set%dnRBB%alloc
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2266,7 +2266,7 @@
         write(out_unitp,*) 'nb',basis_set%nb
         write(out_unitp,*) 'shape(MatRBB)',shape(MatRBB)
         write(out_unitp,*) 'alloc dnRBB',basis_set%dnRBB%alloc
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2319,7 +2319,7 @@
         write(out_unitp,*) 'nb',nb
         write(out_unitp,*) 'shape(MatRGB)',shape(MatRGB)
         write(out_unitp,*) 'alloc dnPara_OF_RGB',basis_set%dnPara_OF_RGB%alloc
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2371,7 +2371,7 @@
         write(out_unitp,*) 'nb',nb
         write(out_unitp,*) 'shape(MatRBB)',shape(MatRBB)
         write(out_unitp,*) 'alloc dnPara_OF_RBB',basis_set%dnPara_OF_RBB%alloc
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2421,7 +2421,7 @@ SUBROUTINE Get2_MATdnPara_OF_RBB(basis_set,MatRBB,dnba_ind)
         write(out_unitp,*) 'nb',basis_set%nb
         write(out_unitp,*) 'shape(MatRBB)',shape(MatRBB)
         write(out_unitp,*) 'alloc dnPara_OF_RBB',basis_set%dnPara_OF_RBB%alloc
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -2475,7 +2475,7 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
         write(out_unitp,*) 'nb',nb
         write(out_unitp,*) 'shape(MatCBB)',shape(MatCBB)
         write(out_unitp,*) 'alloc dnCBB',basis_set%dnCBB%alloc
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 

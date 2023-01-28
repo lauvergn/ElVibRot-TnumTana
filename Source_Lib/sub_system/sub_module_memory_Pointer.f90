@@ -21,7 +21,7 @@
 !===========================================================================
 !===========================================================================
 MODULE mod_memory_pointer
-      USE mod_NumParameters, only : Rkind, ILkind, ZERO, CZERO,out_unitp
+      USE QDUtil_NumParameters_m, only : Rkind, ILkind, ZERO, CZERO,out_unitp => out_unit
       use mod_memory, only: write_error_not_null, sub_test_tab_ub, sub_test_tab_lb, &
                             error_memo_allo, write_error_null
       IMPLICIT NONE

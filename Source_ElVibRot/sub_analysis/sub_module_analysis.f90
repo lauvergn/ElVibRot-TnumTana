@@ -115,8 +115,8 @@
           real (kind=Rkind) :: nEstep         ! 10
           logical           :: l_lorentz = .TRUE.      ! (T) if F => gaussian
 
-          TYPE (param_file) :: file_spectrum,file_intensity
-          TYPE (param_file) :: file_resart_int
+          TYPE (File_t) :: file_spectrum,file_intensity
+          TYPE (File_t) :: file_resart_int
 
         END TYPE param_intensity
       CONTAINS

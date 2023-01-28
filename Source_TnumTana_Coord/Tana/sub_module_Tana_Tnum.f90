@@ -78,7 +78,7 @@ MODULE mod_Tana_Tnum
 
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' BEGINNING ',routine_name
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       nullify(Gana)
       CALL alloc_array(Gana,[mole%ndimG,mole%ndimG],'Gana',routine_name)
       CALL alloc_dnSVM(dnGG,mole%ndimG,mole%ndimG,mole%nb_act,2)
@@ -86,10 +86,10 @@ MODULE mod_Tana_Tnum
 
       CALL get_NumG_WITH_AnaKEO(TWOxKEO,Qact,mole,Gana,vep_ana)
       write(out_unitp,*) '   end calc G with Tana'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL get_dnGG_vep(Qact,para_Tnum,mole,dnGG,vep,rho,2)
       write(out_unitp,*) '   end calc G with Tnum'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (maxval(abs(Gana-dnGG%d0))/maxval(abs(dnGG%d0)) > ONETENTH**10) THEN
         write(out_unitp,*) 'G of Tana  '
@@ -102,7 +102,7 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) '         max diff G: ',maxval(abs(Gana-dnGG%d0))
       write(out_unitp,*) 'Relative max diff G: ',maxval(abs(Gana-dnGG%d0))/maxval(abs(dnGG%d0))
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       max_error = maxval(abs(Gana-dnGG%d0))/maxval(abs(dnGG%d0))
 
@@ -130,12 +130,12 @@ MODULE mod_Tana_Tnum
       CALL   calc3_f2_f1Q_num(Qact,Tdef2,Tdef1,vep,rho,Tcor2,Tcor1,Trot,&
                               para_Tnum,mole)
       write(out_unitp,*) '   end calc f2, f1 with Tnum'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       para_Tnum%Tana = .TRUE.
       CALL get_Numf2f1vep_WITH_AnaKEO(TWOxKEO,Qact,mole,para_Tnum,              &
                                       f2_ana,f1_ana,vep_ana,rho_ana)
       write(out_unitp,*) '   end calc f2, f1 with Tana'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (vep < ONETENTH**6) THEN
         vep_error = abs(vep-vep_ana)
@@ -155,7 +155,7 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) '       vep from Tana: ',vep_ana
       write(out_unitp,*) '       vep from Tnum: ',vep
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (mole%nb_act == mole%nb_var) max_error = max( max_error, vep_error )
       max_error = max( max_error, maxval(abs(f2_ana-Tdef2))/maxval(abs(Tdef2)) )
@@ -248,7 +248,7 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) '================================================='
       write(out_unitp,*) ' BEGINNING ',routine_name
       IF (def_only) write(out_unitp,*) ' WARNING: just the deformation part.'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL file_open2(name_file='keo.op',iunit=io_mctdh)
       CALL read_keo_mctdh_form(mole%nb_act,keo=TWOxKEO,io=io_mctdh) ! here we read KEO
@@ -256,7 +256,7 @@ MODULE mod_Tana_Tnum
       IF (debug) CALL write_op(TWOxKEO,header=.TRUE.)
       close(io_mctdh)
       write(out_unitp,*) '   end read analytical KEO'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nullify(Gana)
       CALL alloc_array(Gana,[mole%ndimG,mole%ndimG],'Gana',routine_name)
@@ -265,10 +265,10 @@ MODULE mod_Tana_Tnum
 
       CALL get_NumG_WITH_AnaKEO(TWOxKEO,Qact,mole,Gana,vep_ana)
       write(out_unitp,*) '   end calc G with Tana'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL get_dnGG_vep(Qact,para_Tnum,mole,dnGG,vep,rho,2)
       write(out_unitp,*) '   end calc G with Tnum'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (def_only) THEN
         error_G = maxval(abs(Gana(1:mole%nb_act,1:mole%nb_act)-dnGG%d0(1:mole%nb_act,1:mole%nb_act)))
@@ -287,7 +287,7 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) '         max diff G: ',error_G
       write(out_unitp,*) 'Relative max diff G: ',error_G/maxval(abs(dnGG%d0))
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       max_error = error_G/maxval(abs(dnGG%d0))
 
@@ -316,16 +316,16 @@ MODULE mod_Tana_Tnum
                               para_Tnum,mole)
       para_Tnum%Tana = .TRUE.
       write(out_unitp,*) '   end calc f2, f1 with Tnum'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       ! it is important to make the expantion, otherwise f1 might be zero
       CALL Expand_Sum_OpnD_TO_Sum_OpnD(TWOxKEO,ExpandTWOxKEO)
       write(out_unitp,*) '   end expand anlytical KEO in the f2, f1, vep form'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       CALL get_Numf2f1vep_WITH_AnaKEO(ExpandTWOxKEO,Qact,mole,para_Tnum,        &
                                       f2_ana,f1_ana,vep_ana,rho_ana)
       write(out_unitp,*) '   end calc f2, f1 with Tana'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       IF (vep < ONETENTH**6) THEN
         vep_error = abs(vep-vep_ana)
       ELSE
@@ -344,7 +344,7 @@ MODULE mod_Tana_Tnum
       write(out_unitp,*) '       vep from Tana: ',vep_ana
       write(out_unitp,*) '       vep from Tnum: ',vep
       write(out_unitp,*)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (mole%nb_act == mole%nb_var) max_error = max( max_error, vep_error )
       max_error = max( max_error, maxval(abs(f2_ana-Tdef2))/maxval(abs(Tdef2)) )

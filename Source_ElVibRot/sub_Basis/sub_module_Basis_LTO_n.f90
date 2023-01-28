@@ -494,7 +494,7 @@
 
     IF (n == 0) THEN
      write(out_unitp,*) 'WARNING in ',name_sub, '  n == 0'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
     END IF
 !---------------------------------------------------------------------
       IF (debug) THEN
@@ -701,7 +701,7 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'L_TO_n_para2'
         CALL Write_Basis_L_TO_n(L_TO_n_para2)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 !---------------------------------------------------------------------

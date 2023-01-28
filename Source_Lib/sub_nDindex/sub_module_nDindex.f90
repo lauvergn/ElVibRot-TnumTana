@@ -369,7 +369,7 @@
       IF (debug) THEN
         CALL Write_nDindex(nDindex)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -990,7 +990,7 @@
     write(out_unitp,*) 'Lmax,L1max,L2max',nDindex%Lmax,nDindex%L1max,nDindex%L2max
     write(out_unitp,*) 'nDNum_OF_Lmax',nDindex%nDNum_OF_Lmax
     !CALL Write_nDindex(nDindex)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-----------------------------------------------------------
   err_sub = 0
@@ -1014,7 +1014,7 @@
 
   IF (nDindex%Write_Tab .OR. debug) THEN
     write(out_unitp,*) 'nDindex%Max_nDI',nDindex%Max_nDI
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
   IF (nDindex%Max_nDI <= 0) THEN
@@ -1058,7 +1058,7 @@
        ELSE IF (nDI == 100) THEN
          write(out_unitp,*) 'nDI,nDval ....'
        END IF
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
     END IF
   END DO
   IF (nDI /= nDindex%Max_nDI) THEN
@@ -1075,7 +1075,7 @@
   IF (debug) THEN
     !CALL Write_nDindex(nDindex)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-----------------------------------------------------------
 
@@ -1308,7 +1308,7 @@ END SUBROUTINE init_nDindex_type5p
         IF (nDindex%alloc .AND. nDindex%ndim == ndim) THEN
           !write(out_unitp,*) ' WARNNING in alloc_nDindex'
           !write(out_unitp,*) ' alloc=t and nDindex%ndim == ndim',ndim
-          !CALL flush_perso(out_unitp)
+          !flush(out_unitp)
           RETURN
         END IF
         nDindex%alloc = .TRUE.
@@ -2284,7 +2284,7 @@ END SUBROUTINE init_nDindex_type5p
     IF (debug) THEN
       write(out_unitp,*) ' BEGINNING ',name_sub
       write(out_unitp,*) ' in nDval',nDval
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     IF (present(err_sub)) err_sub = 0
@@ -2357,7 +2357,7 @@ END SUBROUTINE init_nDindex_type5p
     IF (debug) THEN
       write(out_unitp,*) ' out nDval',nDval
       write(out_unitp,*) ' END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
 
@@ -2604,7 +2604,7 @@ END SUBROUTINE ADD_ONE_TO_nDindex_type5p
     END DO
     write(out_unitp,*) 'L1,L2,L    ',L1,L2,L
     write(out_unitp,*) 'nb_Coupling',nb_Coupling
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 
 END SUBROUTINE Analysis_nDval_nDindex_type5
@@ -2663,7 +2663,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) '  nDval (in) ',nDval
     !CALL write_nDindex(nDindex)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-------------------------------------------------------
 
@@ -2687,7 +2687,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
     IF (debug .AND. found) write(out_unitp,*) 'found at nDI',ib
     IF (debug .AND. .NOT. found) write(out_unitp,*) 'not found at nDI',ib
 
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     IF (.NOT. found) THEN
 
@@ -2795,7 +2795,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
   IF (debug) THEN
     write(out_unitp,*) '  nDI ',nDI
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-------------------------------------------------------
 
@@ -2819,7 +2819,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) '  nDval (in) ',nDval
     !CALL write_nDindex(nDindex)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-------------------------------------------------------
 
@@ -2843,7 +2843,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
     IF (debug .AND. found) write(out_unitp,*) 'found at nDI',ib
     IF (debug .AND. .NOT. found) write(out_unitp,*) 'not found at nDI',ib
 
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
 
     ! then from nDI+1 to Max_nDI
     IF (.NOT. found) THEN
@@ -2854,7 +2854,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
       IF (debug .AND. found) write(out_unitp,*) 'found in [nDI+1 ... Max_nDI], it',ib-nDI
       IF (debug .AND. .NOT. found) write(out_unitp,*) 'not found in [nDI+1 ... Max_nDI], it',ib-nDI
 
-      !CALL flush_perso(out_unitp)
+      !flush(out_unitp)
 
     END IF
 
@@ -2865,7 +2865,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
        IF (found) EXIT
       END DO
       IF (debug .AND. found) write(out_unitp,*) 'found in [1 ... nDI-1], it',ib
-      !CALL flush_perso(out_unitp)
+      !flush(out_unitp)
 
     END IF
 
@@ -2942,7 +2942,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
   IF (debug) THEN
     write(out_unitp,*) '  nDI ',nDI
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-------------------------------------------------------
 
@@ -2966,7 +2966,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) '  nDval (in) ',nDval
     !CALL write_nDindex(nDindex)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-------------------------------------------------------
 
@@ -2988,7 +2988,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
     ! first at nDI
     found = ( all(nDval == nDindex%Tab_nDval(:,ib)) )
     IF (debug .AND. found) write(out_unitp,*) 'found at nDI',ib
-    !CALL flush_perso(out_unitp)
+    !flush(out_unitp)
 
     ! then from nDI+1 to Max_nDI
     IF (.NOT. found) THEN
@@ -2997,7 +2997,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
        IF (found) EXIT
       END DO
       IF (debug .AND. found) write(out_unitp,*) 'found in [nDI+1 ... Max_nDI], it',ib-nDI
-      !CALL flush_perso(out_unitp)
+      !flush(out_unitp)
 
     END IF
 
@@ -3008,7 +3008,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
        IF (found) EXIT
       END DO
       IF (debug .AND. found) write(out_unitp,*) 'found in [1 ... nDI-1], it',ib
-      !CALL flush_perso(out_unitp)
+      !flush(out_unitp)
 
     END IF
 
@@ -3085,7 +3085,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
   IF (debug) THEN
     write(out_unitp,*) '  nDI ',nDI
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
 !-------------------------------------------------------
 
@@ -3377,7 +3377,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
             ELSE
               nDindex%Max_nDI = nDindex%Max_nDI + 1
               !write(out_unitp,*) 'nDI,nDval,Norm',nDindex%Max_nDI,nDval,Norm
-              !CALL flush_perso(out_unitp)
+              !flush(out_unitp)
               EXIT
             END IF
           END DO
@@ -3459,7 +3459,7 @@ END SUBROUTINE Analysis_nDval_nDindex_type5
                   nb_Coupling >= nDindex%MinCoupling) THEN
                 nDindex%Max_nDI = nDindex%Max_nDI + 1
                 !write(out_unitp,*) 'nDI,nDval,Norm',nDindex%Max_nDI,nDval,Norm
-                CALL flush_perso(out_unitp)
+                flush(out_unitp)
               END IF
               EXIT
             END IF

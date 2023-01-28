@@ -313,7 +313,7 @@ CONTAINS
 !       DO i=1,get_nq_FROM_basis(basis_temp)
 !         write(out_unitp,*) i,basis_temp%x(:,i),basis_temp%dnRGB%d0(i,:)
 !       END DO
-!       CALL flush_perso(out_unitp)
+!       flush(out_unitp)
 !       STOP
 !     END IF
 
@@ -327,7 +327,7 @@ CONTAINS
          write(out_unitp,*) ' RvpX:'
          CALL Write_Mat(RvpX,out_unitp,5)
          !write(out_unitp,*) 'Id?',matmul(transpose(RvpX),RvpX) ; stop
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
       END IF
 
       !---------------------------------------------------------------
@@ -365,7 +365,7 @@ CONTAINS
           DO i=1,get_nq_FROM_basis(basis_POGridRep)
             write(out_unitp,*) i,basis_POGridRep%x(:,i),basis_POGridRep%dnRGB%d0(i,:)
           END DO
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
       END IF
       nq = get_nq_FROM_basis(basis_POGridRep)
@@ -382,7 +382,7 @@ CONTAINS
         ! enable to calculate  the POGridRep weights
         !write(out_unitp,*) 'shape Rvec',shape(basis_POGridRep%Rvec)
         !write(out_unitp,*) 'shape RvpX',shape(RvpX)
-        !CALL flush_perso(out_unitp)
+        !flush(out_unitp)
         IF (allocated(basis_POGridRep%Rvec))  THEN
           CALL dealloc_NParray(basis_POGridRep%Rvec,"basis_POGridRep%Rvec",name_sub)
         END IF
@@ -395,7 +395,7 @@ CONTAINS
           DO i=1,nq
             write(out_unitp,*) i,basis_POGridRep%x(:,i),basis_POGridRep%dnRGB%d0(i,:)
           END DO
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         ! the POGridRep weights
@@ -410,7 +410,7 @@ CONTAINS
          DO i=1,nq
            write(out_unitp,*) i,basis_POGridRep%x(:,i),basis_POGridRep%w(i)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !- d1b => d1BasisRep and  d2b => d2BasisRep ------------
       CALL sub_dnGB_TO_dnBB(basis_POGridRep)
@@ -428,7 +428,7 @@ CONTAINS
          DO i=1,nq
            write(out_unitp,*) i,basis_POGridRep%x(:,i),basis_POGridRep%dnRGB%d0(i,:)
         END DO
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       CALL dealloc_NParray(matX_basis,"matX_basis",name_sub)
@@ -528,7 +528,7 @@ CONTAINS
 !           DO i=1,get_nq_FROM_basis(basis_temp)
 !             write(out_unitp,*) i,basis_temp%x(:,i),basis_temp%dnRGB%d0(i,:)
 !           END DO
-!           CALL flush_perso(out_unitp)
+!           flush(out_unitp)
 !           STOP
 !         END IF
 
@@ -542,7 +542,7 @@ CONTAINS
             write(out_unitp,*) ' RvpX:'
             CALL Write_Mat(RvpX,out_unitp,5)
             !write(out_unitp,*) 'Id?',matmul(transpose(RvpX),RvpX) ; stop
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
          END IF
 
          !---------------------------------------------------------------
@@ -595,7 +595,7 @@ CONTAINS
              DO i=1,get_nq_FROM_basis(basis_POGridRep)
                write(out_unitp,*) i,basis_POGridRep%x(:,i),basis_POGridRep%dnRGB%d0(i,:)
              END DO
-             CALL flush_perso(out_unitp)
+             flush(out_unitp)
            END IF
          END IF
 GOTO 99
@@ -630,7 +630,7 @@ GOTO 99
            ! enable to calculate  the POGridRep weights
            write(out_unitp,*) 'shape Rvec',shape(basis_POGridRep%Rvec)
            write(out_unitp,*) 'shape RvpX',shape(RvpX)
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
            IF (allocated(basis_POGridRep%Rvec))  THEN
              CALL dealloc_NParray(basis_POGridRep%Rvec,"basis_POGridRep%Rvec",name_sub)
            END IF
@@ -644,7 +644,7 @@ GOTO 99
              DO i=1,get_nq_FROM_basis(basis_POGridRep)
                write(out_unitp,*) i,basis_POGridRep%x(:,i),basis_POGridRep%dnRGB%d0(i,:)
              END DO
-             CALL flush_perso(out_unitp)
+             flush(out_unitp)
            END IF
 
            ! the POGridRep weights
@@ -659,7 +659,7 @@ GOTO 99
             DO i=1,get_nq_FROM_basis(basis_POGridRep)
               write(out_unitp,*) i,basis_POGridRep%x(:,i),basis_POGridRep%w(i)
            END DO
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
          END IF
          99 CONTINUE
          !---------------------------------------------------------------
@@ -676,7 +676,7 @@ GOTO 99
             DO i=1,get_nq_FROM_basis(basis_POGridRep)
               write(out_unitp,*) i,basis_POGridRep%x(:,i),basis_POGridRep%dnRGB%d0(i,:)
            END DO
-           CALL flush_perso(out_unitp)
+           flush(out_unitp)
          END IF
 
          CALL dealloc_NParray(matX_basis,"matX_basis",name_sub)
@@ -1645,7 +1645,7 @@ STOP
       logical           :: check_basis_save,err_cuba
 
       integer                  :: nio,err_io
-      TYPE (param_file)        :: cubature_file
+      TYPE (File_t)        :: cubature_file
       character (len=Name_len) :: name_i,name_j
 
 
@@ -1761,7 +1761,7 @@ STOP
       write(out_unitp,*) ' Optimal norm',NormA
       write(out_unitp,*) 'av',((sum(basis_cuba%x(i,:)) /                &
                                real(nq,kind=Rkind)),i=1,basis_cuba%ndim)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL file_open(cubature_file,nio,err_file=err_io)
       write(nio,*,iostat=err_io) nq
@@ -1882,7 +1882,7 @@ STOP
 
       write(out_unitp,'(a)') 'Eval (%): [--0-10-20-30-40-50-60-70-80-90-100]'
       write(out_unitp,'(a)',ADVANCE='no') 'Eval (%): ['
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       NormA  = ZERO
       ! first find the average Energy (Norm), then Temp
       DO imc=1,SA_para%nb_mc_tot/10
@@ -1927,7 +1927,7 @@ STOP
 
       Temp     = Temp_max
       write(out_unitp,*) 'Average Norm, Temp',NormA,Temp
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       DTemp               = Temp_max/real(SA_para%nb_mc_tot,kind=Rkind)
       imc                 = 1
@@ -1943,7 +1943,7 @@ STOP
         END DO
         DNorm = NormA - NormB
         !write(out_unitp,*) 'Norm',imc,NormA
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
         IF ( NormA < Norm_min) THEN
           nb_Norm_min = nb_Norm_min + 1
@@ -1985,7 +1985,7 @@ STOP
 
           write(out_unitp,*) 'imc,Temp_max,nb_Norm_min,Norm_min',imc,   &
                                            Temp_max,nb_Norm_min,Norm_min
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           SQ(:)               = SQ(:)*SA_para%RangeScal
           Temp_max            = (ONE-SA_para%ResetTempScal)*Temp_max

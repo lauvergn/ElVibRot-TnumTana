@@ -177,7 +177,7 @@
 
       IF (write_maxS) THEN
          write(out_unitp,"(' Max Overlap:',2e11.3)") max_Sii,max_Sij
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       IF (debug) THEN

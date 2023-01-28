@@ -296,7 +296,7 @@ MODULE mod_ActiveTransfo
 
       END IF
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE Read_ActiveTransfo
 
@@ -347,7 +347,7 @@ MODULE mod_ActiveTransfo
 
       END DO
       write(out_unitp,*) 'list_Qact_order',list_Qact(:)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       ! modify ActiveTransfo%list_act_OF_Qdyn with list_Qact
       DO i=1,count(list_Qact(:) > 0)
@@ -374,7 +374,7 @@ MODULE mod_ActiveTransfo
           STOP
       END IF
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       END SUBROUTINE Read2_ActiveTransfo
 
@@ -615,7 +615,7 @@ IMPLICIT NONE
      write(out_unitp,*) 'size Qact',size(Qact)
      IF (.NOT. With_act_loc) write(out_unitp,*) 'Qact (only act)',Qact(1:ActiveTransfo%nb_act)
      write(out_unitp,*)
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
 
@@ -629,7 +629,7 @@ IMPLICIT NONE
 
      IF (debug) THEN
        write(out_unitp,*) 'i_Qact,i_Qdyn,typ_var_act',i_Qact,i_Qdyn,typ_var_act
-       CALL flush_perso(out_unitp)
+       flush(out_unitp)
      END IF
   END DO
 
@@ -699,7 +699,7 @@ IMPLICIT NONE
   IF (debug) THEN
     write(out_unitp,*) 'Qact (all)',Qact(:)
     write(out_unitp,*) 'END ',name_sub
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
 
@@ -735,7 +735,7 @@ IMPLICIT NONE
     write(out_unitp,*) 'nb_act',ActiveTransfo%nb_act
     write(out_unitp,*) 'Qact0',Qact0(:)
     write(out_unitp,*)
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !-----------------------------------------------------------------
 

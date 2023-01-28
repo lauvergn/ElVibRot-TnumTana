@@ -103,7 +103,7 @@ CONTAINS
 
         CALL Write_RPHTransfo(mole%RPHTransfo)
 
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
@@ -131,7 +131,7 @@ CONTAINS
         CALL Write_dnVec(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnQopt)
         write(out_unitp,*) 'dnC_inv'
         CALL Write_dnMat(mole%RPHTransfo%tab_RPHpara_AT_Qact1(0)%dnC_inv)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
       END IF
 
@@ -163,7 +163,7 @@ CONTAINS
       END IF
 
       write(out_unitp,*) 'RPHCoord_IN_OneBasis',RPHCoord_IN_OneBasis
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (RPHCoord_IN_OneBasis) THEN
         CALL Set_paraPRH_ONEBasis(mole,para_Tnum,BasisnD,ib)
@@ -171,7 +171,7 @@ CONTAINS
         CALL Set_paraPRH_gene(mole,para_Tnum,BasisnD)
       END IF
 
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       mole%RPHTransfo%init = .TRUE.
 
       DO it=mole%nb_Qtransfo-1,mole%itRPH+1,-1
@@ -343,7 +343,7 @@ CONTAINS
       END DO
       CALL time_perso('Grid RPH')
       write(out_unitp,*) 'nb of Qact1 grid points',size(List_Qact1,dim=2)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !----------------------------------------------------------------
       !----------------------------------------------------------------
@@ -380,7 +380,7 @@ CONTAINS
           write(out_unitp,*) 'new RPH point',iq_list
           !write(out_unitp,*) 'new RPH point',Qact(:)
 
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           CALL Set_RPHpara_AT_Qact1(                                    &
                           mole%RPHTransfo%tab_RPHpara_AT_Qact1(iq_list),&
@@ -389,7 +389,7 @@ CONTAINS
         END DO
 
       write(out_unitp,*) 'END Grid RPH'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL dealloc_NParray(List_Qact1,'List_Qact1',name_sub)
       CALL dealloc_NParray(Qact1_fromBasisnD,'Qact1_fromBasisnD',name_sub)
@@ -473,7 +473,7 @@ CONTAINS
 
         IF (debug .AND. (mod(iq,nq_part)==0)) THEN
           write(out_unitp,*) 'iq,nq',iq,get_nq_FROM_basis(BasisnD)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         Qact(:) = ZERO
@@ -532,7 +532,7 @@ CONTAINS
       END DO
       CALL time_perso('Grid RPH')
       write(out_unitp,*) 'nb of Qact1 grid points',size(List_Qact1,dim=2)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       !----------------------------------------------------------------
       !----------------------------------------------------------------
 
@@ -553,7 +553,7 @@ CONTAINS
           CALL Adding_InactiveCoord_TO_Qact(Qact,mole%ActiveTransfo) ! add rigid, flexible coordinates
 
           write(out_unitp,*) 'new RPH point',iq_list
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
           CALL Set_RPHpara_AT_Qact1(                                    &
                           mole%RPHTransfo%tab_RPHpara_AT_Qact1(iq_list),&
@@ -562,7 +562,7 @@ CONTAINS
         END DO
 
       write(out_unitp,*) 'END Grid RPH'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       CALL dealloc_NParray(List_Qact1,'List_Qact1',name_sub)
       CALL dealloc_NParray(Qact1_fromBasisnD,'Qact1_fromBasisnD',name_sub)

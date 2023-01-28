@@ -264,7 +264,7 @@
         write(out_unitp,*) 'list_flex',FlexibleTransfo%list_flex
         write(out_unitp,*) 'QMLib',FlexibleTransfo%QMLib
         write(out_unitp,*) 'With_Tab_dnQflex',FlexibleTransfo%With_Tab_dnQflex
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !---------------------------------------------------------------------
 
@@ -424,7 +424,7 @@
         write(out_unitp,*) 'dnQout'
         CALL Write_dnVec(dnQout)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !stop
 !---------------------------------------------------------------------

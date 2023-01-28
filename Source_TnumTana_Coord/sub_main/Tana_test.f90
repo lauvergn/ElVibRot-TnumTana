@@ -245,7 +245,7 @@ F11D = F11D * F1el
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,*) 'Op1D = 1 x Q^2 ?'
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*)
 write(out_unitp,*) '------------------------------'
@@ -254,7 +254,7 @@ F1el = set_opel(idf, idq, alfa=-1, indexq=1, coeff=cone,err_el=err_Op)
 F11D = F11D * F1el
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*)
 write(out_unitp,*) '------------------------------'
@@ -263,7 +263,7 @@ F1el = set_opel(4, idq, alfa=1, indexq=1, coeff=cone,err_el=err_Op)
 F11D = F1el * F11D
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*)
 write(out_unitp,*) '------------------------------'
@@ -272,7 +272,7 @@ F1el = set_opel(13, idq, alfa=-2, indexq=1, coeff=cone,err_el=err_Op)
 F11D = F1el * F11D
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*)
 write(out_unitp,*) '------------------------------'
@@ -281,7 +281,7 @@ F1el = set_opel(1, idq, alfa=2, indexq=1, coeff=cone,err_el=err_Op)
 F11D = F11D * F1el
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*)
 write(out_unitp,*) '------------------------------'
@@ -289,7 +289,7 @@ write(out_unitp,*) 'Simplify(Op1D) = Op1D = Q^-2P P Q ?'
 CALL Simplify_Op1D(F11D)
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,'(a,a)') 'Simplify 1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*)
 write(out_unitp,*) '------------------------------'
@@ -297,7 +297,7 @@ write(out_unitp,*) 'Split(Op1D) = Q^-2 x P^2 x Q ?'
 CALL Split_Op1D_TO_SplitOp1D(F11D,F21D) ; F11D=F21D
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,'(a,a)') 'Split+simplify 1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 CALL delete_op(F11D)
 CALL delete_op(F21D)
@@ -336,14 +336,14 @@ F11D = F11D * F1el
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,*) 'Op1D = 1 x cos(Q)^2 ?'
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*) 'Op1D = Op1D x sin(Q)^-1 = cos^2 sin^-1 ?'
 F1el = set_opel(6, idq, alfa=-1, indexq=1, coeff=cone,err_el=err_Op)
 F11D = F11D * F1el
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*) ' First derivative:'
 tab_F1D = Der1_OF_d0Op1D(F11D)
@@ -428,7 +428,7 @@ CALL Export_VSCF_Op1D(F21D,'Q0',FelName)
 write(out_unitp,*) 'Op1D = Q^-2 * P  ?'
 write(out_unitp,'(a,a)') '1DOp: ',FelName
 
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 write(out_unitp,*) '------------------------------------'
 Sum1_1D = F11D + F11D
@@ -519,7 +519,7 @@ F11D = set_opel(2, idq, alfa=-2, indexq=1, coeff=cone) * &
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,*) 'Op1D = Q^-2 * P * Q^3 ?'
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 CALL Expand_Op1D_TO_SumOp1D(F11D,tab_F1D)
 CALL write_op(tab_F1D)
@@ -531,7 +531,7 @@ F11D = set_opel(2, idq, alfa=-2, indexq=1, coeff=cone) * &
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,*) 'Op1D = Q^-2 * P * Q^3 ?'
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 CALL Expand_Op1D_TO_SumOp1D(F11D,tab_F1D)
 CALL write_op(tab_F1D)
@@ -542,7 +542,7 @@ F11D = set_opel(4, idq, alfa= 1, indexq=1, coeff=cone) * &
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,*) 'Op1D = P * Q^3 ?'
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 CALL Expand_Op1D_TO_SumOp1D(F11D,tab_F1D)
 CALL write_op(tab_F1D)
@@ -553,7 +553,7 @@ F11D = set_opel(2, idq, alfa=-2, indexq=1, coeff=cone) * &
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,*) 'Op1D = Q^-2 * P ?'
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 CALL Expand_Op1D_TO_SumOp1D(F11D,tab_F1D)
 CALL write_op(tab_F1D)
@@ -568,7 +568,7 @@ F11D = set_opel(2, idq, alfa= 2, indexq=1, coeff=cone) * &
 CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
 write(out_unitp,*) 'Op1D = Q^2 * P * Q^-3 * P * Q^6 ?'
 write(out_unitp,'(a,a)') '1DOp: ',FelName
-CALL flush_perso(out_unitp)
+flush(out_unitp)
 
 CALL Expand_Op1D_TO_SumOp1D(F11D,tab_F1D)
 CALL write_op(tab_F1D)
@@ -589,7 +589,7 @@ DO i=1,size(list_exP2(1,:))
 
   CALL Export_VSCF_Op1D(F11D,'Q0',FelName)
   write(out_unitp,'(a,a)') '1DOp: ',FelName
-  CALL flush_perso(out_unitp)
+  flush(out_unitp)
   write(out_unitp,*) ' Expand of F11D:'
   write(out_unitp,'(a,i0,a,i0,a)') '       ',1,'* x^',n1+n2+n3,' * P^2'
   write(out_unitp,'(a,i0,a,i0,a)') '       ',(n2 + 2*n3),'* x^',n1+n2+n3-1,' * P'

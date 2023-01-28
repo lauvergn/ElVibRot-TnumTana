@@ -394,7 +394,7 @@
           END IF
         ELSE ! nderiv=1
           write(out_unitp,*) 'read FCC from the input file:'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
           CALL alloc_dnSVM(dnFCC,mole%ncart_act,nderiv)
 
           ! read the gradient

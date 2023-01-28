@@ -146,7 +146,7 @@
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5 ) THEN
    write(out_unitp,'(a)')              'OpPsi SG4 (%): [--0-10-20-30-40-50-60-70-80-90-100]'
    write(out_unitp,'(a)',ADVANCE='no') 'OpPsi SG4 (%): ['
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
 
  !to be sure to have the correct number of threads, we use
@@ -198,7 +198,7 @@
    IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
        mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
      write(out_unitp,'(a)',ADVANCE='no') '---'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
@@ -220,7 +220,7 @@
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5) THEN
    IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
  END IF
- CALL flush_perso(out_unitp)
+ flush(out_unitp)
 
  !- check norm ------------------
  IF(keep_MPI) CALL norm2_psi(psi,GridRep=.FALSE.,BasisRep=.TRUE.)
@@ -477,7 +477,7 @@ END SUBROUTINE march_noD_ONE_DP_SG4
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5 ) THEN
    write(out_unitp,'(a)')              'OpPsi SG4 (%): [--0-10-20-30-40-50-60-70-80-90-100]'
    write(out_unitp,'(a)',ADVANCE='no') 'OpPsi SG4 (%): ['
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  psi0Hkpsi0(:) = CZERO
  E0            = para_H%E0
@@ -614,7 +614,7 @@ nb_thread = 1
    IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
        mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
      write(out_unitp,'(a)',ADVANCE='no') '---'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
@@ -636,7 +636,7 @@ nb_thread = 1
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5) THEN
    IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
  END IF
- CALL flush_perso(out_unitp)
+ flush(out_unitp)
 
  IF (abs(norm2_w2) > para_propa%para_poly%poly_tol) THEN
    write(out_unitp,*) ' ERROR in ',name_sub
@@ -769,7 +769,7 @@ nb_thread = 1
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5 ) THEN
    write(out_unitp,'(a)')              'OpPsi SG4 (%): [--0-10-20-30-40-50-60-70-80-90-100]'
    write(out_unitp,'(a)',ADVANCE='no') 'OpPsi SG4 (%): ['
-   CALL flush_perso(out_unitp)
+   flush(out_unitp)
  END IF
  psi0Hkpsi0(:) = CZERO
  E0            = para_H%E0
@@ -928,7 +928,7 @@ nb_thread = 1
    IF (print_level > 0  .AND. BasisnD%para_SGType2%nb_SG > 10**5 .AND. &
        mod(iG,max(1,BasisnD%para_SGType2%nb_SG/10)) == 0 .AND. MPI_id==0) THEN
      write(out_unitp,'(a)',ADVANCE='no') '---'
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
    END IF
 
    !write(out_unitp,*) 'iG done:',iG ; flush(out_unitp)
@@ -950,7 +950,7 @@ nb_thread = 1
  IF (print_level > 0 .AND. BasisnD%para_SGType2%nb_SG > 10**5) THEN
    IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
  END IF
- CALL flush_perso(out_unitp)
+ flush(out_unitp)
 
  IF (abs(norm2_w2) > para_propa%para_poly%poly_tol) THEN
    write(out_unitp,*) ' ERROR in ',name_sub

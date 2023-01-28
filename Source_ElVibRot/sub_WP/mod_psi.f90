@@ -97,7 +97,7 @@ CONTAINS
         write(out_unitp,*) 'nb_basis_act1',WP0(1)%BasisnD%nb_basis
         CALL RecWrite_basis(WP0(1)%BasisnD)
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !-----------------------------------------------------------
@@ -141,7 +141,7 @@ CONTAINS
           CALL norm2_psi(WP0(1),GridRep=.TRUE.)
           IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
           write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
 
 
           IF (WP0(1)%norm2 < ZERO) THEN
@@ -152,7 +152,7 @@ CONTAINS
             CALL renorm_psi_WITH_norm2(WP0(1),GridRep=.TRUE.)
             IF(openmpi) CALL MPI_Bcast_(WP0(1)%norm2,size1_MPI,root_MPI)
             write(out_unitp,*) 'norm2WP GridRep',WP0(1)%norm2
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
 
             IF (debug) THEN
               write(out_unitp,*) 'psiGridRep normalized'
@@ -243,7 +243,7 @@ CONTAINS
           CALL ecri_psi(ZERO,WP0(1),out_unitp,.TRUE.,.FALSE.)
         END IF
         write(out_unitp,*) 'END psi0'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -303,7 +303,7 @@ CONTAINS
            para_WP0%WP0sigma,para_WP0%WP0Qeq,para_WP0%WP0imp_k
         write(out_unitp,*) 'WP0_DIP',para_WP0%WP0_DIP
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -363,7 +363,7 @@ CONTAINS
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END psi0_gaussGridRep'
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 
@@ -405,7 +405,7 @@ CONTAINS
         write(out_unitp,*)
         CALL Write_Tab_GWP(para_WP0%tab_GWP0)
         write(out_unitp,*) 'WP0nrho',para_WP0%WP0nrho
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -449,7 +449,7 @@ CONTAINS
 !-----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END New_WP0_GridRep'
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !-----------------------------------------------------------
 

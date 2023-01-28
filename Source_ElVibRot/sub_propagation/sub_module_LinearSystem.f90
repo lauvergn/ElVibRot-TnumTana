@@ -82,7 +82,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       !-----------------------------------------------------------
 
@@ -120,7 +120,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
 
 
       !------ working parameters --------------------------------
-      TYPE(param_file)  :: Log_file
+      TYPE(File_t)  :: Log_file
       integer           :: iunit
 
       TYPE (param_psi) :: HDiagInv
@@ -135,7 +135,7 @@ SUBROUTINE sub_LinearSystem(TabOpPsi,TabPsi,Op,para_propa)
       IF (debug) THEN
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 

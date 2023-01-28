@@ -2308,7 +2308,7 @@ END FUNCTION Qnamealfa_Latex
 
      write(i_open,"(3x, 2(I2,10x),    A4,6x,      (I2,10x),3x, A, (E13.4,' Ix ',E13.4))" )  &
                   Fel%idf,Fel%idq, string_alpha, Fel%indexq, Fel%opname,Fel%coeff
-     CALL flush_perso(i_open)
+     flush(i_open)
 
      deallocate(string_alpha)
 

@@ -428,7 +428,7 @@ END IF
 !----- input output variables ----------------------------------------
       integer                  :: nderiv,ncart_act
       character (len=Line_len) :: fchk_name
-      TYPE (param_file)        :: file_FChk
+      TYPE (File_t)        :: file_FChk
       TYPE(Type_dnS)           :: dnFCC
 
 !----- for the files -------------------------------------------------
@@ -472,7 +472,7 @@ END IF
 !----- input output variables ----------------------------------------
       integer                  :: nderiv,ncart_act
       character (len=Line_len) :: fchk_name
-      TYPE (param_file)        :: file_FChk
+      TYPE (File_t)        :: file_FChk
       TYPE(Type_dnS)           :: dnECC
 
 !----- for the files -------------------------------------------------
@@ -494,7 +494,7 @@ END IF
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'fchk_name: ',fchk_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -577,7 +577,7 @@ END IF
         write(out_unitp,*) 'dnECC'
         CALL Write_dnS(dnECC,nderiv)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -592,7 +592,7 @@ END IF
 !----- input output variables ----------------------------------------
       integer, intent(in)      :: nderiv,ncart_act
       character (len=Line_len) :: fchk_name
-      TYPE (param_file)        :: file_FChk
+      TYPE (File_t)        :: file_FChk
       TYPE(Type_dnS)           :: dnDipCC(3)
 
 !----- for the files -------------------------------------------------
@@ -618,7 +618,7 @@ END IF
         write(out_unitp,*) 'nderiv',nderiv_loc
         write(out_unitp,*) 'fchk_name: ',fchk_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       IF (nderiv_loc < 0) RETURN
@@ -675,7 +675,7 @@ END IF
         write(out_unitp,*) 'dnDipCC(:)'
         CALL Write_VecOFdnS(dnDipCC)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -691,7 +691,7 @@ END IF
 !----- input output variables ----------------------------------------
       integer, intent(in)      :: nderiv,ncart_act
       character (len=Line_len) :: fchk_name
-      TYPE (param_file)        :: file_FChk
+      TYPE (File_t)        :: file_FChk
       TYPE(Type_dnS)           :: dnPolarCC(6) ! αxx, αxy, αyy, αxz, αyz, αzz
 
 !----- for the files -------------------------------------------------
@@ -717,7 +717,7 @@ END IF
         write(out_unitp,*) 'nderiv',nderiv_loc
         write(out_unitp,*) 'fchk_name: ',fchk_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       IF (nderiv_loc < 0) RETURN
@@ -774,7 +774,7 @@ END IF
         write(out_unitp,*) 'dnPolarCC(:)'
         CALL Write_VecOFdnS(dnPolarCC)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -993,7 +993,7 @@ END IF
 !----- input output variables ----------------------------------------
       integer                  :: nderiv,ncart_act
       character (len=Line_len) :: log_name,pun_name
-      TYPE (param_file)        :: file_log,file_pun
+      TYPE (File_t)        :: file_log,file_pun
       TYPE(Type_dnS)           :: dnECC
 
 !----- for the files -------------------------------------------------
@@ -1016,7 +1016,7 @@ END IF
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'log_name: ',log_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1112,7 +1112,7 @@ END IF
         write(out_unitp,*) 'dnECC'
         CALL Write_dnS(dnECC,nderiv)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1127,7 +1127,7 @@ END IF
 !----- input output variables ----------------------------------------
       integer                  :: nderiv,ncart_act
       character (len=Line_len) :: pun_name
-      TYPE (param_file)        :: file_pun
+      TYPE (File_t)        :: file_pun
       TYPE(Type_dnS)           :: dnDipCC(3)
 
 !----- for the files -------------------------------------------------
@@ -1150,7 +1150,7 @@ END IF
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'pun_name: ',pun_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       IF (nderiv < 0) RETURN
@@ -1211,7 +1211,7 @@ END IF
         write(out_unitp,*) 'dnDipCC(:)'
         CALL Write_VecOFdnS(dnDipCC,nderiv)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1453,7 +1453,7 @@ SUBROUTINE Read_dnECC_Molpro(dnECC,outm_name,nderiv,ncart_act)
 !----- input output variables ----------------------------------------
       integer                  :: nderiv,ncart_act
       character (len=Line_len) :: outm_name
-      TYPE (param_file)        :: file_outm
+      TYPE (File_t)        :: file_outm
       TYPE(Type_dnS)           :: dnECC
 
 !----- for the files -------------------------------------------------
@@ -1476,7 +1476,7 @@ SUBROUTINE Read_dnECC_Molpro(dnECC,outm_name,nderiv,ncart_act)
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'outm_name: ',outm_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1512,7 +1512,7 @@ SUBROUTINE Read_dnECC_Molpro(dnECC,outm_name,nderiv,ncart_act)
         write(out_unitp,*) 'dnECC'
         CALL Write_dnS(dnECC,nderiv)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1527,7 +1527,7 @@ SUBROUTINE Read_GradHess_Molpro(dnFCC,outm_name,nderiv,ncart_act)
 !----- input output variables ----------------------------------------
       integer                  :: nderiv,ncart_act
       character (len=Line_len) :: outm_name
-      TYPE (param_file)        :: file_outm
+      TYPE (File_t)        :: file_outm
       TYPE(Type_dnS)           :: dnFCC
 
 !----- for the files -------------------------------------------------
@@ -1558,7 +1558,7 @@ SUBROUTINE Read_GradHess_Molpro(dnFCC,outm_name,nderiv,ncart_act)
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'outm_name: ',outm_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1582,7 +1582,7 @@ SUBROUTINE Read_GradHess_Molpro(dnFCC,outm_name,nderiv,ncart_act)
          ' Atom          dE/dx               dE/dy               dE/dz',&
                          located,'(a60)')
         write(out_unitp,*) 'located Gradient',located
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         IF (located) THEN
           read(nio,*,iostat=err)
           DO icart=1,ncart_act,3
@@ -1604,7 +1604,7 @@ SUBROUTINE Read_GradHess_Molpro(dnFCC,outm_name,nderiv,ncart_act)
           write(out_unitp,31) dnFCC%d1(:)
         END IF
         close(nio)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (nderiv == 2) THEN
@@ -1614,7 +1614,7 @@ SUBROUTINE Read_GradHess_Molpro(dnFCC,outm_name,nderiv,ncart_act)
         CALL file_open(file_outm,nio)
         CALL FFind_Label(nio,' Force Constants',located,'(a16)')
         write(out_unitp,*) 'located hessian',located
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         IF (located) THEN
           nb_blocks = ncart_act/5
           IF (nb_blocks*5 < ncart_act) nb_blocks = nb_blocks + 1
@@ -1648,14 +1648,14 @@ SUBROUTINE Read_GradHess_Molpro(dnFCC,outm_name,nderiv,ncart_act)
         END DO
         IF (debug) THEN
           CALL Write_Mat(dnFCC%d2,out_unitp,5)
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         close(nio)
       END IF
 !     ----------------------------------------------------------------
 !----------------------------------------------------------------------
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 !-----------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'END ',name_sub
@@ -1853,7 +1853,7 @@ END SUBROUTINE Read_GradHess_Molpro
 !----- input output variables ----------------------------------------
       integer                  :: nderiv,ncart_act,nb_elec
       character (len=Line_len) :: log_name
-      TYPE (param_file)        :: file_log
+      TYPE (File_t)        :: file_log
       TYPE(Type_dnS)           :: MatdnECC(nb_elec,nb_elec)
 
 !----- for the files -------------------------------------------------
@@ -1875,7 +1875,7 @@ END SUBROUTINE Read_GradHess_Molpro
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'log_name: ',log_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1932,7 +1932,7 @@ END SUBROUTINE Read_GradHess_Molpro
         write(out_unitp,*) 'MatdnECC'
         CALL Write_MatOFdnS(MatdnECC,nderiv)
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 
@@ -1947,7 +1947,7 @@ END SUBROUTINE Read_GradHess_Molpro
 !----- input output variables ----------------------------------------
       integer                  :: nderiv,nb_elec,ncart_act
       character (len=Line_len) :: log_name
-      TYPE (param_file)        :: file_log
+      TYPE (File_t)        :: file_log
       TYPE(Type_dnS) :: MatdnDipCC(nb_elec,nb_elec,3)
 
 !----- for the files -------------------------------------------------
@@ -1968,7 +1968,7 @@ END SUBROUTINE Read_GradHess_Molpro
         write(out_unitp,*) 'nderiv',nderiv
         write(out_unitp,*) 'log_name: ',log_name
         write(out_unitp,*)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       IF (nderiv < 0) RETURN
@@ -2074,7 +2074,7 @@ END SUBROUTINE Read_GradHess_Molpro
          write(out_unitp,*) 'MatdnDipCC(:,:,3)'
          CALL Write_MatOFdnS(MatdnDipCC(:,:,i))
         write(out_unitp,*) 'END ',name_sub
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
 

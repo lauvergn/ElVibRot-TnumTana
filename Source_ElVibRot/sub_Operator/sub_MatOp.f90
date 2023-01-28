@@ -212,7 +212,7 @@ CONTAINS
       para_Op%Make_mat = .TRUE.
       para_Op%mat_done = .TRUE.
       write(out_unitp,*) 'The full matrix is restored from the restart file'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     IF (.NOT. para_Op%Partial_MatOp) THEN
@@ -244,7 +244,7 @@ CONTAINS
     RealTime = Delta_RealTime(MatOp_Time)
     IF (debug .OR. print_Op .OR. print_level > 0) Then
         write(out_unitp,*) 'Building MatOp: Delta Real Time',RealTime
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
     END IF
 
 !-----------------------------------------------------------
@@ -299,7 +299,7 @@ CONTAINS
         write(out_unitp,*) ' nb_diago',nb_WP
         write(out_unitp,*)
         CALL write_param_Op(para_Op)
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 !-----------------------------------------------------------
       spectral_save = para_Op%spectral
@@ -369,7 +369,7 @@ CONTAINS
           If(MPI_id==0) write(out_unitp,21) non_hermitic*auTOcm_inv
  21       format(' non-hermitic Hamiltonien: ',f16.12,' cm-1')
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !     - Write the matrix ----
@@ -381,7 +381,7 @@ CONTAINS
         ELSE
           CALL Write_Mat(RMatOp,out_unitp,5)
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       ENDIF ! keep_MPI
 
@@ -391,7 +391,7 @@ CONTAINS
       para_Op%nb_tot      = nb_WP
       para_Op%mat_done    = .TRUE.
       write(out_unitp,*) 'nb_tot_ini',para_Op%nb_tot_ini
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       IF (para_Op%cplx) THEN
         IF (allocated(para_Op%Cmat))  THEN
@@ -422,7 +422,7 @@ CONTAINS
 !----------------------------------------------------------
        IF (debug) THEN
          write(out_unitp,*) 'END ',name_sub
-         CALL flush_perso(out_unitp)
+         flush(out_unitp)
        END IF
 !----------------------------------------------------------
 
@@ -883,7 +883,7 @@ CONTAINS
  98   CONTINUE
 
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'Block of ReOpd0b(:,:) (%): '
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nplus = min(kmem,nreste)
       DO k=1,nplus
@@ -891,7 +891,7 @@ CONTAINS
         IF (mod(k,max(1,int(nplus/10))) == 0 .AND. print_level>-1) THEN
           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                        &
                       int(real(k,kind=Rkind)*HUNDRED/real(nplus,kind=Rkind))
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                      &
@@ -912,7 +912,7 @@ CONTAINS
 
       END DO
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - End'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
       !DO iterm_Op=1,d0MatOpd0bWrho(1,1)%nb_term ! one term
       iterm_Op=1
 
@@ -983,7 +983,7 @@ CONTAINS
 !     - END of loop of kmem block ----------------------------
 !     --------------------------------------------------------
       close(para_Op%file_grid%unit)
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       !- determination of Hmax --------------------------------
@@ -1216,7 +1216,7 @@ CONTAINS
 
  98   CONTINUE
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'Block of ReOpd0b(:,:) (%): '
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nplus = min(kmem,nreste)
       DO k=1,nplus
@@ -1225,7 +1225,7 @@ CONTAINS
         IF (mod(k,max(1,int(nplus/10))) == 0 .AND. print_level>-1) THEN
           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                  &
                            int(real(k,kind=Rkind)*HUNDRED/real(nplus,kind=Rkind))
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                      &
@@ -1247,7 +1247,7 @@ CONTAINS
 
 
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - End'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1317,7 +1317,7 @@ CONTAINS
       IF (nreste .GT. 0) GOTO 98
       !- END of loop of kmem block ----------------------------
       !--------------------------------------------------------
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
@@ -1555,7 +1555,7 @@ CONTAINS
 
  98   CONTINUE
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'Block of ReOpd0b(:,:) (%): '
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nplus = min(kmem,nreste)
       DO k=1,nplus
@@ -1564,7 +1564,7 @@ CONTAINS
         IF (mod(k,max(1,int(nplus/10))) == 0 .AND. print_level>-1) THEN
           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                  &
                    int(real(k,kind=Rkind)*HUNDRED/real(nplus,kind=Rkind))
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                      &
@@ -1587,7 +1587,7 @@ CONTAINS
 
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - End'
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'Block of ReMatOp(:,:) (%): '
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       DO i2_h=1,para_Op%nb_bie
@@ -1595,7 +1595,7 @@ CONTAINS
                           print_level>-1 .AND. para_Op%nb_bie /= 0) THEN
             write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                &
               int(real(i2_h,kind=Rkind)*HUNDRED/real(para_Op%nb_bie,kind=Rkind))
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
         END IF
       DO i1_h=1,para_Op%nb_bie
         DO i_Op=1,d0MatOpd0bWrho(1,1)%nb_term
@@ -1613,7 +1613,7 @@ CONTAINS
                           print_level>-1 .AND. para_Op%nb_bie == 0) THEN
               write(out_unitp,'(a,i3)',ADVANCE='no') ' -',              &
                         int(real(ib1,kind=Rkind)*HUNDRED/real(para_Op%nb_ba,kind=Rkind))
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
 
             DO k=1,nplus
@@ -1645,7 +1645,7 @@ CONTAINS
                           print_level>-1 .AND. para_Op%nb_bie == 0) THEN
               write(out_unitp,'(a,i3)',ADVANCE='no') ' -',              &
                         int(real(ib1,kind=Rkind)*HUNDRED/real(para_Op%nb_ba,kind=Rkind))
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
             DO k=1,nplus
               VecQ(k) = d0MatOpd0bWrho(k,ib1)%ImVal(i1_h,i2_h)
@@ -1801,13 +1801,13 @@ CONTAINS
 
 
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - End'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nreste = nreste - nplus
       IF (nreste .GT. 0) GOTO 98
       !- END of loop of kmem block ----------------------------
       !--------------------------------------------------------
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
@@ -2033,7 +2033,7 @@ CONTAINS
 
  98   CONTINUE
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'Block of ReOpd0b(:,:) (%): '
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nplus = min(kmem,nreste)
       DO k=1,nplus
@@ -2042,7 +2042,7 @@ CONTAINS
         IF (mod(k,max(1,int(nplus/10))) == 0 .AND. print_level>-1) THEN
           write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                  &
                    int(real(k,kind=Rkind)*HUNDRED/real(nplus,kind=Rkind))
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         CALL sub_reading_Op(nDGridI,para_Op%nb_qa,                      &
@@ -2071,7 +2071,7 @@ CONTAINS
 
 
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'Block of ReMatOp(:,:) (%): '
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
 
       DO i2_h=1,para_Op%nb_bie
@@ -2079,7 +2079,7 @@ CONTAINS
                           print_level>-1 .AND. para_Op%nb_bie /= 0) THEN
             write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                &
               int(real(i2_h,kind=Rkind)*HUNDRED/real(para_Op%nb_bie,kind=Rkind))
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
         END IF
       DO i1_h=1,para_Op%nb_bie
         DO i_Op=1,d0MatOpd0bWrho(1,1)%nb_term
@@ -2097,7 +2097,7 @@ CONTAINS
                           print_level>-1 .AND. para_Op%nb_bie == 0) THEN
               write(out_unitp,'(a,i3)',ADVANCE='no') ' -',              &
                    int(real(ib1,kind=Rkind)*HUNDRED/real(para_Op%nb_ba,kind=Rkind))
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
 
             DO k=1,nplus
@@ -2129,7 +2129,7 @@ CONTAINS
                           print_level>-1 .AND. para_Op%nb_bie == 0) THEN
               write(out_unitp,'(a,i3)',ADVANCE='no') ' -',              &
                         int(real(ib1,kind=Rkind)*HUNDRED/real(para_Op%nb_ba,kind=Rkind))
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
             DO k=1,nplus
               VecQ(k) = d0MatOpd0bWrho(k,ib1)%ImVal(i1_h,i2_h)
@@ -2225,13 +2225,13 @@ CONTAINS
 
 
       IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - End'
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       nreste = nreste - nplus
       IF (nreste .GT. 0) GOTO 98
       !- END of loop of kmem block ----------------------------
       !--------------------------------------------------------
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
 
       !- determination of Hmax --------------------------------
       DO i=1,para_Op%nb_tot
@@ -2399,7 +2399,7 @@ CONTAINS
           write(out_unitp,*)
           write(out_unitp,*) 'END ',name_sub
         END IF
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END SUBROUTINE sub_Read_MatOp
 !===============================================================================
 !
@@ -2440,7 +2440,7 @@ CONTAINS
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
         !IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                              &
@@ -2494,7 +2494,7 @@ CONTAINS
         IF (print_level > -1 .AND. ith == 0) THEN
           write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         CALL init_psi(psi,para_Op,para_Op%cplx)
@@ -2512,7 +2512,7 @@ CONTAINS
 
         DO i=i1,i2
           i_mat = para_Op%List_Mat_i_todo(i)
-          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; flush(out_unitp)
 
 
           IF (para_Op%para_ReadOp%Op_WithContracRVec) THEN
@@ -2531,7 +2531,7 @@ CONTAINS
           IF (mod(nb_done,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1 &
               .AND. MPI_id==0) THEN
             write(out_unitp,'(a)',ADVANCE='no') '---'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
@@ -2556,7 +2556,7 @@ CONTAINS
 
         IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       IF (debug) THEN
@@ -2608,7 +2608,7 @@ CONTAINS
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
         !IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                              &
@@ -2642,7 +2642,7 @@ CONTAINS
         IF (print_level > -1) THEN
           write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         nb_todo_th = nb_todo/nb_thread
@@ -2674,7 +2674,7 @@ CONTAINS
 
         DO i=i1,i2
           i_mat = para_Op%List_Mat_i_todo(i)
-          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; flush(out_unitp)
 
           CALL sub_OpBasis_OneBF(Psi,OpPsi,para_Op,i_mat)
 
@@ -2694,7 +2694,7 @@ CONTAINS
           IF (mod(nb_done,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1 &
               .AND. MPI_id==0) THEN
             write(out_unitp,'(a)',ADVANCE='no') '---'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
@@ -2719,7 +2719,7 @@ CONTAINS
 
         IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       IF (debug) THEN
@@ -2772,7 +2772,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
         !IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                              &
@@ -2806,7 +2806,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
         IF (print_level > -1) THEN
           write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         nb_todo_th = nb_todo/nb_thread
@@ -2839,7 +2839,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
 
           DO i=i1,i2
             i_mat = para_Op%List_Mat_i_todo(i)
-            !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+            !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; flush(out_unitp)
 
             CALL sub_OpBasis_OneBF(Psi,Hpsi,para_Op,i_mat)
             CMat_th(:,i)  = Hpsi%CvecB(:) !< Rmat calculated
@@ -2855,7 +2855,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
               ELSE
                 write(UnitMat) i_mat,Hpsi%CvecB(:)
               END IF
-              CALL flush_perso(UnitMat)
+              flush(UnitMat)
 
               !$OMP END CRITICAL (sub_MatOp_direct3_CRIT2)
             END IF
@@ -2863,7 +2863,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
             IF (mod(nb_done,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1 &
                 .AND. MPI_id==0) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
 
           END DO
@@ -2878,7 +2878,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
 
           DO i=i1,i2
             i_mat = para_Op%List_Mat_i_todo(i)
-            !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+            !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; flush(out_unitp)
 
             CALL sub_OpBasis_OneBF(Psi,Hpsi,para_Op,i_mat)
 
@@ -2895,7 +2895,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
               ELSE
                 write(UnitMat) i_mat,Hpsi%RvecB(:)
               END IF
-              CALL flush_perso(UnitMat)
+              flush(UnitMat)
 
               !$OMP END CRITICAL (sub_MatOp_direct3_CRIT1)
             END IF
@@ -2903,7 +2903,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
             IF (mod(nb_done,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1 &
                 .AND. MPI_id==0) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
 
           END DO
@@ -2921,7 +2921,7 @@ END SUBROUTINE sub_MatOp_direct3_v2
 
         IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       IF (debug) THEN
@@ -2974,7 +2974,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
         !IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                              &
@@ -3008,7 +3008,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
         IF (print_level > -1) THEN
           write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         nb_todo_th = nb_todo/nb_thread
@@ -3041,7 +3041,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
 
           DO i=i1,i2
             i_mat = para_Op%List_Mat_i_todo(i)
-            !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+            !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; flush(out_unitp)
 
             psi = ZERO
             psi%CvecB(i_mat) = ONE
@@ -3060,7 +3060,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
               ELSE
                 write(UnitMat) i_mat,Hpsi%CvecB(:)
               END IF
-              CALL flush_perso(UnitMat)
+              flush(UnitMat)
 
               !$OMP END CRITICAL (sub_MatOp_direct3_CRIT2)
             END IF
@@ -3068,7 +3068,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
             IF (mod(nb_done,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1 &
                 .AND. MPI_id==0) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
 
           END DO
@@ -3079,7 +3079,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
 
           DO i=i1,i2
             i_mat = para_Op%List_Mat_i_todo(i)
-            !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+            !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; flush(out_unitp)
 
             psi = ZERO
             psi%RvecB(i_mat) = ONE
@@ -3098,7 +3098,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
               ELSE
                 write(UnitMat) i_mat,Hpsi%RvecB(:)
               END IF
-              CALL flush_perso(UnitMat)
+              flush(UnitMat)
 
               !$OMP END CRITICAL (sub_MatOp_direct3_CRIT1)
             END IF
@@ -3106,7 +3106,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
             IF (mod(nb_done,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1 &
                 .AND. MPI_id==0) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
 
           END DO
@@ -3121,7 +3121,7 @@ END SUBROUTINE sub_MatOp_direct3_v1
 
         IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       IF (debug) THEN
@@ -3168,7 +3168,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
         IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                              &
@@ -3202,7 +3202,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
         IF (print_level > -1) THEN
           write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         !$OMP parallel do default(none)                    &
@@ -3210,7 +3210,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
         !$OMP private(i)                                   &
         !$OMP num_threads(nb_thread)
         DO i=1,nb_todo
-          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; flush(out_unitp)
           IF (para_Op%para_ReadOp%Op_WithContracRVec) THEN
             CALL sub_OpBasisCFi(para_Op,para_Op%List_Mat_i_todo(i))
           ELSE
@@ -3222,7 +3222,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
           IF (mod(i,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1         &
               .AND. MPI_id==0) THEN
             write(out_unitp,'(a)',ADVANCE='no') '---'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
@@ -3230,7 +3230,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
 
         IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       IF (debug) THEN
@@ -3277,7 +3277,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
         IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                              &
@@ -3304,7 +3304,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
         IF (print_level > -1) THEN
           write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         !$OMP parallel do default(none)                    &
@@ -3312,7 +3312,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
         !$OMP private(i)                                   &
         !$OMP num_threads(nb_thread)
         DO i=1,para_Op%nb_tot
-          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; CALL flush_perso(out_unitp)
+          !$ !write(out_unitp,*) "thread",omp_get_thread_num(),"doing",i ; flush(out_unitp)
           IF (para_Op%para_ReadOp%Op_WithContracRVec) THEN
             CALL sub_OpBasisCFi(para_Op,i)
           ELSE
@@ -3324,7 +3324,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
           IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1         &
               .AND. MPI_id==0) THEN
             write(out_unitp,'(a)',ADVANCE='no') '---'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
@@ -3332,7 +3332,7 @@ END SUBROUTINE sub_MatOp_direct3_v0
 
         IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       IF (debug) THEN
@@ -3380,7 +3380,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
         IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                      &
@@ -3417,7 +3417,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
       IF (print_level > -1) THEN
         write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
         write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       ib = 0
@@ -3451,7 +3451,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
             IF (mod(ib,max(1,int(nb_todo/10))) == 0 .AND. print_level > -1      &
                 .AND. MPI_id==0) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
           END DO
         ELSE
@@ -3480,7 +3480,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
             IF (mod(ib,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1) THEN
               write(out_unitp,'(a)',ADVANCE='no') '---'
-              CALL flush_perso(out_unitp)
+              flush(out_unitp)
             END IF
           END DO
         END IF
@@ -3488,7 +3488,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
       IF (print_level > -1 .AND. MPI_id==0) THEN
         write(out_unitp,'(a)',ADVANCE='yes') '----]'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (debug) THEN
@@ -3547,7 +3547,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
         IF (allocated(para_Op%List_Mat_i_todo)) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                      &
@@ -3585,7 +3585,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         IF (print_level > -1) THEN
           write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         n=para_Op%nb_tot/nb_thread
@@ -3597,7 +3597,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         DO i=1,para_Op%nb_tot
           ith = 1
           !$ ith = omp_get_thread_num()+1
-          !write(out_unitp,*) 'i,ith',i,ith ; CALL flush_perso(out_unitp)
+          !write(out_unitp,*) 'i,ith',i,ith ; flush(out_unitp)
 
           IF (psi(ith)%cplx) THEN
             psi(ith)%CvecB(:) = CZERO
@@ -3617,7 +3617,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
           IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level > -1         &
               .AND. MPI_id==0) THEN
             write(out_unitp,'(a)',ADVANCE='no') '---'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
@@ -3625,7 +3625,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
         IF (print_level > -1 .AND. MPI_id==0) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       IF (debug) THEN
@@ -3680,7 +3680,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                      &
@@ -3702,7 +3702,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 !     ----------------------------------------------------------
 !       - build H and H0
         IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): 0'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         para_Op%Rmat(:,:) = ZERO
         DO i=1,para_Op%nb_tot
 
@@ -3731,12 +3731,12 @@ END SUBROUTINE sub_MatOp_direct2_v0
           IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level>-1) THEN
             write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                        &
               int(real(i,kind=Rkind)*HUNDRED/real(para_Op%nb_tot,kind=Rkind))
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
         IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - 100'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 !       - analysis of the overlap matrix
         IF (para_Op%cplx) THEN
@@ -3795,7 +3795,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
 !     - scaling of Op ---------------------------------------
@@ -3817,7 +3817,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         IF (print_level > -1) THEN
           write(out_unitp,'(a)')              'MatOp(:,i) (%): [--0-10-20-30-40-50-60-70-80-90-100]'
           write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): ['
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
         DO iq=1,nq
@@ -3844,7 +3844,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
           IF (mod(iq,max(1,int(nq/10))) == 0 .AND. print_level > -1) THEN
             write(out_unitp,'(a)',ADVANCE='no') '---'
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
 
@@ -3852,7 +3852,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 
         IF (print_level > -1) THEN
           write(out_unitp,'(a)',ADVANCE='yes') '----]'
-          CALL flush_perso(out_unitp)
+          flush(out_unitp)
         END IF
 
       IF (debug) THEN
@@ -3912,7 +3912,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                      &
@@ -3933,7 +3933,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 !     ----------------------------------------------------------
 !       - build H and H0
         IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): 0'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         para_Op%Rmat(:,:) = ZERO
 
           IF (para_Op%cplx) THEN
@@ -3985,12 +3985,12 @@ END SUBROUTINE sub_MatOp_direct2_v0
           IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level>-1) THEN
             write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                        &
               int(real(i,kind=Rkind)*HUNDRED/real(para_Op%nb_tot,kind=Rkind))
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
         IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - 100'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 !       - analysis of the overlap matrix
         IF (para_Op%cplx) THEN
@@ -4053,7 +4053,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                      &
@@ -4081,7 +4081,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
 !     ----------------------------------------------------------
 !       - build H and H0
         IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='no') 'MatOp(:,i) (%): 0'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
         para_Op%Rmat(:,:) = ZERO
 
           IF (para_Op%cplx) THEN
@@ -4131,12 +4131,12 @@ END SUBROUTINE sub_MatOp_direct2_v0
           IF (mod(i,max(1,int(para_Op%nb_tot/10))) == 0 .AND. print_level>-1) THEN
             write(out_unitp,'(a,i3)',ADVANCE='no') ' -',                        &
               int(real(i,kind=Rkind)*HUNDRED/real(para_Op%nb_tot,kind=Rkind))
-            CALL flush_perso(out_unitp)
+            flush(out_unitp)
           END IF
 
         END DO
         IF (print_level>-1) write(out_unitp,'(a)',ADVANCE='yes') ' - 100'
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
 
 !       - analysis of the overlap matrix
         IF (para_Op%cplx) THEN
@@ -4206,7 +4206,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build matrix of ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat)                                      &
@@ -4317,7 +4317,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build Op(:,i) ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat) THEN
@@ -4387,7 +4387,7 @@ END SUBROUTINE sub_MatOp_direct2_v0
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build Op(:,i) ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
       IF (.NOT. para_Op%alloc_mat) THEN
         write(out_unitp,*) ' ERROR in ',name_sub
@@ -4467,7 +4467,7 @@ SUBROUTINE save_MatOp_i(para_Op,i)
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*)
         write(out_unitp,*) 'Build Op(:,i) ',para_Op%nb_tot
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       IF (.NOT. para_Op%alloc_mat) THEN
@@ -4494,7 +4494,7 @@ SUBROUTINE save_MatOp_i(para_Op,i)
           write(UnitMat) i,para_Op%Rmat(:,i)
         END IF
       END IF
-      CALL flush_perso(UnitMat)
+      flush(UnitMat)
 !     ----------------------------------------------------------
        !write(out_unitp,*) 'out total memory: ',para_mem%mem_tot
 !----------------------------------------------------------
@@ -4527,7 +4527,7 @@ SUBROUTINE save_Psi_FOR_MatOp_i(psi,i,para_Op)
   IF (debug) THEN
     write(out_unitp,*) 'BEGINNING ',name_sub
     write(out_unitp,*) 'i',i
-    CALL flush_perso(out_unitp)
+    flush(out_unitp)
   END IF
   !----------------------------------------------------------
 
@@ -4549,7 +4549,7 @@ SUBROUTINE save_Psi_FOR_MatOp_i(psi,i,para_Op)
       write(UnitMat) i,psi%RvecB(:)
     END IF
   END IF
-  CALL flush_perso(UnitMat)
+  flush(UnitMat)
 
 !$OMP END CRITICAL (save_Psi_FOR_MatOp_i_CRIT)
 
@@ -4586,7 +4586,7 @@ SUBROUTINE check_Restart_MatOp(para_Op)
       write(out_unitp,*) 'para_Op%nb_tot',para_Op%nb_tot
       write(out_unitp,*) 'Partial_MatOp_i,Partial_MatOp_f',                     &
         para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     nb = para_Op%nb_tot
 
@@ -4598,7 +4598,7 @@ SUBROUTINE check_Restart_MatOp(para_Op)
          para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
       write(out_unitp,*) 'nb_todo (before restart)',nb_todo
       write(out_unitp,*) 'Partial_MatOp',para_Op%Partial_MatOp
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     IF (para_Op%para_ReadOp%restart_MatOp) THEN
@@ -4611,7 +4611,7 @@ SUBROUTINE check_Restart_MatOp(para_Op)
         write(out_unitp,*) ' name:      ',para_Op%para_ReadOp%FileMat%name
         write(out_unitp,*) ' unit:      ',para_Op%para_ReadOp%FileMat%unit
         write(out_unitp,*) ' formatted: ',para_Op%para_ReadOp%FileMat%formatted
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       CALL alloc_NParray(list_done,[para_Op%para_ReadOp%Partial_MatOp_f],       &
@@ -4720,7 +4720,7 @@ SUBROUTINE check_Restart_MatOp(para_Op)
       IF (allocated(para_Op%List_Mat_i_todo))                                   &
                 write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 !----------------------------------------------------------
 
@@ -4750,7 +4750,7 @@ SUBROUTINE check_Restart_MatOp_v1(para_Op)
       write(out_unitp,*) 'para_Op%nb_tot',para_Op%nb_tot
       write(out_unitp,*) 'Partial_MatOp_i,Partial_MatOp_f',                     &
         para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     nb = para_Op%nb_tot
 
@@ -4762,7 +4762,7 @@ SUBROUTINE check_Restart_MatOp_v1(para_Op)
          para_Op%para_ReadOp%Partial_MatOp_i,para_Op%para_ReadOp%Partial_MatOp_f
       write(out_unitp,*) 'nb_todo (before restart)',nb_todo
       write(out_unitp,*) 'Partial_MatOp',para_Op%Partial_MatOp
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 
     IF (para_Op%para_ReadOp%restart_MatOp) THEN
@@ -4775,7 +4775,7 @@ SUBROUTINE check_Restart_MatOp_v1(para_Op)
         write(out_unitp,*) ' name:      ',para_Op%para_ReadOp%FileMat%name
         write(out_unitp,*) ' unit:      ',para_Op%para_ReadOp%FileMat%unit
         write(out_unitp,*) ' formatted: ',para_Op%para_ReadOp%FileMat%formatted
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       CALL alloc_NParray(list_done,[para_Op%para_ReadOp%Partial_MatOp_f],       &
@@ -4867,7 +4867,7 @@ SUBROUTINE check_Restart_MatOp_v1(para_Op)
       IF (allocated(para_Op%List_Mat_i_todo))                                   &
                 write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
       write(out_unitp,*) 'END ',name_sub
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
 !----------------------------------------------------------
 
@@ -4895,7 +4895,7 @@ SUBROUTINE check_Restart_MatOp_v0(para_Op)
     IF (debug) THEN
       write(out_unitp,*) 'BEGINNING ',name_sub
       write(out_unitp,*) 'para_Op%nb_tot',para_Op%nb_tot
-      CALL flush_perso(out_unitp)
+      flush(out_unitp)
     END IF
     nb = para_Op%nb_tot
 
@@ -4909,7 +4909,7 @@ SUBROUTINE check_Restart_MatOp_v0(para_Op)
         write(out_unitp,*) ' name:      ',para_Op%para_ReadOp%FileMat%name
         write(out_unitp,*) ' unit:      ',para_Op%para_ReadOp%FileMat%unit
         write(out_unitp,*) ' formatted: ',para_Op%para_ReadOp%FileMat%formatted
-        CALL flush_perso(out_unitp)
+        flush(out_unitp)
       END IF
 
       CALL alloc_NParray(list_done,[nb], 'list_done', name_sub)
@@ -4993,7 +4993,7 @@ SUBROUTINE check_Restart_MatOp_v0(para_Op)
     IF (debug) THEN
      IF (nb_todo > 0) write(out_unitp,*) 'List_Mat_i_todo ',para_Op%List_Mat_i_todo
      write(out_unitp,*) 'END ',name_sub
-     CALL flush_perso(out_unitp)
+     flush(out_unitp)
     END IF
 !----------------------------------------------------------
 
