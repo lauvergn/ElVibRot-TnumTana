@@ -179,20 +179,25 @@
 
   END SUBROUTINE Write_TabConvRWU_dim1
 
-  SUBROUTINE ADD_RWU_TO_TabConvRWU(TabConvRWU,RWU,Work_unit,Write_unit)
-    USE mod_MPI
+  SUBROUTINE ADD_RWU_TO_TabConvRWU(TabConvRWU,RWU,Work_unit,Write_unit,Write_Warning)
+    !USE mod_MPI
 
-    TYPE(REAL_WU), intent(in)           :: RWU
-    TYPE(Type_TabConvRWU), intent(inout)   :: TabConvRWU
-    logical, optional :: Work_unit,Write_unit
+    TYPE(REAL_WU),         intent(in)             :: RWU
+    TYPE(Type_TabConvRWU), intent(inout)          :: TabConvRWU
+    logical,               intent(in),   optional :: Work_unit,Write_unit,Write_Warning
 
     integer               :: i
     TYPE(Type_TabConvRWU) :: TabConvRWU_loc
-    logical               :: unit_present
+    logical               :: unit_present,Write_Warning_loc
 
     character (len=:), allocatable  :: name_quantity,name_RWUquantity
     character (len=:), allocatable  :: name_unit,name_RWUunit
 
+    IF (present(Write_Warning)) THEN
+      Write_Warning_loc = Write_Warning
+    ELSE
+      Write_Warning_loc = .TRUE.
+    END IF
 
     IF (TabConvRWU%quantity == '') TabConvRWU%quantity = RWU%quantity
 
@@ -209,7 +214,7 @@
       write(out_unitp,*) ' quantities of RWU and TabConvRWU are different!'
       write(out_unitp,*) ' RWU%quantity:        ',RWU%quantity
       write(out_unitp,*) ' TabConvRWU%quantity: ',TabConvRWU%quantity
-      STOP
+      STOP 'ERROR in ADD_RWU_TO_TabConvRWU: quantities of RWU and TabConvRWU are different!'
     END IF
 
     IF (allocated(name_quantity))    deallocate(name_quantity)
@@ -234,7 +239,7 @@
         deallocate(name_unit)
 
         IF (unit_present) THEN
-          IF(MPI_id==0) write(out_unitp,*) 'The unit "',trim(adjustl(RWU%unit)),      &
+          IF(Write_Warning_loc) write(out_unitp,*) 'The unit "',trim(adjustl(RWU%unit)),      &
                                            '" is already present'
           EXIT
         END IF
@@ -283,71 +288,79 @@
 
   END SUBROUTINE ADD_RWU_TO_TabConvRWU
 
-  SUBROUTINE ADD_RWU_TO_Tab_conv_FOR_quantity(RWU,Work_unit,Write_unit)
-   TYPE(REAL_WU), intent(in)           :: RWU
-   logical, optional :: Work_unit,Write_unit
+  SUBROUTINE ADD_RWU_TO_Tab_conv_FOR_quantity(RWU,Work_unit,Write_unit,Write_Warning)
+    TYPE(REAL_WU), intent(in)           :: RWU
+    logical,       intent(in), optional :: Work_unit,Write_unit,Write_Warning
 
-   integer            :: i,iq
-   TYPE(Type_TabConvRWU), allocatable :: Tab_conv_FOR_quantity_loc(:)
-   logical :: Work_unit_loc,Write_unit_loc
+    integer            :: i,iq
+    TYPE(Type_TabConvRWU), allocatable :: Tab_conv_FOR_quantity_loc(:)
+    logical :: Work_unit_loc,Write_unit_loc,Write_Warning_loc
 
-   character (len=:), allocatable  :: name_quantity,name_RWUquantity
+    character (len=:), allocatable  :: name_quantity,name_RWUquantity
 
 
-   IF (present(Write_unit)) THEN
-     Write_unit_loc = Write_unit
-   ELSE
-     Write_unit_loc = .FALSE.
-   END IF
+    IF (present(Write_unit)) THEN
+      Write_unit_loc = Write_unit
+    ELSE
+      Write_unit_loc = .FALSE.
+    END IF
 
-   IF (present(Work_unit)) THEN
-     Work_unit_loc = Work_unit
-   ELSE
-     Work_unit_loc = .FALSE.
-   END IF
+    IF (present(Work_unit)) THEN
+      Work_unit_loc = Work_unit
+    ELSE
+      Work_unit_loc = .FALSE.
+    END IF
+    IF (present(Write_Warning)) THEN
+      Write_Warning_loc = Write_Warning
+    ELSE
+      Write_Warning_loc = .TRUE.
+    END IF
 
-   allocate(character(len=len(RWU%quantity)) :: name_RWUquantity)
-   name_RWUquantity = RWU%quantity
-   CALL string_uppercase_TO_lowercase(name_RWUquantity)
+    allocate(character(len=len(RWU%quantity)) :: name_RWUquantity)
+    name_RWUquantity = RWU%quantity
+    CALL string_uppercase_TO_lowercase(name_RWUquantity)
 
-   IF (allocated(Tab_conv_FOR_quantity)) THEN
-     ! first find the index of RWU%quantity
-     DO i=1,size(Tab_conv_FOR_quantity)
+    IF (allocated(Tab_conv_FOR_quantity)) THEN
+      ! first find the index of RWU%quantity
+      DO i=1,size(Tab_conv_FOR_quantity)
        allocate(character(len=len(Tab_conv_FOR_quantity(i)%quantity)) :: name_quantity)
        name_quantity = Tab_conv_FOR_quantity(i)%quantity
        CALL string_uppercase_TO_lowercase(name_quantity)
        IF (name_quantity == name_RWUquantity) EXIT
        deallocate(name_quantity)
-     END DO
-     iq = i
-     IF (iq > size(Tab_conv_FOR_quantity)) THEN
-       !!!--------------------------------------------------
-       !!!! Compiler ERROR with ifort (ifort version 16.0.3) with the "= assignment"
-       ! Tab_conv_FOR_quantity_loc=Tab_conv_FOR_quantity
-       !!!  We have to use the corresponding subroutine
-       CALL TabConvRWU2_TO_TabConvRWU1_dim1(Tab_conv_FOR_quantity_loc,&
-                                            Tab_conv_FOR_quantity)
-       !!!--------------------------------------------------
-       CALL dealloc_TabConvRWU_dim1(Tab_conv_FOR_quantity)
-       allocate(Tab_conv_FOR_quantity(size(Tab_conv_FOR_quantity_loc)+1))
-       DO i=1,size(Tab_conv_FOR_quantity_loc)
-         Tab_conv_FOR_quantity(i) = Tab_conv_FOR_quantity_loc(i)
-       END DO
-       i = size(Tab_conv_FOR_quantity_loc)+1
-       CALL ADD_RWU_TO_TabConvRWU(Tab_conv_FOR_quantity(i),RWU,      &
-                   Work_unit=Work_unit_loc,Write_unit=Write_unit_loc)
-     ELSE
-       CALL ADD_RWU_TO_TabConvRWU(Tab_conv_FOR_quantity(iq),RWU,     &
-                   Work_unit=Work_unit_loc,Write_unit=Write_unit_loc)
-     END IF
-   ELSE
-     allocate(Tab_conv_FOR_quantity(1))
-     CALL ADD_RWU_TO_TabConvRWU(Tab_conv_FOR_quantity(1),RWU,        &
-                   Work_unit=Work_unit_loc,Write_unit=Write_unit_loc)
-   END IF
+      END DO
+      iq = i
+      IF (iq > size(Tab_conv_FOR_quantity)) THEN
+        !!!--------------------------------------------------
+        !!!! Compiler ERROR with ifort (ifort version 16.0.3) with the "= assignment"
+        ! Tab_conv_FOR_quantity_loc=Tab_conv_FOR_quantity
+        !!!  We have to use the corresponding subroutine
+        CALL TabConvRWU2_TO_TabConvRWU1_dim1(Tab_conv_FOR_quantity_loc,&
+                                             Tab_conv_FOR_quantity)
+        !!!--------------------------------------------------
+        CALL dealloc_TabConvRWU_dim1(Tab_conv_FOR_quantity)
+        allocate(Tab_conv_FOR_quantity(size(Tab_conv_FOR_quantity_loc)+1))
+        DO i=1,size(Tab_conv_FOR_quantity_loc)
+          Tab_conv_FOR_quantity(i) = Tab_conv_FOR_quantity_loc(i)
+        END DO
+        i = size(Tab_conv_FOR_quantity_loc)+1
+        CALL ADD_RWU_TO_TabConvRWU(Tab_conv_FOR_quantity(i),RWU,       &
+                    Work_unit=Work_unit_loc,Write_unit=Write_unit_loc, &
+                    Write_Warning=Write_Warning_loc)
+      ELSE
+        CALL ADD_RWU_TO_TabConvRWU(Tab_conv_FOR_quantity(iq),RWU,     &
+                   Work_unit=Work_unit_loc,Write_unit=Write_unit_loc, &
+                   Write_Warning=Write_Warning_loc)
+      END IF
+    ELSE
+      allocate(Tab_conv_FOR_quantity(1))
+      CALL ADD_RWU_TO_TabConvRWU(Tab_conv_FOR_quantity(1),RWU,        &
+                   Work_unit=Work_unit_loc,Write_unit=Write_unit_loc, &
+                   Write_Warning=Write_Warning_loc)
+    END IF
 
-   IF (allocated(name_quantity))    deallocate(name_quantity)
-   IF (allocated(name_RWUquantity)) deallocate(name_RWUquantity)
+    IF (allocated(name_quantity))    deallocate(name_quantity)
+    IF (allocated(name_RWUquantity)) deallocate(name_RWUquantity)
 
   END SUBROUTINE ADD_RWU_TO_Tab_conv_FOR_quantity
 

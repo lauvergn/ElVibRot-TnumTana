@@ -104,6 +104,7 @@ CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
            -D__COMPILER="'$(FFC)'" \
            -D__COMPILER_VER="'$(FC_VER)'" \
            -D__EVRTPATH="'$(EVRT_path)'" \
+           -D__PHYSCTEPATH="'$(EVRT_path)'" \
            -D__EVR_VER="'$(EVR_ver)'" \
            -D__TNUM_VER="'$(TNUM_ver)'" \
            -D__TANA_VER="'$(TANA_ver)'"
@@ -279,7 +280,6 @@ VPATH = Source_Lib/sub_system Source_Lib/sub_nDindex Source_Lib/sub_dnSVM Source
   sub_module_MPI_aux.f90
 Primlib_SRCFILES  = \
   sub_module_MPI.f90 \
-  sub_module_memory.f90 sub_module_memory_Pointer.f90 sub_module_memory_NotPointer.f90 \
   sub_module_system.f90 \
   sub_module_MPI_aux.f90
 

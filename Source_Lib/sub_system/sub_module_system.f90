@@ -22,9 +22,7 @@
 !===========================================================================
 MODULE mod_system
       USE QDUtil_m, out_unitp => out_unit, in_unitp => in_unit
-      USE mod_memory
-      USE mod_memory_Pointer
-      USE mod_memory_NotPointer
+      !USE QDUtil_memory_m
       USE mod_MPI
       IMPLICIT NONE
 

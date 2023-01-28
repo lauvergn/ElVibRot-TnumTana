@@ -403,6 +403,7 @@ MODULE mod_MPI_aux
 !> interface: increase_martix    
 !---------------------------------------------------------------------------------------
     SUBROUTINE increase_martix_int(matrix,name_sub,ndim0,ndim,double_size)
+      USE QDUtil_m
       IMPLICIT NONE
       
       Integer,allocatable,intent(inout)            :: matrix(:,:)
@@ -436,6 +437,7 @@ MODULE mod_MPI_aux
     ENDSUBROUTINE increase_martix_int
     
     SUBROUTINE increase_martix_real(matrix,name_sub,ndim0,ndim,double_size)
+      USE QDUtil_m
       IMPLICIT NONE
       
       Real(kind=Rkind),allocatable,intent(inout)   :: matrix(:,:)

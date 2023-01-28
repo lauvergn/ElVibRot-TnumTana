@@ -24,17 +24,19 @@
 !> Only the "sub_constantes", "get_mass_Tnum" (from the module mod_Atom) subroutines can used.
 !> \author David Lauvergnat
 !> \date 29/11/2018
- MODULE mod_Constant
- use mod_system
- use mod_Atom, only: table_atom, dealloc_table_at, get_mass_Tnum,        &
+MODULE mod_Constant
+  USE QDUtil_m, out_unitp => out_unit, in_unitp => in_unit
+
+  use mod_Atom, only: table_atom, dealloc_table_at, get_mass_Tnum,        &
                      construct_table_at_NIST2012, construct_table_at_NIST2018,&
                      construct_table_at_HandBook70ed
 
- USE mod_RealWithUnit
- IMPLICIT NONE
+  USE mod_RealWithUnit
+  IMPLICIT NONE
 
- PRIVATE
+  PRIVATE
 
+  character (len=:), allocatable :: PhysCte_path
 
 !> This derived type contains some fundamental physical constants, conversion factors and isotopic masses (in the mendeleev variable)
  TYPE constant
@@ -162,15 +164,18 @@
 !! \param const_phys  derived type with the physical constants, conversion factors and masses
 !! \param Read_Namelist an optional logical flag to be able to read the namelist "constantes"
 !
-  SUBROUTINE sub_constantes(const_phys,Read_Namelist,version,mass_version)
+  SUBROUTINE sub_constantes(const_phys,Read_Namelist,version,mass_version,iprint)
   IMPLICIT NONE
 
   TYPE (constant),         intent(inout)            :: const_phys
   logical,                 intent(in),    optional  :: Read_Namelist
   character(len=*),        intent(in),    optional  :: version,mass_version
+  integer,                 intent(in),    optional  :: iprint
 
 
-  logical :: Read_Namelist_loc
+
+  logical :: Read_Namelist_loc,Write_Warning
+  integer :: iprint_loc
   integer :: err_read,err_unit
 
   real (kind=Rkind) :: c
@@ -214,12 +219,24 @@
 !-----------------------------------------------------------------
   const_phys%constant_done = .TRUE.
 
+#if defined(__PHYSCTEPATH)
+  PhysCte_path =  __PHYSCTEPATH
+#else
+  PhysCte_path = '~/'
+#endif
 
   IF (present(Read_Namelist)) THEN
     Read_Namelist_loc = Read_Namelist
   ELSE
     Read_Namelist_loc = .FALSE.
   END IF
+
+  IF (present(iprint)) THEN
+    iprint_loc = iprint
+  ELSE
+    iprint_loc = 0
+  END IF
+  Write_Warning = (iprint_loc ==0)
 
   ! initialization with or without the namelist
   IF (present(version)) THEN
@@ -251,7 +268,7 @@
                                mass_version_loc,version_loc)
   END IF
 
-  write(out_unitp,*) 'EVRT_path: ',EVRT_path
+  write(out_unitp,*) 'PhysCte_path: ',PhysCte_path
 
 
   CALL string_uppercase_TO_lowercase(version_loc,lower=.FALSE.) ! conversion in capital letters
@@ -362,29 +379,29 @@
   SELECT CASE (mass_version_loc)
   CASE ('NIST2012')
     write(out_unitp,*) 'MASSES, version: ',mass_version_loc
-    CALL construct_table_at_NIST2012(const_phys%mendeleev,gPmolTOmass,mass_unit)
+    CALL construct_table_at_NIST2012(const_phys%mendeleev,gPmolTOmass,mass_unit,PhysCte_path,iprint=iprint_loc)
   CASE ('NIST2018')
     write(out_unitp,*) 'MASSES, version: ',mass_version_loc
-    CALL construct_table_at_NIST2018(const_phys%mendeleev,gPmolTOmass,mass_unit)
+    CALL construct_table_at_NIST2018(const_phys%mendeleev,gPmolTOmass,mass_unit,PhysCte_path,iprint=iprint_loc)
   CASE ('HANDBOOK70ED','HANDBOOK')
     write(out_unitp,*) 'MASSES, version: ','HandBook70ed'
     CALL construct_table_at_HandBook70ed(const_phys%mendeleev,gPmolTOmass,mass_unit)
   CASE Default
     write(out_unitp,*) 'MASSES, version: ',mass_version_loc
-    CALL construct_table_at_NIST2012(const_phys%mendeleev,gPmolTOmass,mass_unit)
+    CALL construct_table_at_NIST2012(const_phys%mendeleev,gPmolTOmass,mass_unit,PhysCte_path,iprint=iprint_loc)
   END SELECT
 
   !------------------------------------------------------------------
 
   ! for the automatic energy (E) conversion
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','E'),Work_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'hartree','E'))
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOeV,'eV','E'))
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(k/Eh,'°K','E')) ! Kelvin
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOcm_inv,'cm-1','E'))
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOGHz,'GHz','E'))
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOkcalmol_inv,'kcal.mol-1','E'))
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOkJmol_inv,'kJ.mol-1','E'))
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','E'),Work_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'hartree','E'),Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOeV,'eV','E'),Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(k/Eh,'°K','E'),Write_Warning=Write_Warning) ! Kelvin
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOcm_inv,'cm-1','E'),Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOGHz,'GHz','E'),Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOkcalmol_inv,'kcal.mol-1','E'),Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/auTOkJmol_inv,'kJ.mol-1','E'),Write_Warning=Write_Warning)
 
   IF (ene_unit == "") THEN
     const_phys%auTOenergy = get_Conv_au_TO_unit('E','cm-1',err_unit=err_unit)
@@ -407,7 +424,7 @@
       const_phys%auTOenergy = get_Conv_au_TO_unit('E',ene_unit,err_unit=err_unit)
       const_phys%ene_unit   = trim(adjustl(ene_unit))
       IF (err_unit /= 0) THEN
-        IF(MPI_id==0) THEN
+        IF(iprint_loc == 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) ' Problem with "ene_unit" and/or "auTOenergy"'
           write(out_unitp,*) '   energy unit: ',ene_unit
@@ -416,48 +433,67 @@
           write(out_unitp,*) 'List of available units:'
         ENDIF
         CALL Write_TabConvRWU_dim1(Tab_conv_FOR_quantity)
-        STOP
+        STOP 'ERROR in :Problem with "ene_unit" and/or "auTOenergy"'
       END IF
     END IF
   END IF
   ! Now we can add the writing unit for the energy (E).
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/const_phys%auTOenergy,const_phys%ene_unit,'E'),Write_unit=.TRUE.)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/const_phys%auTOenergy,const_phys%ene_unit,'E'),&
+       Write_unit=.TRUE.,Write_Warning=Write_Warning)
 
 
   ! for the automatic time (t) conversion
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'ua','t'),Work_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-15)/Ta,'fs','t'),Write_unit=.TRUE.) ! fs => atmic unit
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-12)/Ta,'ps','t')) ! fs => atmic unit
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'ua','t'),                 &
+       Work_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-15)/Ta,'fs','t'),       &
+       Write_unit=.TRUE.,Write_Warning=Write_Warning) ! fs => atmic unit
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-12)/Ta,'ps','t'),       &
+       Write_Warning=Write_Warning) ! fs => atmic unit
 
   ! for the automatic lenght (L) conversion
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','L'),Work_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'bohr','L'))
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-10)/a0,'Angs','L'),Write_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-9)/a0,'nm','L'))
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-12)/a0,'pm','L'))
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','L'),                 &
+       Work_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'bohr','L'),               &
+       Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-10)/a0,'Angs','L'),     &
+       Write_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-9)/a0,'nm','L'),        &
+       Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(TEN**(-12)/a0,'pm','L'),       &
+       Write_Warning=Write_Warning)
 
 
   ! for the automatic angle (angle) conversion
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'Rad','angle'),Work_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(pi/180_Rkind,'°','angle'),Write_unit=.TRUE.)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'Rad','angle'),            &
+       Work_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(pi/180_Rkind,'°','angle'),     &
+       Write_unit=.TRUE.,Write_Warning=Write_Warning)
 
   ! for the automatic electric dipole moment (QL) conversion
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','QL'),Work_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(convDebyeTOau,'D','QL'),Write_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/conv_auTOCm,'C.m','QL'))
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','QL'),                &
+       Work_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(convDebyeTOau,'D','QL'),       &
+       Write_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/conv_auTOCm,'C.m','QL'),   &
+       Write_Warning=Write_Warning)
 
   ! for the automatic Electric field (???) conversion
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','Electric field'),Work_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/E0,'V.cm-1','Electric field'))
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','Electric field'),    &
+       Work_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/E0,'V.cm-1','Electric field'),&
+       Write_Warning=Write_Warning)
 
   ! for the automatic Electric field Intensity (???) conversion
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','EF intensity'),Work_unit=.TRUE.)
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/I0,'W.cm-2','EF intensity'))
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'au','EF intensity'),      &
+       Work_unit=.TRUE.,Write_Warning=Write_Warning)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE/I0,'W.cm-2','EF intensity'),&
+       Write_Warning=Write_Warning)
 
   ! When no dimension
-  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'','No_Dim'),Work_unit=.TRUE.,Write_unit=.TRUE.)
+  CALL ADD_RWU_TO_Tab_conv_FOR_quantity(REAL_WU(ONE,'','No_Dim'),Work_unit=.TRUE.,&
+       Write_unit=.TRUE.,Write_Warning=Write_Warning)
 
-  IF (print_level > 1) THEN
+  IF (print_level > 1 .AND. iprint_loc == 0) THEN
     write(out_unitp,*) 'List of available units:'
     CALL Write_TabConvRWU_dim1(Tab_conv_FOR_quantity)
   END IF
@@ -504,31 +540,35 @@
 !-----------------------------------------------------------------
 
 !-- Write some constantes ------------------------------------
-  IF(MPI_id==0) THEN
-                         write(out_unitp,*)  ' Writing energy unit : ',RWU_WriteUnit('E',WorkingUnit=.FALSE.)
-                         write(out_unitp,*)  ' Working energy unit : ',RWU_WriteUnit('E',WorkingUnit=.TRUE.)
-                         write(out_unitp,21) ' auTOenergy      = ',const_phys%auTOenergy
-                         write(out_unitp,21) ' auTOcm_inv      = ',const_phys%auTOcm_inv
-                         write(out_unitp,21) ' auTOeV          = ',const_phys%auTOeV
-                         write(out_unitp,21) ' auTOGHz         = ',const_phys%auTOGHz
-                         write(out_unitp,21) ' auTOkcalmol_inv = ',const_phys%auTOkcalmol_inv
-                         write(out_unitp,21) ' auTOkJmol_inv   = ',const_phys%auTOkJmol_inv
+  IF(iprint_loc == 0) THEN
+      write(out_unitp,*)  ' Writing energy unit : ',RWU_WriteUnit('E',WorkingUnit=.FALSE.)
+      write(out_unitp,*)  ' Working energy unit : ',RWU_WriteUnit('E',WorkingUnit=.TRUE.)
+      write(out_unitp,21) ' auTOenergy      = ',const_phys%auTOenergy
+      write(out_unitp,21) ' auTOcm_inv      = ',const_phys%auTOcm_inv
+      write(out_unitp,21) ' auTOeV          = ',const_phys%auTOeV
+      write(out_unitp,21) ' auTOGHz         = ',const_phys%auTOGHz
+      write(out_unitp,21) ' auTOkcalmol_inv = ',const_phys%auTOkcalmol_inv
+      write(out_unitp,21) ' auTOkJmol_inv   = ',const_phys%auTOkJmol_inv
 
-    IF (print_level > 0) write(out_unitp,*)  ' pi              = ',const_phys%pi
-    IF (print_level > 0) write(out_unitp,*)  ' cos(pi)         = ',cos(const_phys%pi)
-    IF (print_level > 0) write(out_unitp,11) ' a0 (m-1)        = ',const_phys%a0
-    IF (print_level > 0) write(out_unitp,11) ' a0 (Angs)       = ',const_phys%a0*TEN**10
-    IF (print_level > 0) write(out_unitp,11) ' Eh (J)          = ',const_phys%Eh
-    IF (print_level > 0) write(out_unitp,11) ' Ta (s)          = ',const_phys%Ta
-                         write(out_unitp,21) ' Ta (fs)         = ',const_phys%Ta*TEN**15
+    IF (print_level > 0) THEN
+      write(out_unitp,*)  ' pi              = ',const_phys%pi
+      write(out_unitp,*)  ' cos(pi)         = ',cos(const_phys%pi)
+      write(out_unitp,11) ' a0 (m-1)        = ',const_phys%a0
+      write(out_unitp,11) ' a0 (Angs)       = ',const_phys%a0*TEN**10
+      write(out_unitp,11) ' Eh (J)          = ',const_phys%Eh
+      write(out_unitp,11) ' Ta (s)          = ',const_phys%Ta
+    END IF
+      write(out_unitp,21) ' Ta (fs)         = ',const_phys%Ta*TEN**15
 
-    IF (print_level > 0) write(out_unitp,21) ' inv_Name        = ',const_phys%inv_Name
-    IF (print_level > 0) write(out_unitp,11) ' E0 (V cm-1)     = ',const_phys%E0
-    IF (print_level > 0) write(out_unitp,11) ' I0 (W cm-2)     = ',const_phys%I0
-    IF (print_level > 0) write(out_unitp,11) ' convAif         = ',const_phys%convAif
-    IF (print_level > 0) write(out_unitp,11) ' convIDif        = ',const_phys%convIDif
-    IF (print_level > 0) write(out_unitp,11) ' convIQif        = ',const_phys%convIQif
-    IF (print_level > 0) write(out_unitp,11) ' convDebyeTOau   = ',convDebyeTOau
+    IF (print_level > 0) THEN
+      write(out_unitp,21) ' inv_Name        = ',const_phys%inv_Name
+      write(out_unitp,11) ' E0 (V cm-1)     = ',const_phys%E0
+      write(out_unitp,11) ' I0 (W cm-2)     = ',const_phys%I0
+      write(out_unitp,11) ' convAif         = ',const_phys%convAif
+      write(out_unitp,11) ' convIDif        = ',const_phys%convIDif
+      write(out_unitp,11) ' convIQif        = ',const_phys%convIQif
+      write(out_unitp,11) ' convDebyeTOau   = ',convDebyeTOau
+    END IF
   ENDIF
 
 11 format (a,e17.10)
@@ -559,10 +599,12 @@
   character(len=Name_len)  :: time_unit
   character(len=Name_len)  :: mass_unit  !  the energy unit (default : au)
   character(len=Name_len)  :: version,mass_version
+  character(len=Line_len)  :: PhysConst_path,EVRT_path
+
 
 
   NAMELIST /constantes/ auTOcm_inv,inv_Name,mass_unit,auTOmass,     &
-                        mass_version,version,EVRT_path,             &
+                        mass_version,version,PhysConst_path,EVRT_path, &
                         ene_unit,auTOenergy,time_unit
 
 !- for debuging --------------------------------------------------
@@ -589,6 +631,9 @@
 
   time_unit    = time_unit1
 
+  PhysConst_path = ""
+  EVRT_path      = ""
+
   read(in_unitp,constantes,IOSTAT=err_read)
   IF (err_read < 0) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
@@ -596,14 +641,14 @@
     write(out_unitp,*) ' The namelist "constantes" is probably absent'
     write(out_unitp,*) ' check your data!'
     write(out_unitp,*) ' ERROR in ',name_sub
-    STOP
+    STOP ' ERROR in sub_ReadNMLconstantes: The namelist "constantes" is probably absent'
   ELSE IF (err_read > 0) THEN
     write(out_unitp,*) ' ERROR in ',name_sub
     write(out_unitp,*) ' Some parameter name of the namelist "constantes" are probaly wrong'
     write(out_unitp,*) ' check your data!'
     write(out_unitp,constantes)
     write(out_unitp,*) ' ERROR in ',name_sub
-    STOP
+    STOP ' ERROR in sub_ReadNMLconstantes: Some parameter name of the namelist "constantes" are probaly wrong'
   END IF
 
   version1      = version
@@ -618,6 +663,19 @@
   inv_Name1     = inv_Name
 
   time_unit1    = time_unit
+
+  IF (len_trim(EVRT_path) > 0 .AND. len_trim(PhysConst_path) > 0) THEN
+    write(out_unitp,*) 'ERROR in ',name_sub
+    write(out_unitp,*) 'Both EVRT_path and PhysConst_path are defined in the namelist constantes'
+    write(out_unitp,*) 'Define ONLY PhysConst_path.'
+    STOP ' ERROR in sub_ReadNMLconstantes: Both EVRT_path and PhysConst_path are defined'
+  ELSE IF (len_trim(EVRT_path) > 0) THEN
+    PhysCte_path = trim(adjustl(EVRT_path))
+  ELSE IF (len_trim(PhysConst_path) > 0) THEN
+    PhysCte_path = trim(adjustl(PhysConst_path))
+  ELSE ! nothing to do
+    CONTINUE
+  END IF
 
   IF (debug) THEN
     write(out_unitp,*) 'END ',name_sub

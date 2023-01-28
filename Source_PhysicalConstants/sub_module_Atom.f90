@@ -33,8 +33,7 @@
 !!   with the "construct_table_at" subroutine.
 !!  This subroutine uses an internal file "internal_data/IsotopicMass.txt" download in 2012 from NIST.
 MODULE mod_Atom
-  USE QDUtil_NumParameters_m
-  USE mod_system
+  USE QDUtil_m
   IMPLICIT NONE
 
 PRIVATE
@@ -67,7 +66,6 @@ PRIVATE
     real (kind=Rkind)        :: abundance    = -ONE    !< the isotopic abundance
     logical                  :: MainIsotope  = .FALSE. !< flag to define the most abundant isotope
     logical                  :: SetIsotope   = .FALSE. !< flag to define when an isotope is set
-
   END TYPE atom
 
 !> @brief Derived type in which all isotopes are set-up.
@@ -242,13 +240,16 @@ PRIVATE
 !! @param mendeleev     table of "atoms" with known isotopes
 !! @param auTOgPmol     conversion factor: au to g.mol-1
 !! @param mass_unit     name of the mass unit (eg gPmol)
-  SUBROUTINE construct_table_at_NIST2012(mendeleev,auTOgPmol,mass_unit)
+!! @param iprint        Print things when iprint=0 (old MPI_id)
+  SUBROUTINE construct_table_at_NIST2012(mendeleev,auTOgPmol,mass_unit,PhysConst_path,iprint)
     USE QDUtil_m, ONLY : file_open, file_close
     IMPLICIT NONE
 
     TYPE (table_atom), intent(inout) :: mendeleev
     character (len=*), intent(in)    :: mass_unit
     real (kind=Rkind), intent(in)    :: auTOgPmol
+    character (len=*), intent(in)    :: PhysConst_path
+    integer,           intent(in)    :: iprint
 
     integer           :: nio,err
     integer           :: memory
@@ -271,7 +272,7 @@ PRIVATE
       END IF
 !---------------------------------------------------------------------
 
-    mendeleev%List_Isotope%name = trim(EVRT_path) // '/' //       &
+    mendeleev%List_Isotope%name = PhysConst_path // '/' //       &
                                   'Internal_data/IsotopicMass_2012.txt'
 
     IF (.NOT. mendeleev%construct) THEN
@@ -281,13 +282,13 @@ PRIVATE
         write(out_unit,*) ' WARNNING in ',name_sub
         write(out_unit,*) ' The file "Internal_data/IsotopicMass_2012.txt" can not be open'
         write(out_unit,*) ' Two main raisons:'
-        write(out_unit,*) '  -1- the ElVibRot directory has been moved after the compilation'
-        write(out_unit,*) '  -2- the "EVRT_path" is badly defined in the namelist "system"'
-        write(out_unit,*) '      EVRT_path: ',trim(EVRT_path)
+        write(out_unit,*) '  -1- the PhysConst directory has been moved after the compilation'
+        write(out_unit,*) '  -2- the "PhysConst_path" is badly defined in the namelist "constantes"'
+        write(out_unit,*) '      PhysConst_path: ',trim(PhysConst_path)
 
         write(out_unit,*) ' Two solutions:'
-        write(out_unit,*) '  -1- recompile ElVibRot: "make clean ; make"'
-        write(out_unit,*) '  -2- set-up the "EVRT_path" in the namelist "system"'
+        write(out_unit,*) '  -1- recompile PhysConst: "make clean ; make"'
+        write(out_unit,*) '  -2- set-up the "PhysConst_path" in the namelist "constantes"'
 
         write(out_unit,*) ' WARNNING the old table (construct_table_at_HandBook70ed) is used'
         CALL construct_table_at_HandBook70ed(mendeleev,auTOgPmol,mass_unit)
@@ -326,7 +327,7 @@ PRIVATE
         IF (debug) write(out_unit,*) 'at: ',mendeleev%at(Z,A)
 
       END DO
-      IF(MPI_id==0) write(out_unit,*) 'The number of read isotopes:',isot
+      IF(iprint==0) write(out_unit,*) 'The number of read isotopes:',isot
       CALL file_close(mendeleev%List_Isotope)
 
       DO Z=0,mendeleev%max_Z
@@ -362,12 +363,14 @@ PRIVATE
 !! @param mendeleev     table of "atoms" with known isotopes
 !! @param auTOgPmol     conversion factor: au to g.mol-1
 !! @param mass_unit     name of the mass unit (eg gPmol)
-  SUBROUTINE construct_table_at_NIST2018(mendeleev,auTOgPmol,mass_unit)
+  SUBROUTINE construct_table_at_NIST2018(mendeleev,auTOgPmol,mass_unit,PhysConst_path,iprint)
     IMPLICIT NONE
 
     TYPE (table_atom), intent(inout) :: mendeleev
     character (len=*), intent(in)    :: mass_unit
     real (kind=Rkind), intent(in)    :: auTOgPmol
+    character (len=*), intent(in)    :: PhysConst_path
+    integer,           intent(in)    :: iprint
 
     integer           :: nio,err
     integer           :: memory
@@ -375,10 +378,8 @@ PRIVATE
     integer           :: Z,A,err_mem
     real (kind=Rkind) :: Max_abundance
 
-    character (len=*), parameter ::                               &
-       alphab1="ABCBEFGHIJKLMNOPQRSTUVWXYZ"
-    character (len=*), parameter ::                               &
-       alphab2="abcdefghijklmnopqrstuvwxyz"
+    character (len=*), parameter :: alphab1="ABCBEFGHIJKLMNOPQRSTUVWXYZ"
+    character (len=*), parameter :: alphab2="abcdefghijklmnopqrstuvwxyz"
 
     integer :: i,pos1,pos2,pos3,isot,A_OF_Max_abundance
 
@@ -392,7 +393,7 @@ PRIVATE
       END IF
 !---------------------------------------------------------------------
 
-    mendeleev%List_Isotope%name = trim(EVRT_path) // '/' //       &
+    mendeleev%List_Isotope%name = PhysConst_path // '/' //       &
                                   'Internal_data/IsotopicMass_2018.txt'
 
     IF (.NOT. mendeleev%construct) THEN
@@ -402,14 +403,14 @@ PRIVATE
         write(out_unit,*) ' WARNNING in ',name_sub
         write(out_unit,*) ' The file "Internal_data/IsotopicMass_2018.txt" can not be open'
         write(out_unit,*) ' Two main raisons:'
-        write(out_unit,*) '  -1- the ElVibRot directory has been moved after the compilation'
-        write(out_unit,*) '  -2- the "EVRT_path" is badly defined in the namelist "system"'
-        write(out_unit,*) '      EVRT_path: ',trim(EVRT_path)
+        write(out_unit,*) '  -1- the PhysConst directory has been moved after the compilation'
+        write(out_unit,*) '  -2- the "PhysConst_path" is badly defined in the namelist "constantes"'
+        write(out_unit,*) '      PhysConst_path: ',trim(PhysConst_path)
 
         write(out_unit,*) ' Two solutions:'
-        write(out_unit,*) '  -1- recompile ElVibRot: "make clean ; make"'
-        write(out_unit,*) '  -2- set-up the "EVRT_path" in the namelist "system"'
-
+        write(out_unit,*) '  -1- recompile PhysConst: "make clean ; make"'
+        write(out_unit,*) '  -2- set-up the "PhysConst_path" in the namelist "constantes"'
+  
         write(out_unit,*) ' WARNNING the old table (construct_table_at_HandBook70ed) is used'
         CALL construct_table_at_HandBook70ed(mendeleev,auTOgPmol,mass_unit)
         RETURN
@@ -447,7 +448,7 @@ PRIVATE
         IF (debug) write(out_unit,*) '-----------------------------------------------------'
 
       END DO
-      IF(MPI_id==0) write(out_unit,*) 'The number of read isotopes:',isot
+      IF(iprint==0) write(out_unit,*) 'The number of read isotopes:',isot
       CALL file_close(mendeleev%List_Isotope)
 
 
