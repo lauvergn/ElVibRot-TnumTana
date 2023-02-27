@@ -1,20 +1,18 @@
 .project
 .settings
-.*.swp */.*.swp */*/.*.swp */*/*/.*.swp
-Source_TnumTana_Coord/sub_operator_T/calc_f2_f1Q.f90
-Source_TnumTana_Coord/sub_operator_T/Calc_Tab_dnQflex.f90
-Source_TnumTana_Coord/sub_operator_T/Sub_X_TO_Q_ana.f90
+.*.swp 
+*/.*.swp 
+*/*/.*.swp 
+*/*/*/.*.swp
 
 Source_ElVibRot/sub_Basis/laguerre_integrands.sh
 Source_ElVibRot/sub_Basis/laguerre_integrands.txt
 
-sub_pot/sub_system.f
-sub_pot/sub_system.f90
 obj/*
-makefile_CRP makefile_old
 vib
 comp.log
 *.exe
+*.a
 Examples/exa_PhysicalConstants/res*
 Examples/exa_PhysicalConstants/comp.log
 Examples/exa_TanaCheck/*log
@@ -30,7 +28,3 @@ UnitTests/*/freq.xyz
 UnitTests/*/namelist*
 UnitTests/res_UT_Frac
 UnitTests/res_UT_PhysConst
-
-Ext_Lib/QuantumModelLib*
-Ext_Lib/AD_dnSVM*
-Ext_Lib/dnSVMLib

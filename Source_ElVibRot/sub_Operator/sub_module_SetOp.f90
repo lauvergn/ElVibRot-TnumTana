@@ -310,7 +310,7 @@ MODULE mod_SetOp
           DO k_term=1,para_Op%nb_term
             para_Op%OpGrid(k_term)%para_FileGrid = para_Op%para_ReadOp%para_FileGrid
 
-            info = String_TO_String('  k_term( ' // int_TO_char(k_term) // &
+            info = trim('  k_term( ' // TO_string(k_term) // &
                                       ' ) of ' // trim(para_Op%name_Op))
 
             CALL alloc_OpGrid(para_Op%OpGrid(k_term),                 &
@@ -334,7 +334,7 @@ MODULE mod_SetOp
             para_Op%imOpGrid(1)%para_FileGrid%Save_MemGrid = .FALSE.
           END IF
 
-          info = String_TO_String(' of ' // trim(para_Op%name_Op))
+          info = trim(' of ' // trim(para_Op%name_Op))
 
           CALL alloc_OpGrid(para_Op%imOpGrid(1),                      &
                             para_Op%nb_qa,nb_bie,                     &

@@ -2092,23 +2092,23 @@ MODULE mod_basis
 
       CALL dealloc_dnCplxMat(basis_set%dnCBG)
       CALL alloc_dnCplxMat(basis_set%dnCBG,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=0)
-      CALL Cplx_mat_id(basis_set%dnCBG%d0,basis_set%nb,basis_set%nb)
+      basis_set%dnCBG%d0 = Identity_Mat(basis_set%nb)
 
       CALL dealloc_dnCplxMat(basis_set%dnCBGwrho)
       CALL alloc_dnCplxMat(basis_set%dnCBGwrho,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=0)
-      CALL Cplx_mat_id(basis_set%dnCBGwrho%d0,basis_set%nb,basis_set%nb)
+      basis_set%dnCBGwrho%d0 = Identity_Mat(basis_set%nb)
 
     ELSE
 
       CALL dealloc_dnMat(basis_set%dnRBG)
       CALL alloc_dnMat(basis_set%dnRBG,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=0)
 
-      CALL mat_id(basis_set%dnRBG%d0,basis_set%nb,basis_set%nb)
+      basis_set%dnRBG%d0 = Identity_Mat(basis_set%nb)
 
       CALL dealloc_dnMat(basis_set%dnRBGwrho)
       CALL alloc_dnMat(basis_set%dnRBGwrho,basis_set%nb,basis_set%nb,nb_var_deriv=basis_set%ndim,nderiv=0)
 
-      CALL mat_id(basis_set%dnRBGwrho%d0,basis_set%nb,basis_set%nb)
+      basis_set%dnRBGwrho%d0 = Identity_Mat(basis_set%nb)
 
     END IF
   ELSE
@@ -2275,12 +2275,12 @@ MODULE mod_basis
 
           epsi = ONETENTH**10
           IF (SVD) THEN
-            CALL inv_m1_TO_m2(d0bxd0bT,d0bxd0bT_inv,nq,1,epsi) ! SVD
+            d0bxd0bT_inv = inv_OF_Mat_TO(d0bxd0bT,inv_type=1,epsi=epsi) ! SVD
             ! The SVD procedure does not work all the time !! Why ????
 
-          IF (debug) THEN
-            write(out_unitp,*) ' Computation with pseudonverse, SVD'
-          END IF
+            IF (debug) THEN
+              write(out_unitp,*) ' Computation with pseudonverse, SVD'
+            END IF
 
           ELSE
             CALL alloc_NParray(vecP,[nq,nq],'vecP',name_sub)

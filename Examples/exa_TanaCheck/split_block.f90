@@ -65,9 +65,9 @@ RECURSIVE SUBROUTINE write_recBF(BF,nio,rec)
   END IF
 
   IF (allocated(BF%vec_name)) THEN
-    vec_name = string_TO_string(BF%vec_name)
+    vec_name = trim(BF%vec_name)
     DO i=1,rec_loc
-      vec_name = string_TO_string("   " // vec_name)
+      vec_name = trim("   " // vec_name)
     END DO
 
     write(nio,'(a)') vec_name ; flush(nio)
@@ -90,7 +90,7 @@ RECURSIVE SUBROUTINE recBF2_TO_recBF1(BF1,BF2)
 
   integer :: i
 
-   BF1%vec_name = string_TO_string(BF2%vec_name)
+   BF1%vec_name = trim(BF2%vec_name)
    BF1%layer    = BF2%layer
 
    IF (associated(BF2%tab_BF)) THEN
@@ -128,14 +128,14 @@ RECURSIVE FUNCTION get_layer_OF_recBF(BF) RESULT(layer)
 
 
 END FUNCTION get_layer_OF_recBF
-FUNCTION String_TO_String(string,ltrim)
-  character(len=:), allocatable     :: String_TO_String
+FUNCTION trim(string,ltrim)
+  character(len=:), allocatable     :: trim
   character(len=*), intent(in)      :: string
   logical, optional,intent(in)      :: ltrim
 
   logical :: ltrim_loc
 
-  IF (allocated(String_TO_String)) deallocate(String_TO_String)
+  IF (allocated(trim)) deallocate(trim)
 
   IF (present(ltrim)) THEN
     ltrim_loc = ltrim
@@ -144,17 +144,17 @@ FUNCTION String_TO_String(string,ltrim)
   END IF
 
   IF (ltrim_loc) THEN
-    allocate(character(len=len_trim(string)) :: String_TO_String)
-    String_TO_String = trim(string)
+    allocate(character(len=len_trim(string)) :: trim)
+    trim = trim(string)
   ELSE
-    allocate(character(len=len(string)) :: String_TO_String)
-    String_TO_String = string
+    allocate(character(len=len(string)) :: trim)
+    trim = string
   END IF
 
-END FUNCTION String_TO_String
+END FUNCTION trim
 
-FUNCTION int_TO_char(i)
-  character (len=:), allocatable  :: int_TO_char
+FUNCTION TO_string(i)
+  character (len=:), allocatable  :: TO_string
   integer, intent(in) :: i
 
   character(len=Line_len) :: name_int
@@ -163,11 +163,11 @@ FUNCTION int_TO_char(i)
   write(name_int,*) i
 
   clen = len_trim(adjustl(name_int))
-  allocate(character(len=clen) :: int_TO_char)
+  allocate(character(len=clen) :: TO_string)
 
-  int_TO_char = trim(adjustl(name_int))
+  TO_string = trim(adjustl(name_int))
 
-END FUNCTION int_TO_char
+END FUNCTION TO_string
 
 SUBROUTINE get_next_tab_v(tab_v,nv,nb,end_tab)
   integer, intent(in) :: nv,nb
@@ -282,7 +282,7 @@ RECURSIVE SUBROUTINE Split_blocks_new(nv)
   BF_vec_frame%layer    = 1
 
   allocate(BF_vec(1)%tab_BF(1)) ! number of i_BF for v=1
-  BF_vec(1)%tab_BF(1)%vec_name = String_TO_String(" &vector /")  ! it is not going to be used
+  BF_vec(1)%tab_BF(1)%vec_name = trim(" &vector /")  ! it is not going to be used
   BF_vec(1)%tab_BF(1)%layer    = 1
 
 
@@ -339,11 +339,11 @@ RECURSIVE SUBROUTINE Split_blocks_new(nv)
 
         allocate(BF_vec(iv)%tab_BF(i_BF)%tab_BF(nb))
         IF (zmat_order) THEN
-          BF_vec(iv)%tab_BF(i_BF)%vec_name = String_TO_String( &
-            " &Vector frame=t nb_vect=" // int_TO_char(nb) // " zmat_order=t /")
+          BF_vec(iv)%tab_BF(i_BF)%vec_name = trim( &
+            " &Vector frame=t nb_vect=" // TO_string(nb) // " zmat_order=t /")
         ELSE
-          BF_vec(iv)%tab_BF(i_BF)%vec_name = String_TO_String( &
-            " &Vector frame=t nb_vect=" // int_TO_char(nb) // " zmat_order=f /")
+          BF_vec(iv)%tab_BF(i_BF)%vec_name = trim( &
+            " &Vector frame=t nb_vect=" // TO_string(nb) // " zmat_order=f /")
         END IF
 
         DO i=1,nb
@@ -391,7 +391,7 @@ RECURSIVE SUBROUTINE Split_blocks_new(nv)
     IF (get_layer_OF_recBF(BF_vec(iv)%tab_BF(i_BF)) > max_layer) CYCLE
 
 
-    data_name = String_TO_String( "dat_nv" // int_TO_char(iv) // "-num" // int_TO_char(i_BF) )
+    data_name = trim( "dat_nv" // TO_string(iv) // "-num" // TO_string(i_BF) )
 
     nio=10
     open(unit=nio,file=data_name)

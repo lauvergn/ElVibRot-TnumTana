@@ -159,7 +159,7 @@ CONTAINS
        write(out_unitp,*)
        Q =  part_func(ene,nb_psi_in,para_ana%Temp)
 
-      file_WPspectral%name = make_FileName(para_ana%name_file_spectralWP)
+      file_WPspectral%name = make_EVRTFileName(para_ana%name_file_spectralWP)
       IF(MPI_id==0) CALL file_open(file_WPspectral,nioWP,lformatted=para_ana%formatted_file_WP)
 
       ! For the header of the file
@@ -211,7 +211,7 @@ CONTAINS
         para_ana%ana_psi%Ene     = ene(i)
         para_ana%ana_psi%num_psi = i
 
-        info = String_TO_String( " " //                                 &
+        info = trim( " " //                                 &
            real_TO_char( ene(i)*const_phys%auTOenergy,"f12.6" ) // " : ")
 
         CALL sub_analyze_psi(tab_Psi(i),para_ana%ana_psi,adia=.FALSE.)
@@ -381,13 +381,13 @@ CONTAINS
        IF (para_Tnum%Inertia) THEN
          write(out_unitp,*) iPsi,'TensorI',info
          write(out_unitp,"(3(3(f15.6,1x),/))") TensorI(:,:)
-         CALL inversion(avMhu,TensorI,trav1,index,3)
-         avMhu = avMhu * HALF
+         avMhu = inv_OF_Mat_TO(TensorI) * HALF
        ELSE
          avMhu = TensorI
          mat   = TensorI
 
-         CALL inversion(TensorI,mat,trav1,index,3)
+         TensorI = inv_OF_Mat_TO(mat)
+
          write(out_unitp,*) iPsi,'TensorI (invers of G)',info
          write(out_unitp,"(3(3(f15.6,1x),/))") TensorI(:,:)
        END IF

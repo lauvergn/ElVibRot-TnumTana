@@ -69,6 +69,7 @@
       character (len=Name_longlen)   :: RMatFormat
       character (len=Name_longlen)   :: CMatFormat
       character (len=Line_len)       :: base_FileName = ''
+      character (len=Line_len)       :: File_path = ''
 
       character(len=:), allocatable  :: input_filename
 
@@ -200,6 +201,7 @@
         ELSE IF (base_FileName /= "") THEN
           File_path = base_FileName
         END IF
+        Current_Path = trim(File_path) ! Current_Path is in FOR_EVRT library
 
         para_mem%mem_debug = mem_debug
 
@@ -223,7 +225,7 @@
         para_EVRT_calc%nDGrid           = nDGrid
         para_EVRT_calc%main_test        = main_test
 
-        print_level = printlevel ! print_level is in mod_system.mod
+        CALL set_print_level(printlevel) ! print_level = printlevel ! print_level is in mod_system.mod
 
         EneIO_format  = EneFormat
         RMatIO_format = RMatFormat

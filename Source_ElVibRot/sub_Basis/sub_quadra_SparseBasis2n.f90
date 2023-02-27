@@ -223,7 +223,7 @@
         END DO
 
 !       2b: number of the duplicate values
-        CALL trie_tab(nq,x,nq) ! sort the 1D-grid:x
+        CALL Sort_Vec(x,sort_type=-1)
         nb_remove = 0
         DO iq=1,nq-1
           IF (x(iq) == x(iq+1)) nb_remove = nb_remove + 1

@@ -6,9 +6,6 @@
 # F90 = mpifort
  FC = gfortran
 #
-## parallel_make=1 to enable parallel make
-## parallel_make=0 for fast debug make, no parallel
-parallel_make=0
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
 OPT = 0
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
@@ -19,13 +16,6 @@ LAPACK = 1
 ## default 4: , INT=8 (for kind=8)
 INT = 4
 #
-## Arpack? Empty: default No Arpack; 0: without Arpack; 1 with Arpack
-ARPACK = 0
-## CERFACS? Empty: default No CERFACS; 0: without CERFACS; 1 with CERFACS
-CERFACS = 0
-## extension for the "sub_system." file. Possible values: f; f90 or $(EXTFextern)
-## if $(EXTFextern) is empty, the default is f
-extf = $(EXTFextern)
 ## how to get external libraries;  "loc" (default): from local zip file, Empty or something else (v0.5): from github
 EXTLIB_TYPE = loc
 #=================================================================================
@@ -51,19 +41,11 @@ else
   LLAPACK      := $(LAPACK)
 endif
 #===============================================================================
-# turn off ARPACK when using pgf90
-ifeq ($(FFC),pgf90)
-  ARPACK = 0
-endif
-#===============================================================================
 # setup for mpifort
 ifeq ($(FFC),mpifort)
   ## MPI compiled with: gfortran or ifort
   MPICORE := $(shell ompi_info | grep 'Fort compiler:' | awk '{print $3}')
   OOMP = 0
-  ifeq ($(INT),8)
-    ARPACK = 0 ## temp here, disable ARPACK for 64-bit case
-  endif
 endif
 #===============================================================================
 #
@@ -71,45 +53,25 @@ endif
 OS :=$(shell uname)
 
 # about EVRT, path, versions ...:
-EVRT_path:= $(shell pwd)
-TNUM_ver:=$(shell awk '/Tnum/ {print $$3}' $(EVRT_path)/version-EVR-T)
-TANA_ver:=$(shell awk '/Tana/ {print $$3}' $(EVRT_path)/version-EVR-T)
-EVR_ver:=$(shell awk '/EVR/ {print $$3}' $(EVRT_path)/version-EVR-T)
+LOC_path:= $(shell pwd)
 
 # Extension for the object directory and the library
 ifeq ($(FFC),mpifort)
-  ext_obj:=_$(FFC)_$(MPICORE)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
+  extlibwi_obj:=_$(FFC)_$(MPICORE)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
 else
-  ext_obj:=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
+  extlibwi_obj:=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)_int$(INT)
 endif
 extlib_obj:=_$(FFC)_opt$(OOPT)_omp$(OOMP)_lapack$(LLAPACK)
 
-
-
-OBJ_DIR = obj/obj$(ext_obj)
+OBJ_DIR = obj/obj$(extlibwi_obj)
 $(info ***********OBJ_DIR:            $(OBJ_DIR))
 $(shell [ -d $(OBJ_DIR) ] || mkdir -p $(OBJ_DIR))
 MOD_DIR=$(OBJ_DIR)
-#SRC_DIR=SRC
-#MAIN_DIR=APP
-#TESTS_DIR=Tests
-UT_DIR      = $(EVRT_path)/UnitTests
-
+#
 # library name
-EVRTLIBA=libEVRT$(ext_obj).a
+LIBA=libEVR$(extlibwi_obj).a
 #=================================================================================
 # cpp preprocessing
-CPPSHELL = -D__COMPILE_DATE="\"$(shell date +"%a %e %b %Y - %H:%M:%S")\"" \
-           -D__COMPILE_HOST="\"$(shell hostname -s)\"" \
-           -D__COMPILER="'$(FFC)'" \
-           -D__COMPILER_VER="'$(FC_VER)'" \
-           -D__EVRTPATH="'$(EVRT_path)'" \
-           -D__PHYSCTEPATH="'$(EVRT_path)'" \
-           -D__EVR_VER="'$(EVR_ver)'" \
-           -D__TNUM_VER="'$(TNUM_ver)'" \
-           -D__TANA_VER="'$(TANA_ver)'"
-CPPSHELL_ARPACK  = -D__ARPACK="$(ARPACK)"
-CPPSHELL_CERFACS = -D__CERFACS="$(CERFACS)"
 CPPSHELL_LAPACK  = -D__LAPACK="$(LLAPACK)"
 
 #===============================================================================
@@ -117,65 +79,35 @@ CPPSHELL_LAPACK  = -D__LAPACK="$(LLAPACK)"
 #===============================================================================
 # external lib (QML, AD_dnSVM ...)
 ifeq ($(ExtLibDIR),)
-  ExtLibDIR := $(EVRT_path)/Ext_Lib
+  ExtLibDIR := $(LOC_path)/Ext_Lib
 endif
+QD_DIR            = $(ExtLibDIR)/QDUtilLib
+QDMOD_DIR         = $(QD_DIR)/OBJ/obj$(extlib_obj)
+QDLIBA            = $(QD_DIR)/libQD$(extlib_obj).a
 
-QML_DIR    = $(ExtLibDIR)/QuantumModelLib
-QMLMOD_DIR = $(QML_DIR)/OBJ/obj$(extlib_obj)
-QMLLIBA    = $(QML_DIR)/libQMLib$(extlib_obj).a
+AD_DIR            = $(ExtLibDIR)/AD_dnSVM
+ADMOD_DIR         = $(AD_DIR)/OBJ/obj$(extlib_obj)
+ADLIBA            = $(AD_DIR)/libAD_dnSVM$(extlib_obj).a
 
-AD_DIR    = $(ExtLibDIR)/AD_dnSVM
-ADMOD_DIR = $(AD_DIR)/OBJ/obj$(extlib_obj)
-ADLIBA    = $(AD_DIR)/libAD_dnSVM$(extlib_obj).a
+QML_DIR           = $(ExtLibDIR)/QuantumModelLib
+QMLMOD_DIR        = $(QML_DIR)/OBJ/obj$(extlib_obj)
+QMLLIBA           = $(QML_DIR)/libQMLib$(extlib_obj).a
 
-QD_DIR    = $(ExtLibDIR)/QDUtilLib
-QDMOD_DIR = $(QD_DIR)/OBJ/obj$(extlib_obj)
-QDLIBA    = $(QD_DIR)/libQD$(extlib_obj).a
+FOREVRT_DIR       = $(ExtLibDIR)/FOR_EVRT
+FOREVRTMOD_DIR    = $(FOREVRT_DIR)/OBJ/obj$(extlibwi_obj)
+FOREVRTLIBA       = $(FOREVRT_DIR)/libFOR_EVRT$(extlibwi_obj).a
 
-EXTLib     = $(QMLLIBA) $(ADLIBA) $(QDLIBA)
+CONSTPHYS_DIR     = $(ExtLibDIR)/ConstPhys
+CONSTPHYSMOD_DIR  = $(CONSTPHYS_DIR)/OBJ/obj$(extlibwi_obj)
+CONSTPHYSLIBA     = $(CONSTPHYS_DIR)/libPhysConst$(extlibwi_obj).a
+
+KEO_DIR           = $(ExtLibDIR)/Coord_KEO_PrimOp
+KEOMOD_DIR        = $(KEO_DIR)/OBJ/obj$(extlibwi_obj)
+KEOLIBA           = $(KEO_DIR)/libCoord_KEO_PrimOp$(extlibwi_obj).a
+
+EXTLib     = $(KEOLIBA) $(CONSTPHYSLIBA) $(FOREVRTLIBA) $(QMLLIBA) $(ADLIBA) $(QDLIBA)
 #===============================================================================
 #
-#===============================================================================
-# If EXTFextern is empty, extf must be empty
-ifeq  ($(strip $(EXTFextern)),)
-  extf = f
-endif
-#===============================================================================
-
-#===============================================================================
-# We cannot use ARPACK without lapack
-ifeq ($(LAPACK),0)
-  ARPACK = 0
-endif
-#===============================================================================
-# Arpack library
-#===============================================================================
-ifeq ($(ARPACK),1)
-  # Arpack management with the OS
-  ifeq ($(OS),Darwin)    # OSX
-    #EXTLib += /Users/chen/Linux/Software/ARPACK/libarpack_MAC.a
-    EXTLib += /Users/lauvergn/trav/ARPACK/libarpack_OSX.a
-  else                   # Linux
-    ifeq ($(F90), mpifort)
-      ifeq ($(MPICORE), gfortran)
-        EXTLib += /u/achen/Software/ARPACK/libarpack_Linux_gfortran.a
-      else ifeq ($(MPICORE), ifort)
-        EXTLib += /u/achen/Software/ARPACK/libarpack_Linux_ifort.a
-      endif
-    else ifeq ($(F90), gfortran)
-      EXTLib += /u/achen/Software/ARPACK/libarpack_Linux_gfortran.a
-    else ifeq ($(F90), ifort)
-      EXTLib += /u/achen/Software/ARPACK/libarpack_Linux_ifort.a
-    endif
-    #ARPACKLIB=/usr/lib64/libarpack.a
-    EXTLib += /userTMP/lauvergn/EVR/ARPACK_DML/libarpack_Linux.a
-  endif
-endif
-#===============================================================================
-#
-CompC=gcc
-#===============================================================================
-
 #===============================================================================
 # gfortran (osx and linux)
 #ifeq ($(F90),gfortran)
@@ -205,7 +137,7 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
   FFLAGS +=-J$(MOD_DIR)
 
   # where to look the .mod files
-  FFLAGS += -I$(QMLMOD_DIR) -I$(ADMOD_DIR) -I$(QDMOD_DIR)
+  FFLAGS += -I$(KEOMOD_DIR) -I$(CONSTPHYSMOD_DIR) -I$(FOREVRTMOD_DIR) -I$(QMLMOD_DIR) -I$(ADMOD_DIR) -I$(QDMOD_DIR)
 
   # some cpreprocessing
   FFLAGS += -cpp $(CPPSHELL)
@@ -246,116 +178,69 @@ ifeq ($(FFC),mpifort)
 $(info ***********COMPILED with:    $(MPICORE))
 endif
 $(info ***********OpenMP:           $(OOMP))
-$(info ***********Arpack:           $(ARPACK))
-$(info ***********CERFACS:          $(CERFACS))
 $(info ***********Lapack:           $(LLAPACK))
 $(info ***********FFLAGS0:          $(FFLAGS0))
 $(info ***********FLIB:             $(FLIB))
-$(info ***********subsystem file:   sub_system.$(extf))
+$(info ***********ExtLibDIR:        $(ExtLibDIR))
 $(info ************************************************************************)
-$(info ************************************************************************)
-$(info ***************** TNUM_ver: $(TNUM_ver))
-$(info ***************** TANA_ver: $(TANA_ver))
-$(info ****************** EVR_ver: $(EVR_ver))
-$(info ************************************************************************)
-$(info ************************************************************************)
-$(info ************ run UnitTests: make UT)
-$(info ********** clean UnitTests: make clean_UT)
 $(info ************************************************************************)
 
 #==========================================
-#VPATH = Source_Lib/sub_system Source_Lib/sub_nDindex Source_Lib/sub_dnSVM Source_Lib/sub_module \
-        Source_Lib/sub_communf90/sub_math Source_Lib/sub_communf90/sub_io \
-        Source_PhysicalConstants
-VPATH = Source_Lib/sub_system Source_Lib/sub_nDindex Source_Lib/sub_dnSVM Source_Lib/sub_module \
-        Source_Lib/sub_communf90/sub_math \
-        Source_PhysicalConstants
-
-#Primlib_SRCFILES  = \
-  sub_module_NumParameters.f90 sub_module_MPI.f90 \
-  sub_module_memory.f90 sub_module_string.f90 \
-  sub_module_memory_Pointer.f90 sub_module_memory_NotPointer.f90 \
-  sub_module_file.f90 sub_module_RW_MatVec.f90 mod_Frac.f90 \
-  sub_module_system.f90 \
-  sub_module_MPI_aux.f90
-Primlib_SRCFILES  = \
-  sub_module_MPI.f90 \
-  sub_module_system.f90 \
-  sub_module_MPI_aux.f90
-
-#math_SRCFILES =\
-   sub_diago.f90 sub_trans_mat.f90 sub_math_util.f90 sub_integration.f90 \
-   sub_polyortho.f90 sub_function.f90 sub_derive.f90 sub_pert.f90 \
-   sub_fft.f90
-math_SRCFILES =\
-   sub_math_util.f90 sub_integration.f90 \
-   sub_polyortho.f90 sub_function.f90 sub_derive.f90 sub_pert.f90 \
-   sub_fft.f90
-
-#io_SRCFILES = sub_io.f90
-io_SRCFILES =
-
-dnSVM_SRCFILES = \
-  sub_module_dnS.f90 sub_module_VecOFdnS.f90 sub_module_MatOFdnS.f90 \
-  sub_module_dnV.f90 sub_module_dnM.f90 sub_module_IntVM.f90 \
-  sub_module_dnSVM.f90
-
-FiniteDiff_SRCFILES = mod_FiniteDiff.f90
-
-# nDindex, Minimize Only list: OK
-# USE mod_mod_nDindex and mod_module_DInd
-nDindex_SRCFILES  = sub_module_DInd.f90 sub_module_nDindex.f90
-
-# nDfit, Minimize Only list: OK
-nDfit_SRCFILES    = sub_module_nDfit.f90
+VPATH = Source_ElVibRot/sub_Basis Source_ElVibRot/sub_Basis/sub_Basis_SG4 \
+  Source_ElVibRot/sub_Basis/sub_ReducedDensity Source_ElVibRot/sub_Basis/sub_SymAbelian \
+  Source_ElVibRot/sub_CRP Source_ElVibRot/sub_GWP Source_ElVibRot/sub_Operator \
+  Source_ElVibRot/sub_Optimization Source_ElVibRot/sub_Smolyak_test Source_ElVibRot/sub_WP \
+  Source_ElVibRot/sub_active Source_ElVibRot/sub_analysis Source_ElVibRot/sub_data_initialisation Source_ElVibRot/sub_inactive \
+  Source_ElVibRot/sub_main Source_ElVibRot/sub_propagation Source_ElVibRot/sub_rotation 
 
 
-#============================================================================
-#Physical constants
-#USE mod_constant
-PhysConst_SRCFILES = sub_module_RealWithUnit.f90 sub_module_Atom.f90 sub_module_constant.f90
-PhysConstEXE       = PhysConst.exe
-PhysConstMAIN      = PhysicalConstants_Main
-#============================================================================
 
-SRCFILES= $(Primlib_SRCFILES) $(math_SRCFILES) $(io_SRCFILES) $(dnSVM_SRCFILES) $(FiniteDiff_SRCFILES)  \
-          $(nDindex_SRCFILES) $(nDfit_SRCFILES) \
-          $(PhysConst_SRCFILES)
+#SRCFILES=  $(basis_SRCFILES) $(main_SRCFILES) $(EVR-Mod_SRCFILES) 
+include ./f90list.mk
 
 OBJ0=${SRCFILES:.f90=.o}
+OBJ0 += QMRPACK_lib.o
+
 OBJ=$(addprefix $(OBJ_DIR)/, $(OBJ0))
 $(info ************ OBJ: $(OBJ))
 #
-#============================================================================
-# Physical Constants
-.PHONY: PhysConst
-PhysConst: $(PhysConstEXE)
-	@echo "Physical Constants OK"
-#
-$(PhysConstEXE): $(EVRTLIBA) $(OBJ_DIR)/$(PhysConstMAIN).o
-	$(FFC) $(FFLAGS) -o $(PhysConstEXE) $(OBJ_DIR)/$(PhysConstMAIN).o $(EVRTLIBA) $(FLIB)
-#
-.PHONY: UT_PhysConst ut_physconst
-UT_PhysConst ut_physconst: $(PhysConstEXE)
-	@echo "---------------------------------------"
-	@echo "Unitary tests for the PhysConst module"
-	cd Examples/exa_PhysicalConstants ; ./run_tests > $(UT_DIR)/res_UT_PhysConst ; $(UT_DIR)/PhysConst.sh $(UT_DIR)/res_UT_PhysConst
-	@echo "---------------------------------------"
+#===============================================
+#============= Several mains ===================
 #===============================================
 #===============================================
-.PHONY: clean_UT
-clean_UT:
-	@cd UnitTests ; ./clean
-	@echo "UnitTests cleaned"
-#===============================================
-#============= Library: libEVRT.a  =============
-#===============================================
-.PHONY: lib
-lib: $(EVRTLIBA)
+#==============================================
+#ElVibRot:
+VIBEXE  = vib.exe
+VIBMAIN = EVR-T
 
-$(EVRTLIBA): $(OBJ)
-	ar -cr $(EVRTLIBA) $(OBJ)
-	@echo "  done Library: "$(EVRTLIBA)
+
+#make all : EVR
+.PHONY: all evr EVR libEVR libevr lib
+evr EVR all :obj vib $(VIBEXE)
+	@echo "EVR OK"
+lib libEVR libevr: $(LIBA)
+	@echo $(LIBA) " OK"
+#
+# vib script
+.PHONY: vib
+vib:
+	@echo "make vib script"
+	./scripts/make_vib.sh $(LOC_path) $(FFC)
+	chmod a+x vib
+#
+$(VIBEXE): $(OBJ_DIR)/$(VIBMAIN).o $(LIBA) $(EXTLib)
+	$(FFC) $(FFLAGS) -o $(VIBEXE) $(OBJ_DIR)/$(VIBMAIN).o $(LIBA) $(FLIB)
+	@echo EVR-T
+#===============================================
+#============= TESTS ===========================
+#===============================================
+#===============================================
+#============= Library: lib_FOR_EVRT.a  ========
+#===============================================
+$(LIBA): $(OBJ) $(EXTLib)
+	@echo "  LIBA from OBJ files"
+	ar -cr $(LIBA) $(OBJ)
+	@echo "  done Library: "$(LIBA)
 #
 #===============================================
 #============= compilation =====================
@@ -363,47 +248,83 @@ $(EVRTLIBA): $(OBJ)
 $(OBJ_DIR)/%.o: %.f90
 	@echo "  compile: " $<
 	$(FFC) $(FFLAGS) -o $@ -c $<
+$(OBJ_DIR)/%.o: %.f
+	@echo "  compile: " $<
+	$(FFC) $(FFLAGS) -o $@ -c $<
 #===============================================
 #================ cleaning =====================
 .PHONY: clean cleanall
 clean:
-	rm -f $(OBJ_DIR)/*/*.o $(OBJ_DIR)/*.o
-	rm -f lib*.a
+	rm -f  $(OBJ_DIR)/*.o
 	rm -f *.log 
 	rm -f TEST*.x
 	@echo "  done cleaning"
 
 cleanall : clean clean_extlib
-	rm -fr OBJ/obj* OBJ/*mod build
+	rm -fr obj/* build
 	rm -f lib*.a
 	rm -f *.exe
 	rm -f TESTS/res* TESTS/*log
 	@echo "  done all cleaning"
 #===============================================
-#=== external libraries ========================
-# AD_dnSVM + QML Lib
+#================ zip and copy the directory ===
+ExtLibSAVEDIR := /Users/lauvergn/git/Ext_Lib
+BaseName := EVR
+.PHONY: zip
+zip: cleanall
+	test -d $(ExtLibSAVEDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
+	cd $(ExtLibSAVEDIR) ; rm -rf $(BaseName)_devloc
+	mkdir $(ExtLibSAVEDIR)/$(BaseName)_devloc
+	cp -r * $(ExtLibSAVEDIR)/$(BaseName)_devloc
+	cd $(ExtLibSAVEDIR) ; zip -r Save_$(BaseName)_devloc.zip $(BaseName)_devloc
+	cd $(ExtLibSAVEDIR) ; rm -rf $(BaseName)_devloc
+	@echo "  done zip"
 #===============================================
+#=== external libraries ========================
+# AD_dnSVM + QML Lib ...
+#===============================================
+#
+$(KEOLIBA):
+	@test -d $(ExtLibDIR)     || (echo $(ExtLibDIR) "does not exist" ; exit 1)
+	@test -d $(KEO_DIR) || (cd $(ExtLibDIR) ; ./get_Coord_KEO_PrimOp.sh $(EXTLIB_TYPE))
+	@test -d $(KEO_DIR) || (echo $(KEO_DIR) "does not exist" ; exit 1)
+	cd $(KEO_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR) INT=$(INT)
+	@echo "  done " $(KEO_DIR) " in "$(BaseName)
+#
+$(CONSTPHYSLIBA):
+	@test -d $(ExtLibDIR)     || (echo $(ExtLibDIR) "does not exist" ; exit 1)
+	@test -d $(CONSTPHYS_DIR) || (cd $(ExtLibDIR) ; ./get_ConstPhys.sh $(EXTLIB_TYPE))
+	@test -d $(CONSTPHYS_DIR) || (echo $(CONSTPHYS_DIR) "does not exist" ; exit 1)
+	cd $(CONSTPHYS_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR) INT=$(INT)
+	@echo "  done " $(CONSTPHYS_DIR) " in "$(BaseName)
+#
+$(FOREVRTLIBA):
+	@test -d $(ExtLibDIR)   || (echo $(ExtLibDIR) "does not exist" ; exit 1)
+	@test -d $(FOREVRT_DIR) || (cd $(ExtLibDIR) ; ./get_FOR_EVRT.sh $(EXTLIB_TYPE))
+	@test -d $(FOREVRT_DIR) || (echo $(FOREVRT_DIR) "does not exist" ; exit 1)
+	cd $(FOREVRT_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR) INT=$(INT)
+	@echo "  done " $(FOREVRTLIBA) " in "$(BaseName)
 #
 $(QMLLIBA):
 	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
-	@test -d $(QML_DIR) || (cd $(ExtLibDIR) ; ./get_QML.sh $(EXTLIB_TYPE))
-	@test -d $(QML_DIR) || (echo $(QML_DIR) "does not exist" ; exit 1)
+	@test -d $(QML_DIR)   || (cd $(ExtLibDIR) ; ./get_QML.sh $(EXTLIB_TYPE))
+	@test -d $(QML_DIR)   || (echo $(QML_DIR) "does not exist" ; exit 1)
 	cd $(QML_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
-	@echo "  done " $(QDLIBA) " in QML"
+	@echo "  done " $(QDLIBA) " in "$(BaseName)
 #
 $(ADLIBA):
 	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
-	@test -d $(AD_DIR) || (cd $(ExtLibDIR) ; ./get_dnSVM.sh  $(EXTLIB_TYPE))
-	@test -d $(AD_DIR) || (echo $(AD_DIR) "does not exist" ; exit 1)
+	@test -d $(AD_DIR)    || (cd $(ExtLibDIR) ; ./get_dnSVM.sh  $(EXTLIB_TYPE))
+	@test -d $(AD_DIR)    || (echo $(AD_DIR) "does not exist" ; exit 1)
 	cd $(AD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
-	@echo "  done " $(AD_DIR) " in QML"
+	@echo "  done " $(AD_DIR) " in "$(BaseName)
 #
 $(QDLIBA):
 	@test -d $(ExtLibDIR) || (echo $(ExtLibDIR) "does not exist" ; exit 1)
-	@test -d $(QD_DIR) || (cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(EXTLIB_TYPE))
-	@test -d $(QD_DIR) || (echo $(QD_DIR) "does not exist" ; exit 1)
+	@test -d $(QD_DIR)    || (cd $(ExtLibDIR) ; ./get_QDUtilLib.sh $(EXTLIB_TYPE))
+	@test -d $(QD_DIR)    || (echo $(QD_DIR) "does not exist" ; exit 1)
 	cd $(QD_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR)
-	@echo "  done " $(QDLIBA) " in QML"
+	@echo "  done " $(QDLIBA) " in "$(BaseName)
 ##
 .PHONY: clean_extlib
 clean_extlib:
@@ -411,7 +332,796 @@ clean_extlib:
 #=======================================================================================
 #=======================================================================================
 #add dependence for parallelization
-$(OBJ): $(QMLLIBA) $(ADLIBA) $(QDLIBA)
-ifeq ($(parallel_make),1)
-  include ./dependency.mk
-endif
+#$(OBJ):                     $(EXTLib)
+#	@echo "OBJ with EXTLib"
+$(OBJ) : $(EXTLib)
+
+#$(OBJ_DIR)/$(VIBMAIN).o:    $(LIBA)
+#	@echo "done VIBMAIN.o"
+
+#$(OBJ_DIR)/sub_Auto_Basis.o : $(OBJ_DIR)/sub_module_basis.o
+#$(OBJ_DIR)/sub_module_basis.o: $(OBJ_DIR)/sub_module_RotBasis.o $(OBJ_DIR)/sub_module_basis_Grid_Param.o \
+#    $(OBJ_DIR)/sub_module_Basis_LTO_n.o $(OBJ_DIR)/sub_SymAbelian.o $(OBJ_DIR)/sub_module_param_SGType2.o
+
+#===============================================
+mod_auto_basis = $(OBJ_DIR)/sub_Auto_Basis.o
+mod_basis_btog_gtob_sgtype4 = $(OBJ_DIR)/sub_module_basis_BtoG_GtoB_SG4.o
+mod_basis_btog_gtob_sgtype4_mpi = $(OBJ_DIR)/sub_module_basis_BtoG_GtoB_SG4_MPI.o
+mod_basis_rcvec_sgtype4 = $(OBJ_DIR)/sub_module_basis_RCVec_SG4.o
+mod_param_rd = $(OBJ_DIR)/sub_module_param_RD.o
+mod_symabelian = $(OBJ_DIR)/sub_SymAbelian.o
+basismakegrid = $(OBJ_DIR)/sub_module_BasisMakeGrid.o
+mod_basis_l_to_n = $(OBJ_DIR)/sub_module_Basis_LTO_n.o
+mod_rotbasis_param = $(OBJ_DIR)/sub_module_RotBasis.o
+mod_basis = $(OBJ_DIR)/sub_module_basis.o
+mod_basis_btog_gtob = $(OBJ_DIR)/sub_module_basis_BtoG_GtoB.o
+mod_basis_btog_gtob_mpi = $(OBJ_DIR)/sub_module_basis_BtoG_GtoB_MPI.o
+mod_basis_btog_gtob_sgtype2 = $(OBJ_DIR)/sub_module_basis_BtoG_GtoB_SGType2.o
+mod_basis_grid_param = $(OBJ_DIR)/sub_module_basis_Grid_Param.o
+mod_basis_set_alloc = $(OBJ_DIR)/sub_module_basis_set_alloc.o
+mod_param_sgtype2 = $(OBJ_DIR)/sub_module_param_SGType2.o
+mod_crp = $(OBJ_DIR)/sub_CRP.o
+mod_matop = $(OBJ_DIR)/sub_MatOp.o
+mod_oppsi = $(OBJ_DIR)/sub_OpPsi.o
+mod_oppsi_mpi = $(OBJ_DIR)/sub_OpPsi_MPI.o
+mod_oppsi_sg4 = $(OBJ_DIR)/sub_OpPsi_SG4.o
+mod_oppsi_sg4_mpi = $(OBJ_DIR)/sub_OpPsi_SG4_MPI.o
+mod_op = $(OBJ_DIR)/sub_module_Op.o
+mod_opgrid = $(OBJ_DIR)/sub_module_OpGrid.o
+mod_readop = $(OBJ_DIR)/sub_module_ReadOp.o
+mod_setop = $(OBJ_DIR)/sub_module_SetOp.o
+mod_bfgs = $(OBJ_DIR)/sub_module_BFGS.o
+mod_optimization = $(OBJ_DIR)/sub_module_Optimization.o
+mod_simulatedannealing = $(OBJ_DIR)/sub_module_SimulatedAnnealing.o
+mod_smolyak_dind = $(OBJ_DIR)/sub_Smolyak_DInd.o
+mod_smolyak_rdp = $(OBJ_DIR)/sub_Smolyak_RDP.o
+mod_smolyak_ba = $(OBJ_DIR)/sub_Smolyak_ba.o
+mod_smolyak_test = $(OBJ_DIR)/sub_Smolyak_module.o
+mod_psi = $(OBJ_DIR)/mod_psi.o
+mod_ana_psi = $(OBJ_DIR)/sub_module_ana_psi.o
+mod_ana_psi_mpi = $(OBJ_DIR)/sub_module_ana_psi_MPI.o
+mod_param_wp0 = $(OBJ_DIR)/sub_module_param_WP0.o
+mod_psi_b_to_g = $(OBJ_DIR)/sub_module_psi_B_TO_G.o
+mod_psi_op = $(OBJ_DIR)/sub_module_psi_Op.o
+mod_psi_op_mpi = $(OBJ_DIR)/sub_module_psi_Op_MPI.o
+mod_psi_io = $(OBJ_DIR)/sub_module_psi_io.o
+mod_psi_set_alloc = $(OBJ_DIR)/sub_module_psi_set_alloc.o
+mod_type_ana_psi = $(OBJ_DIR)/sub_module_type_ana_psi.o
+mod_set_pararph = $(OBJ_DIR)/sub_paraRPH.o
+mod_fullanalysis = $(OBJ_DIR)/sub_analyse.o
+mod_analysis = $(OBJ_DIR)/sub_module_analysis.o
+mod_evr = $(OBJ_DIR)/EVR_Module.o
+mod_ndgridfit = $(OBJ_DIR)/sub_main_nDfit.o
+constants = $(OBJ_DIR)/constants.o
+system = $(OBJ_DIR)/system.o
+tdpes = $(OBJ_DIR)/tdPES.o
+mod_hmax_mpi = $(OBJ_DIR)/sub_Hmax_MPI.o
+mod_fullcontrol = $(OBJ_DIR)/sub_control.o
+mod_arpack = $(OBJ_DIR)/sub_module_Arpack.o
+mod_davidson = $(OBJ_DIR)/sub_module_Davidson.o
+mod_davidson_mpi = $(OBJ_DIR)/sub_module_Davidson_MPI.o
+mod_exactfact = $(OBJ_DIR)/sub_module_ExactFact.o
+mod_filter = $(OBJ_DIR)/sub_module_Filter.o
+mod_field = $(OBJ_DIR)/sub_module_field.o
+mod_march = $(OBJ_DIR)/sub_module_propa_march.o
+mod_march_mpi = $(OBJ_DIR)/sub_module_propa_march_MPI.o
+mod_march_sg4 = $(OBJ_DIR)/sub_module_propa_march_SG4.o
+mod_propa = $(OBJ_DIR)/sub_module_propagation.o
+mod_propa_mpi = $(OBJ_DIR)/sub_module_propagation_MPI.o
+mod_fullpropa = $(OBJ_DIR)/sub_propagation.o
+#===============================================
+$(OBJ_DIR)/sub_Auto_Basis.o : \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_ndindex) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_mpi) \
+          $(mod_system) \
+          $(basismakegrid) \
+          $(mod_constant) \
+          $(mod_analysis) \
+          $(mod_propa) \
+          $(mod_psi) \
+          $(mod_fullanalysis)
+$(OBJ_DIR)/sub_module_basis_BtoG_GtoB_SG4.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_basis_set_alloc) \
+          $(mod_param_sgtype2) \
+          $(mod_basis_rcvec_sgtype4) \
+          $(mod_mpi_aux) \
+          $(mod_basis_btog_gtob_sgtype4_mpi)
+$(OBJ_DIR)/sub_module_basis_BtoG_GtoB_SG4_MPI.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_basis_set_alloc) \
+          $(mod_param_sgtype2) \
+          $(mod_basis_rcvec_sgtype4) \
+          $(mod_mpi_aux) \
+          $(mod_mpi)
+$(OBJ_DIR)/sub_module_basis_RCVec_SG4.o : \
+          $(mod_system)
+$(OBJ_DIR)/sub_module_param_RD.o : \
+          $(mod_system) \
+          $(mod_ndindex)
+$(OBJ_DIR)/sub_SymAbelian.o : \
+          $(mod_system)
+$(OBJ_DIR)/sub_SymAbelian_OF_Basis.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_basis_El.o : \
+          $(mod_system) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_module_BasisMakeGrid.o : \
+          $(mod_system) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_ndindex) \
+          $(mod_dnsvm)
+$(OBJ_DIR)/sub_module_Basis_LTO_n.o : \
+          $(mod_system)
+$(OBJ_DIR)/sub_module_RotBasis.o : \
+          $(mod_system) \
+          $(mod_ndindex)
+$(OBJ_DIR)/sub_module_basis.o : \
+          $(mod_ndindex) \
+          $(mod_coord_keo) \
+          $(mod_rotbasis_param) \
+          $(mod_basis_grid_param) \
+          $(mod_basis_l_to_n) \
+          $(mod_symabelian) \
+          $(mod_param_sgtype2) \
+          $(mod_basis_set_alloc) \
+          $(mod_basis_btog_gtob) \
+          $(mod_system) \
+          $(mod_dnsvm) \
+          $(mod_basis_btog_gtob_sgtype4)
+$(OBJ_DIR)/sub_module_basis_BtoG_GtoB.o : \
+          $(mod_system) \
+          $(mod_basis_set_alloc) \
+          $(mod_basis_btog_gtob_sgtype2) \
+          $(mod_param_sgtype2) \
+          $(mod_basis_btog_gtob_mpi) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_basis_rcvec_sgtype4) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_module_basis_BtoG_GtoB_MPI.o : \
+          $(mod_system) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_module_basis_BtoG_GtoB_SGType2.o : \
+          $(mod_system) \
+          $(mod_basis_set_alloc) \
+          $(mod_module_dind)
+$(OBJ_DIR)/sub_module_basis_Grid_Param.o : \
+          $(mod_system)
+$(OBJ_DIR)/sub_module_basis_set_alloc.o : \
+          $(mod_system) \
+          $(mod_dnsvm) \
+          $(mod_ndindex) \
+          $(mod_rotbasis_param) \
+          $(mod_basis_grid_param) \
+          $(mod_symabelian) \
+          $(mod_param_sgtype2) \
+          $(mod_basis_l_to_n) \
+          $(mod_param_rd) \
+          $(mod_mpi)
+$(OBJ_DIR)/sub_module_param_SGType2.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_quadra_DirProd.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_basis) \
+          $(mod_dnsvm)
+$(OBJ_DIR)/sub_quadra_SincDVR.o : \
+          $(mod_system) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_SparseBasis.o : \
+          $(mod_system) \
+          $(mod_dnsvm) \
+          $(mod_ndindex) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_auto_basis) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_module_dind)
+$(OBJ_DIR)/sub_quadra_SparseBasis2n.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_coord_keo) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_Wigner.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_Ylm.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_box.o : \
+          $(mod_system) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_fourier.o : \
+          $(mod_system) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_ft.o : \
+          $(mod_system) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_herm.o : \
+          $(mod_system) \
+          $(mod_basis) \
+          $(basismakegrid) \
+          $(mod_ndindex) \
+          $(mod_dnsvm)
+$(OBJ_DIR)/sub_quadra_inact.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_coord_keo) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_laguerre.o : \
+          $(mod_system) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_quadra_legendre.o : \
+          $(mod_system) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_read_data.o : \
+          $(mod_system) \
+          $(mod_basis) \
+          $(mod_coord_keo) \
+          $(mod_constant)
+$(OBJ_DIR)/sub_CRP.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_psi) \
+          $(mod_realwithunit) \
+          $(mod_dnsvm) \
+          $(mod_ndindex)
+$(OBJ_DIR)/sub_calc_crp_P_lanczos-withNAG.o : \
+          $(mod_op) \
+          $(mod_system) \
+          $(mod_psi)
+$(OBJ_DIR)/sub_MatOp.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_setop) \
+          $(mod_psi) \
+          $(mod_oppsi) \
+          $(mod_ndindex) \
+          $(mod_ana_psi) \
+          $(mod_basis_btog_gtob_sgtype4)
+$(OBJ_DIR)/sub_OpPsi.o : \
+          $(mod_oppsi_sg4) \
+          $(mod_oppsi_sg4_mpi) \
+          $(mod_system) \
+          $(mod_psi) \
+          $(mod_setop) \
+          $(mod_mpi) \
+          $(mod_mpi_aux) \
+          $(mod_symabelian) \
+          $(mod_basis_btog_gtob) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_opgrid) \
+          $(mod_primop) \
+          $(mod_param_sgtype2)
+$(OBJ_DIR)/sub_OpPsi_MPI.o : \
+          $(mod_system) \
+          $(mod_psi)
+$(OBJ_DIR)/sub_OpPsi_SG4.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_coord_keo) \
+          $(mod_basis_set_alloc) \
+          $(mod_basis_rcvec_sgtype4) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_psi) \
+          $(mod_setop) \
+          $(mod_basis) \
+          $(mod_symabelian) \
+          $(mod_psi_set_alloc) \
+          $(mod_mpi_aux) \
+          $(mod_primop)
+$(OBJ_DIR)/sub_OpPsi_SG4_MPI.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_coord_keo) \
+          $(mod_symabelian) \
+          $(mod_basis_set_alloc) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_psi) \
+          $(mod_setop) \
+          $(mod_mpi_aux) \
+          $(mod_oppsi_sg4) \
+          $(mod_basis_btog_gtob_sgtype4_mpi) \
+          $(mod_psi_set_alloc) \
+          $(mod_mpi)
+$(OBJ_DIR)/sub_lib_Op.o : \
+          $(mod_system) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(mod_setop)
+$(OBJ_DIR)/sub_module_Op.o : \
+          $(mod_setop) \
+          $(mod_readop) \
+          $(mod_matop) \
+          $(mod_oppsi)
+$(OBJ_DIR)/sub_module_OpGrid.o : \
+          $(mod_system) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_mpi)
+$(OBJ_DIR)/sub_module_ReadOp.o : \
+          $(mod_system) \
+          $(mod_opgrid) \
+          $(mod_primop)
+$(OBJ_DIR)/sub_module_SetOp.o : \
+          $(mod_system) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(mod_opgrid) \
+          $(mod_readop) \
+          $(mod_mpi) \
+          $(mod_param_sgtype2) \
+          $(mod_psi)
+$(OBJ_DIR)/sub_main_Optimization.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_dnsvm) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(basismakegrid) \
+          $(mod_psi) \
+          $(mod_propa) \
+          $(mod_op) \
+          $(mod_analysis) \
+          $(mod_auto_basis) \
+          $(mod_optimization)
+$(OBJ_DIR)/sub_module_BFGS.o : \
+          $(mod_system) \
+          $(mod_dnsvm) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_auto_basis)
+$(OBJ_DIR)/sub_module_Optimization.o : \
+          $(mod_system) \
+          $(mod_simulatedannealing) \
+          $(mod_bfgs)
+$(OBJ_DIR)/sub_module_SimulatedAnnealing.o : \
+          $(mod_system) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_auto_basis)
+$(OBJ_DIR)/sub_Smolyak_DInd.o : \
+          $(mod_system)
+$(OBJ_DIR)/sub_Smolyak_RDP.o : \
+          $(mod_system) \
+          $(mod_smolyak_ba) \
+          $(mod_smolyak_dind)
+$(OBJ_DIR)/sub_Smolyak_ba.o : \
+          $(mod_smolyak_dind) \
+          $(mod_system)
+$(OBJ_DIR)/sub_Smolyak_module.o : \
+          $(mod_smolyak_dind) \
+          $(mod_smolyak_rdp) \
+          $(mod_smolyak_ba) \
+          $(mod_system)
+$(OBJ_DIR)/sub_Smolyak_test.o : \
+          $(mod_system) \
+          $(mod_smolyak_dind) \
+          $(mod_smolyak_rdp) \
+          $(mod_smolyak_ba) \
+          $(mod_smolyak_test)
+$(OBJ_DIR)/mod_psi.o : \
+          $(mod_param_wp0) \
+          $(mod_type_ana_psi) \
+          $(mod_psi_set_alloc) \
+          $(mod_ana_psi) \
+          $(mod_psi_io) \
+          $(mod_psi_b_to_g) \
+          $(mod_psi_op) \
+          $(mod_ana_psi_mpi) \
+          $(mod_system) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_module_ana_psi.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_constant) \
+          $(mod_type_ana_psi) \
+          $(mod_basis) \
+          $(mod_psi_set_alloc) \
+          $(mod_psi_b_to_g) \
+          $(mod_dnsvm) \
+          $(mod_param_sgtype2) \
+          $(mod_param_rd) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_module_ana_psi_MPI.o : \
+          $(mod_system) \
+          $(mod_psi_set_alloc) \
+          $(mod_basis) \
+          $(mod_param_sgtype2) \
+          $(mod_ana_psi) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_module_param_WP0.o : \
+          $(mod_system) \
+          $(mod_coord_keo)
+$(OBJ_DIR)/sub_module_psi_B_TO_G.o : \
+          $(mod_basis) \
+          $(mod_system) \
+          $(mod_psi_set_alloc)
+$(OBJ_DIR)/sub_module_psi_Op.o : \
+          $(mod_basis) \
+          $(mod_system) \
+          $(mod_psi_set_alloc) \
+          $(mod_mpi_aux) \
+          $(mod_ana_psi)
+$(OBJ_DIR)/sub_module_psi_Op_MPI.o : \
+          $(mod_basis) \
+          $(mod_system) \
+          $(mod_psi_set_alloc) \
+          $(mod_mpi_aux) \
+          $(mod_param_sgtype2) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_psi_op)
+$(OBJ_DIR)/sub_module_psi_io.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_basis) \
+          $(mod_psi_set_alloc) \
+          $(mod_ana_psi) \
+          $(mod_psi_op) \
+          $(mod_param_wp0)
+$(OBJ_DIR)/sub_module_psi_set_alloc.o : \
+          $(mod_system) \
+          $(mod_basis) \
+          $(mod_type_ana_psi) \
+          $(mod_mpi_aux) \
+          $(mod_mpi)
+$(OBJ_DIR)/sub_module_type_ana_psi.o : \
+          $(mod_system)
+$(OBJ_DIR)/sub_Grid_SG4.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_op)
+$(OBJ_DIR)/sub_diago_H.o : \
+          $(mod_system) \
+          $(mod_constant)
+$(OBJ_DIR)/sub_ini_act_harm.o : \
+          $(mod_system) \
+          $(mod_op) \
+          $(mod_primop)
+$(OBJ_DIR)/sub_lib_act.o : \
+          $(mod_system) \
+          $(mod_primop) \
+          $(mod_op) \
+          $(mod_coord_keo) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_paraRPH.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_dnsvm) \
+          $(mod_constant) \
+          $(mod_primop) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_NLO.o : \
+          $(mod_system) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_analysis)
+$(OBJ_DIR)/sub_VibRot.o : \
+          $(mod_system) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(mod_psi) \
+          $(mod_op) \
+          $(mod_analysis)
+$(OBJ_DIR)/sub_analyse.o : \
+          $(mod_constant) \
+          $(mod_system) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_param_rd) \
+          $(mod_psi) \
+          $(mod_op) \
+          $(mod_analysis) \
+          $(mod_ndindex)
+$(OBJ_DIR)/sub_intensity.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_analysis)
+$(OBJ_DIR)/sub_module_analysis.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_psi) \
+          $(mod_crp) \
+          $(mod_coord_keo)
+$(OBJ_DIR)/ini_data.o : \
+          $(mod_system) \
+          $(mod_dnsvm) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_cap) \
+          $(mod_basis) \
+          $(mod_set_pararph) \
+          $(mod_readop) \
+          $(mod_op) \
+          $(mod_analysis) \
+          $(mod_propa) \
+          $(mod_auto_basis) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/nb_harm.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_namelist.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_primop) \
+          $(mod_cap) \
+          $(mod_hstep)
+$(OBJ_DIR)/sub_HST_harm.o : \
+          $(mod_system) \
+          $(mod_dnsvm) \
+          $(mod_coord_keo) \
+          $(mod_basis) \
+          $(mod_op) \
+          $(mod_primop) \
+          $(mod_constant) \
+          $(mod_ndindex)
+$(OBJ_DIR)/sub_ana_HS.o : \
+          $(mod_system)
+$(OBJ_DIR)/sub_changement_de_var.o : \
+          $(mod_system) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_inactive_harmo.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_primop) \
+          $(mod_basis)
+$(OBJ_DIR)/EVR-T.o : \
+          $(mod_system) \
+          $(mod_ndgridfit)
+$(OBJ_DIR)/EVR_Module.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(mod_psi) \
+          $(mod_propa) \
+          $(mod_op) \
+          $(mod_analysis)
+$(OBJ_DIR)/EVR_driver.o : \
+          $(mod_evr) \
+          $(mod_fullpropa) \
+          $(mod_fullcontrol) \
+          $(mod_davidson) \
+          $(mod_filter) \
+          $(mod_arpack) \
+          $(mod_op) \
+          $(mod_analysis) \
+          $(mod_fullanalysis) \
+          $(mod_auto_basis) \
+          $(mod_psi) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/Gauss_numlH.o : \
+          $(mod_system) \
+          $(mod_coord_keo) \
+          $(mod_poly) \
+          $(mod_gwp) \
+          $(mod_propa)
+$(OBJ_DIR)/cart.o : \
+          $(mod_system) \
+          $(mod_dnsvm) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_cart)
+$(OBJ_DIR)/sub_main_nDfit.o : \
+          $(mod_system) \
+          $(mod_ndindex) \
+          $(mod_dnsvm) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_primop)
+$(OBJ_DIR)/vib.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_coord_keo) \
+          $(mod_primop) \
+          $(mod_basis) \
+          $(mod_psi) \
+          $(mod_propa) \
+          $(mod_fullpropa) \
+          $(mod_fullcontrol) \
+          $(mod_davidson) \
+          $(mod_filter) \
+          $(mod_arpack) \
+          $(mod_crp) \
+          $(mod_op) \
+          $(mod_analysis) \
+          $(mod_fullanalysis) \
+          $(mod_auto_basis) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/main.o : \
+          $(system) \
+          $(tdpes)
+$(OBJ_DIR)/tdPES.o : \
+          $(system) \
+          $(constants)
+$(OBJ_DIR)/sub_Hmax.o : \
+          $(mod_system) \
+          $(mod_op) \
+          $(mod_psi) \
+          $(mod_ana_psi_mpi) \
+          $(mod_propa) \
+          $(mod_fullpropa) \
+          $(mod_davidson) \
+          $(mod_hmax_mpi) \
+          $(mod_mpi_aux) \
+          $(mod_march)
+$(OBJ_DIR)/sub_Hmax_MPI.o : \
+          $(mod_system) \
+          $(mod_setop) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_TF_autocorr.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_propa)
+$(OBJ_DIR)/sub_control.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_psi) \
+          $(mod_op) \
+          $(mod_field) \
+          $(mod_propa) \
+          $(mod_fullpropa) \
+          $(mod_march)
+$(OBJ_DIR)/sub_module_Arpack.o : \
+          $(mod_constant) \
+          $(mod_system) \
+          $(mod_psi) \
+          $(mod_op) \
+          $(mod_propa) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_module_Davidson.o : \
+          $(mod_constant) \
+          $(mod_mpi) \
+          $(mod_system) \
+          $(mod_psi) \
+          $(mod_op) \
+          $(mod_propa) \
+          $(mod_propa_mpi) \
+          $(mod_davidson_mpi) \
+          $(mod_ana_psi_mpi) \
+          $(mod_psi_op_mpi) \
+          $(mod_mpi_aux) \
+          $(mod_basis)
+$(OBJ_DIR)/sub_module_Davidson_MPI.o : \
+          $(mod_constant) \
+          $(mod_mpi) \
+          $(mod_system) \
+          $(mod_ana_psi_mpi) \
+          $(mod_psi) \
+          $(mod_psi_op_mpi) \
+          $(mod_propa) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_module_ExactFact.o : \
+          $(mod_system) \
+          $(mod_basis) \
+          $(mod_psi) \
+          $(mod_op) \
+          $(mod_field)
+$(OBJ_DIR)/sub_module_Filter.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_psi) \
+          $(mod_op) \
+          $(mod_propa)
+$(OBJ_DIR)/sub_module_LinearSystem.o : \
+          $(mod_constant) \
+          $(mod_mpi) \
+          $(mod_system) \
+          $(mod_psi) \
+          $(mod_propa) \
+          $(mod_op)
+$(OBJ_DIR)/sub_module_field.o : \
+          $(mod_system)
+$(OBJ_DIR)/sub_module_propa_march.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_psi) \
+          $(mod_propa) \
+          $(mod_field) \
+          $(mod_march_mpi) \
+          $(mod_march_sg4) \
+          $(mod_op) \
+          $(mod_mpi_aux) \
+          $(mod_basis) \
+          $(mod_oppsi_sg4)
+$(OBJ_DIR)/sub_module_propa_march_MPI.o : \
+          $(mod_system) \
+          $(mod_psi) \
+          $(mod_propa) \
+          $(mod_march_sg4) \
+          $(mod_op) \
+          $(mod_psi_op_mpi) \
+          $(mod_psi_set_alloc) \
+          $(mod_oppsi_mpi) \
+          $(mod_propa_mpi) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_basis_btog_gtob_sgtype4_mpi) \
+          $(mod_mpi_aux) \
+          $(mod_basis_set_alloc) \
+          $(mod_param_sgtype2) \
+          $(mod_ndindex) \
+          $(mod_symabelian) \
+          $(mod_psi_op)
+$(OBJ_DIR)/sub_module_propa_march_SG4.o : \
+          $(mod_system) \
+          $(mod_psi) \
+          $(mod_propa) \
+          $(mod_ndindex) \
+          $(mod_coord_keo) \
+          $(mod_basis_set_alloc) \
+          $(mod_basis_btog_gtob_sgtype4) \
+          $(mod_op) \
+          $(mod_oppsi_sg4) \
+          $(mod_mpi_aux)
+$(OBJ_DIR)/sub_module_propagation.o : \
+          $(mod_system) \
+          $(mod_constant) \
+          $(mod_psi) \
+          $(mod_field) \
+          $(mod_op) \
+          $(mod_exactfact) \
+          $(mod_mpi_aux) \
+          $(mod_realwithunit) \
+          $(mod_type_ana_psi) \
+          $(mod_coord_keo)
+$(OBJ_DIR)/sub_module_propagation_MPI.o : \
+          $(mod_propa) \
+          $(mod_mpi_aux) \
+          $(mod_system) \
+          $(mod_op) \
+          $(mod_psi_set_alloc) \
+          $(mod_psi_op_mpi)
+$(OBJ_DIR)/sub_propagation.o : \
+          $(mod_constant) \
+          $(mod_mpi) \
+          $(mod_system) \
+          $(mod_op) \
+          $(mod_propa) \
+          $(mod_psi) \
+          $(mod_field) \
+          $(mod_march)
+

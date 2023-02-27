@@ -131,7 +131,7 @@ CONTAINS
       i = int(log10(abs(para_propa%WPdeltaT)+ONETENTH**8))  ! to avoid zero
       IF (i < 0) THEN
         CALL modif_ana_psi(para_propa%ana_psi,                                  &
-                  TFormat='f' // int_TO_char(12-i) // '.' // int_TO_char(2-i) )
+                  TFormat='f' // TO_string(12-i) // '.' // TO_string(2-i) )
       END IF
 
       IF(.NOT. para_H%para_ReadOp%para_FileGrid%Type_FileGrid==4) THEN
@@ -820,7 +820,7 @@ CONTAINS
 
 
       real (kind=Rkind) :: RealTime
-      TYPE (param_time) :: PropaTime
+      TYPE (Time_t) :: PropaTime
       integer  ::   nioWP
       logical :: BasisRep,GridRep,test
 

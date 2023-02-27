@@ -1608,8 +1608,9 @@ END SUBROUTINE march_RK4_old
        IF (dim_S /= size(S(:,1))) STOP 'ERROR in Make_SMatrix_WITH_TDParam: wrong size.'
 
 !-----------------------------------------------------------
-       CALL Cplx_mat_id(S, WP%nb_tot,dim_S)
-
+       !CALL Cplx_mat_id(S, WP%nb_tot,dim_S)
+       S(1:WP%nb_tot,1:WP%nb_tot) = Identity_Mat(WP%nb_tot)
+       STOP 'IN Make_SMatrix_WITH_TDParam : a vérifer !!'
 
 !-----------------------------------------------------------
       IF (debug) THEN
@@ -3146,7 +3147,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
               CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
         CALL alloc_NParray(UPsiOnKrylov,[n],'UPsiOnKrylov',name_sub)
 
-        CALL diagonalization_HerCplx(H,Eig,Vec,n,3,1,.TRUE.)
+        CALL diagonalization(H,Eig,Vec,3,1,.TRUE.)
       END IF
 
       ! loop on the eigenvectors
@@ -3232,7 +3233,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         IF (allocated(Eig)) CALL dealloc_NParray(Eig,'Eig',name_sub)
         CALL alloc_NParray(Eig,[n],  'Eig',name_sub)
 
-        CALL diagonalization_HerCplx(S,Eig,Vec,n,3,1,.TRUE.)
+        CALL diagonalization(S,Eig,Vec,3,1,.TRUE.)
         IF (debug) write(out_unitp,*) 'Eig of S',Eig
         IF (debug) write(out_unitp,*) 'min(abs(Eig)) of S',minval(abs(Eig))
 
@@ -3316,7 +3317,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
               CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
         CALL alloc_NParray(UPsiOnKrylov,[n],'UPsiOnKrylov',name_sub)
 
-        CALL diagonalization_HerCplx(Ho,Eig,Vec,n,3,1,.TRUE.)
+        CALL diagonalization(Ho,Eig,Vec,3,1,.TRUE.)
         IF (debug) THEN
           write(out_unitp,*) 'Eig',Eig
 
@@ -3426,7 +3427,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         IF (allocated(Eig)) CALL dealloc_NParray(Eig,'Eig',name_sub)
         CALL alloc_NParray(Eig,[n],  'Eig',name_sub)
 
-        CALL diagonalization_HerCplx(S,Eig,Vec,n,3,1,.TRUE.)
+        CALL diagonalization(S,Eig,Vec,3,1,.TRUE.)
         IF (debug) write(out_unitp,*) 'Eig of S',Eig
         IF (debug) write(out_unitp,*) 'min(abs(Eig)) of S',minval(abs(Eig))
 
@@ -3588,7 +3589,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
       END IF
 !-----------------------------------------------------------
 
-      CALL diagonalization_HerCplx(H,Eig,Vec,n,3,1,.TRUE.)
+      CALL diagonalization(H,Eig,Vec,3,1,.TRUE.)
 
       ! loop on the eigenvectors
       UPsiOnKrylov = CZERO
@@ -3907,8 +3908,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
         CALL Write_Mat(H,out_unitp,6)
       END IF
 
-      CALL diagonalization_HerCplx(H,Eig,Vec,para_propa%para_poly%npoly,&
-                                   3,1,.TRUE.)
+      CALL diagonalization(H,Eig,Vec,3,1,.TRUE.)
 
       IF (debug) THEN
         write(out_unitp,*) 'Vec'

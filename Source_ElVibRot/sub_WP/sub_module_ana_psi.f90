@@ -193,10 +193,10 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
 
     IF (adia) THEN
       CALL Channel_weight(tab_WeightChannels,psi,GridRep=.TRUE.,BasisRep=.FALSE.)
-      info = '#WPadia ' // int_TO_char(ana_psi%num_psi)
+      info = '#WPadia ' // TO_string(ana_psi%num_psi)
     ELSE
       CALL Channel_weight(tab_WeightChannels,psi,GridRep=.FALSE.,BasisRep=.TRUE.)
-      info = '#WP ' // int_TO_char(ana_psi%num_psi)
+      info = '#WP ' // TO_string(ana_psi%num_psi)
     END IF
     Psi_norm2 = sum(tab_WeightChannels)
 
@@ -206,7 +206,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
     ! add the energy
     iE = int(log10(abs(E)+ONETENTH**8)) ! to avoid zero
     CALL modif_ana_psi(ana_psi,                                                 &
-                 EFormat='f' // int_TO_char(15-iE) // '.' // int_TO_char(7-iE) )
+                 EFormat='f' // TO_string(15-iE) // '.' // TO_string(7-iE) )
     !write(6,*) E,iE,'ana_psi%Eformat: ',ana_psi%Eformat
 
     psi_line = psi_line // ' ' // real_TO_char(E,Rformat=ana_psi%Eformat)
@@ -238,8 +238,8 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
       DO i=1,size(Mij(1,:,1))
       DO j=i+1,size(Mij(1,:,1))
 
-        write(out_unitp,*) 'M-' // int_TO_char(i) // '-' //             &
-                           int_TO_char(j) // ' ' // info // ' ' //      &
+        write(out_unitp,*) 'M-' // TO_string(i) // '-' //             &
+                           TO_string(j) // ' ' // info // ' ' //      &
                     real_TO_char(ana_psi%T,Rformat='f12.2') // ': ' //  &
                     real_TO_char(Mij(1,i,j),Rformat='f12.8'),' ',       &
                     real_TO_char(Mij(2,i,j),Rformat='f12.8')
@@ -264,12 +264,12 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
       CALL sub_Qmoy(psi,moy_Qba,ana_psi)
 
       IF (ana_psi%num_psi < 10000 .AND. Dominant_Channel(2) < 10000) THEN
-        lformat = String_TO_String('("lev: ",i4,i4,l3,' //              &
-                                   int_TO_char(3+size(moy_Qba)) //      &
+        lformat = trim('("lev: ",i4,i4,l3,' //              &
+                                   TO_string(3+size(moy_Qba)) //      &
                        "(1x," // trim(adjustl(EneIO_format)) // "))")
       ELSE
-        lformat = String_TO_String('("lev: ",i0,i0,l3,' //              &
-                                   int_TO_char(3+size(moy_Qba)) //      &
+        lformat = trim('("lev: ",i0,i0,l3,' //              &
+                                   TO_string(3+size(moy_Qba)) //      &
                        "(1x," // trim(adjustl(EneIO_format)) // "))")
       END IF
 
@@ -280,17 +280,17 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
     ELSE
 
       IF (ana_psi%num_psi < 10000 .AND. Dominant_Channel(2) < 10000) THEN
-        lformat = String_TO_String( '("lev: ",i4,i4,l3,3(1x,' //      &
+        lformat = trim( '("lev: ",i4,i4,l3,3(1x,' //      &
                                trim(adjustl(EneIO_format)) // '))' )
       ELSE
-        lformat = String_TO_String( '("lev: ",i0,i0,l3,3(1x,' //      &
+        lformat = trim( '("lev: ",i0,i0,l3,3(1x,' //      &
                                trim(adjustl(EneIO_format)) // '))' )
       END IF
 
       write(out_unitp,lformat) ana_psi%num_psi,Dominant_Channel(2),psi%convAvOp,E,DE,pop
     END IF
 
-    info = String_TO_String( " " // real_TO_char(E,"f12.6" ) // " : ")
+    info = trim( " " // real_TO_char(E,"f12.6" ) // " : ")
   END IF
   !----------------------------------------------------------------------
 
@@ -299,8 +299,8 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
 
   IF (psi%nb_bi > 1 .AND. .NOT. ana_psi%propa) THEN
 
-    lformat = String_TO_String( '("% HAC: ",' //                    &
-                            int_TO_char(psi%nb_bi) // "(1x,f4.0) )" )
+    lformat = trim( '("% HAC: ",' //                    &
+                            TO_string(psi%nb_bi) // "(1x,f4.0) )" )
 
     write(out_unitp,lformat) (tab_WeightChannels(i_bi,1)*TEN**2,i_bi=1,psi%nb_bi)
   END IF
@@ -337,7 +337,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
         name_filePsi = trim(name_filePsi) // '_GridPsi2'
       END IF
 
-      IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
+      IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // TO_string(ana_psi%num_psi)
 
       IF (ana_psi%propa .AND. ana_psi%T == ZERO) THEN
         IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi)
@@ -353,7 +353,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
 
     IF (.NOT. adia .AND. ana_psi%Write_psi_Grid) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_GridPsi'
-      IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
+      IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // TO_string(ana_psi%num_psi)
 
       IF (ana_psi%propa .AND. ana_psi%T == ZERO) THEN
         IF(MPI_id==0) CALL file_open2(name_filePsi,nioPsi)
@@ -370,7 +370,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
 
     IF (.NOT. adia .AND. ana_psi%Write_psi2_Basis) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_BasisPsi2'
-      IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
+      IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // TO_string(ana_psi%num_psi)
 
       IF (ana_psi%propa) THEN
         IF (ana_psi%T == ZERO) THEN
@@ -396,7 +396,7 @@ SUBROUTINE sub_analyze_psi(psi,ana_psi,adia,Write_psi)
 
     IF (.NOT. adia .AND. ana_psi%Write_psi_Basis) THEN
       name_filePsi = trim(ana_psi%file_Psi%name) // '_BasisPsi'
-      IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // int_TO_char(ana_psi%num_psi)
+      IF (ana_psi%propa) name_filePsi = trim(name_filePsi) // '-' // TO_string(ana_psi%num_psi)
 
       IF (ana_psi%propa) THEN
         IF (ana_psi%T == ZERO) THEN
@@ -972,12 +972,12 @@ END SUBROUTINE sub_analyze_psi
         DO ib=1,psi%BasisnD%nb_basis
 
           IF (adia) THEN
-            state_name = make_FileName('psiAdia1D_')
+            state_name = make_EVRTFileName('psiAdia1D_')
           ELSE
-            state_name = make_FileName('psi1D_')
+            state_name = make_EVRTFileName('psi1D_')
           END IF
-          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) // &
-                                                  '-' // int_TO_char(ib)
+          file_psi%name = state_name // TO_string(ana_psi%num_psi) // &
+                                                  '-' // TO_string(ib)
 
           IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
             CALL file_open(file_psi,nio,append=.TRUE.)
@@ -1012,12 +1012,12 @@ END SUBROUTINE sub_analyze_psi
         DO jb=ib+1,psi%BasisnD%nb_basis
 
           IF (ana_psi%adia) THEN
-            state_name = make_FileName('psiAdia2D_')
+            state_name = make_EVRTFileName('psiAdia2D_')
           ELSE
-            state_name = make_FileName('psi2D_')
+            state_name = make_EVRTFileName('psi2D_')
           END IF
-          file_psi%name = state_name // int_TO_char(ana_psi%num_psi) // &
-                       '-' // int_TO_char(ib)  // '-' // int_TO_char(jb)
+          file_psi%name = state_name // TO_string(ana_psi%num_psi) // &
+                       '-' // TO_string(ib)  // '-' // TO_string(jb)
 
           IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
             CALL file_open(file_psi,nio,append=.TRUE.)
@@ -1135,12 +1135,12 @@ END SUBROUTINE sub_analyze_psi
           DO i_basis_act1=1,psi%BasisnD%nb_basis
 
             IF (adia) THEN
-              state_name = make_FileName('RhoAdia1D_')
+              state_name = make_EVRTFileName('RhoAdia1D_')
             ELSE
-              state_name = make_FileName('Rho1D_')
+              state_name = make_EVRTFileName('Rho1D_')
             END IF
-            file_Rho%name = state_name // int_TO_char(ana_psi%num_psi) // &
-                                    '-' // int_TO_char(i_basis_act1)
+            file_Rho%name = state_name // TO_string(ana_psi%num_psi) // &
+                                    '-' // TO_string(i_basis_act1)
             IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
               CALL file_open(file_Rho,nioRho,append=.TRUE.)
             ELSE
@@ -1239,12 +1239,12 @@ END SUBROUTINE sub_analyze_psi
           DO j_basis_act1=i_basis_act1+1,psi%BasisnD%nb_basis
 
             IF (adia) THEN
-              state_name = make_FileName('RhoAdia2D_')
+              state_name = make_EVRTFileName('RhoAdia2D_')
             ELSE
-              state_name = make_FileName('Rho2D_')
+              state_name = make_EVRTFileName('Rho2D_')
             END IF
-            file_Rho%name = state_name // int_TO_char(ana_psi%num_psi) // &
-               '-' // int_TO_char(i_basis_act1) // '-' // int_TO_char(j_basis_act1)
+            file_Rho%name = state_name // TO_string(ana_psi%num_psi) // &
+               '-' // TO_string(i_basis_act1) // '-' // TO_string(j_basis_act1)
 
             IF (ana_psi%propa .AND. ana_psi%T > ZERO) THEN
               CALL file_open(file_Rho,nioRho,append=.TRUE.)
@@ -1767,7 +1767,7 @@ END SUBROUTINE sub_analyze_psi
       IF (ie == 1 .AND. ii == 1) THEN
         state_name = 'Grd Channel'
       ELSE
-        state_name = 'State_Se' // int_TO_char(ie) // '_Cha' // int_TO_char(ii)
+        state_name = 'State_Se' // TO_string(ie) // '_Cha' // TO_string(ii)
       END IF
 
       IF (psi%cplx) THEN

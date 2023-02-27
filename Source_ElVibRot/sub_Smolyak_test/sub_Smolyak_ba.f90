@@ -230,7 +230,8 @@ step  = ONETENTH**4
     allocate(d0b_pseudoInv(nq,nq))
 
     d0b = ba%d0b
-    CALL inv_m1_TO_m2(d0b,d0b_pseudoInv,nq,0,ZERO) ! not SVD
+    d0b_pseudoInv = inv_OF_Mat_TO(d0b)
+
     !write(out_unitp,*) 'd0b_pseudoInv'
     !CALL Write_VecMat(d0b_pseudoInv,out_unitp,5)
     !flush(out_unitp)
@@ -245,7 +246,8 @@ step  = ONETENTH**4
     !write(out_unitp,*) 'd0bxd0bT'
     !CALL Write_VecMat(d0bxd0bT,out_unitp,5)
 
-    CALL inv_m1_TO_m2(d0bxd0bT,d0bxd0bT_inv,nq,1,ONETENTH**10) ! SVD
+    d0bxd0bT_inv = inv_OF_Mat_TO(d0bxd0bT,inv_type=1,epsi=ONETENTH**10) ! SVD
+
     !write(out_unitp,*) 'd0bxd0bT_inv'
     !CALL Write_VecMat(d0bxd0bT_inv,out_unitp,5)
 

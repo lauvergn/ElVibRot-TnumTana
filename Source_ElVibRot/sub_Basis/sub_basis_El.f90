@@ -102,7 +102,7 @@
       base%wrho(:)  = ONE
 
       CALL alloc_dnb_OF_basis(base)
-      CALL mat_id(base%dnRGB%d0,base%nb,base%nb)
+      base%dnRGB%d0 = Identity_Mat(base%nb)
       base%primitive_done = .TRUE.
       base%packed_done    = .TRUE.
 

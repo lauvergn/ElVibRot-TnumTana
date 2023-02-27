@@ -2673,7 +2673,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     IF (nb0 /= 1) STOP 'nb0>1 not yet'
 
     !$OMP  CRITICAL (get_OpGrid_type10_OF_ONEDP_FOR_SG4_CRIT2)
-     FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // int_TO_char(iG)
+     FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // TO_string(iG)
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, FileName_RV',iG,nq,FileName_RV
@@ -2773,7 +2773,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     IF (nb0 /= 1) STOP 'nb0>1 not yet'
 
 !    !$OMP  CRITICAL (get_OpGrid_type10_OF_ONEDP_FOR_SG4_CRIT1)
-     FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // int_TO_char(iG)
+     FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // TO_string(iG)
 
      ! this subroutine does not work because V as 3 dim (before 1)
      !CALL sub_WriteRV(V,FileName_RV,lformatted,err_sub)
@@ -3209,7 +3209,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     STOP 'nb0>1 not yet'
 
      !$OMP  CRITICAL (get_OpGrid_type0_OF_ONEDP_FOR_SG4_CRIT2)
-     FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // int_TO_char(iG)
+     FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // TO_string(iG)
 
      IF (iG == 1 .AND. debug) THEN
        write(out_unitp,*) 'iG,nq, FileName_RV',iG,nq,FileName_RV
@@ -3286,7 +3286,7 @@ END SUBROUTINE sub_TabOpPsi_OF_ONEDP_FOR_SGtype4_SRG_MPI
     STOP 'nb0>1 not yet'
 
 !    !$OMP  CRITICAL (get_OpGrid_type0_OF_ONEDP_FOR_SG4_CRIT1)
-     FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // int_TO_char(iG)
+     FileName_RV = trim(para_Op%OpGrid(iterm00)%file_Grid%name) // '_SGterm' // TO_string(iG)
 
      ! the rank of V is 3 now, this subroutine work with rank 1
      !CALL sub_WriteRV(V,FileName_RV,lformatted,err_sub)

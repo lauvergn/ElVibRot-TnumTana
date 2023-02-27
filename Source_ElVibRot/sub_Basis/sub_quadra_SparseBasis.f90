@@ -1335,7 +1335,7 @@
 
 
         IF (debug) THEN
-          fformat = '(a,i0,a,' // int_TO_char(basis_SG%nb_basis) // '(1x,i0),a,i0)'
+          fformat = '(a,i0,a,' // TO_string(basis_SG%nb_basis) // '(1x,i0),a,i0)'
 
           write(out_unitp,fformat) 'nb at i_SG ',i_SG,' : ',tab_nb(:),' : ',nb
           write(out_unitp,fformat) 'nq at i_SG ',i_SG,' : ',tab_nq(:),' : ',nq

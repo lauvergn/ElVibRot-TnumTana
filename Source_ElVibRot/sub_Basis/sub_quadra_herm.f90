@@ -327,7 +327,7 @@
 
           IF (WithRead) THEN
             herm_file%name = trim(EVRT_path) //                                 &
-              '/Internal_data/HermQuadra/herm' // int_TO_char(nq) // '.txt'
+              '/Internal_data/HermQuadra/herm' // TO_string(nq) // '.txt'
 
             write(out_unitp,*) 'herm_file%name: ',herm_file%name
             CALL file_open(herm_file,nio,old=.TRUE.,err_file=err_io)
@@ -503,7 +503,7 @@
 
         IF (WithRead) THEN
           herm_file%name = trim(EVRT_path) //                                   &
-            '/Internal_data/HermQuadra/herm' // int_TO_char(2*nq) // '.txt'
+            '/Internal_data/HermQuadra/herm' // TO_string(2*nq) // '.txt'
 
           write(out_unitp,*) 'herm_file%name: ',herm_file%name
           CALL file_open(herm_file,nio,old=.TRUE.,err_file=err_io)
@@ -1276,9 +1276,8 @@ end subroutine sub_quadra_hermite_half
 
 
       integer                  :: LB,LG
-      character (len=Name_len) :: name_i,name_j
       integer                  :: nio,err_io
-      TYPE (File_t)        :: cubature_file
+      TYPE (File_t)            :: cubature_file
       logical                  :: err_grid
 
 !----- for debuging --------------------------------------------------
@@ -1332,11 +1331,8 @@ end subroutine sub_quadra_hermite_half
         END IF
 
         IF (LG /= 0) THEN
-          CALL Write_int_IN_char(base%ndim,name_i)
-          CALL Write_int_IN_char(LG,       name_j)
-          cubature_file%name = trim(EVRT_path) //                               &
-                                          '/Internal_data/HermCuba/' //         &
-                                 trim(name_i) // 'D_deg' // trim(name_j)
+          cubature_file%name = trim(EVRT_path) // '/Internal_data/HermCuba/' //  &
+             TO_String(base%ndim) // 'D_deg' // TO_String(LG)
 
 
           write(out_unitp,*) 'cubature_file%name: ',cubature_file%name

@@ -431,7 +431,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
+        fformat = '(i0,a,i0,x,i0,a,' // TO_string(ndim) // '(1x,i0))'
 
         DO ith=1,SGType2%nb_tasks
           write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
@@ -523,7 +523,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
+        fformat = '(i0,a,i0,x,i0,a,' // TO_string(ndim) // '(1x,i0))'
 
         DO ith=1,SGType2%nb_tasks
           write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
@@ -622,7 +622,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
         IF (count(SGType2%fG_th == 0) > 0) err_sub = 1
 
       IF (debug) THEN
-        fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
+        fformat = '(i0,a,i0,x,i0,a,' // TO_string(ndim) // '(1x,i0))'
 
         DO ith=1,SGType2%nb_tasks
           write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &
@@ -738,7 +738,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
 
 !-----------------------------------------------------------
       IF (debug) THEN
-        fformat = '(i0,a,i0,x,i0,a,' // int_TO_char(ndim) // '(1x,i0))'
+        fformat = '(i0,a,i0,x,i0,a,' // TO_string(ndim) // '(1x,i0))'
 
         DO ith=1,SGType2%nb_tasks
           write(out_unitp,fformat) ith-1,' iG_th,fG_th ',               &

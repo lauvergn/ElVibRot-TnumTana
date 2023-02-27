@@ -362,14 +362,12 @@ PUBLIC :: SaveWP_restart,ReadWP_restart
 
       TYPE (param_propa), intent(inout) :: para_propa
 
-      integer :: i
-
-      CALL dealloc_ana_psi(para_propa%ana_psi)
-
       CALL dealloc_param_WP0(para_propa%para_WP0)
       CALL dealloc_param_control(para_propa%para_control)
       CALL dealloc_param_poly(para_propa%para_poly)
       CALL dealloc_param_field(para_propa%para_field)
+
+      CALL dealloc_ana_psi(para_propa%ana_psi)
 
       END SUBROUTINE dealloc_param_propa
 
@@ -889,8 +887,8 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,ana_psi,adia,para_field)
     ! add the psi number + the time
     RWU_T = REAL_WU(T,'au','t')
 
-    !psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' // real_TO_char(T,Rformat=ana_psi%Tformat)
-    psi_line = 'norm^2-WP #WP ' // int_TO_char(i) // ' ' //                     &
+    !psi_line = 'norm^2-WP #WP ' // TO_string(i) // ' ' // real_TO_char(T,Rformat=ana_psi%Tformat)
+    psi_line = 'norm^2-WP #WP ' // TO_string(i) // ' ' //                     &
                   RWU_Write(RWU_T,WithUnit=.TRUE.,WorkingUnit=.FALSE.)
 
 
@@ -906,7 +904,7 @@ SUBROUTINE sub_analyze_mini_WP_OpWP(T,WP,nb_WP,para_H,ana_psi,adia,para_field)
       ! add the energy
       iE = int(log10(abs(E)+ONETENTH**8)) ! to avoid zero
       CALL modif_ana_psi(ana_psi,                                               &
-                EFormat='f' // int_TO_char(15-iE) // '.' // int_TO_char(7-iE) )
+                EFormat='f' // TO_string(15-iE) // '.' // TO_string(7-iE) )
       !write(6,*) E,iE,'ana_psi%Eformat: ',ana_psi%Eformat
       psi_line = psi_line // ' ' // real_TO_char(E,Rformat=ana_psi%Eformat)
     ELSE
@@ -1330,32 +1328,32 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         para_propa%write_BasisRep     = write_FBR
         para_propa%write_WPAdia       = write_WPAdia
 
-        para_propa%file_autocorr%name    = make_FileName(file_autocorr)
-        IF (err_file_name(para_propa%file_autocorr%name,name_sub='read_propagation') /= 0) THEN
+        para_propa%file_autocorr%name    = make_EVRTFileName(file_autocorr)
+        IF (err_FileName(para_propa%file_autocorr%name,name_sub='read_propagation') /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the file_autocorr file name is empty'
           write(out_unitp,*) '  => check your data!!'
           STOP
         END IF
 
-        para_propa%file_spectrum%name    = make_FileName(file_spectrum)
-        IF (err_file_name(para_propa%file_spectrum%name,name_sub='read_propagation') /= 0) THEN
+        para_propa%file_spectrum%name    = make_EVRTFileName(file_spectrum)
+        IF (err_FileName(para_propa%file_spectrum%name,name_sub='read_propagation') /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the file_spectrum file name is empty'
           write(out_unitp,*) '  => check your data!!'
           STOP
         END IF
 
-        para_propa%file_WP%name          = make_FileName(file_WP)
-        IF (err_file_name(para_propa%file_WP%name,name_sub='read_propagation') /= 0) THEN
+        para_propa%file_WP%name          = make_EVRTFileName(file_WP)
+        IF (err_FileName(para_propa%file_WP%name,name_sub='read_propagation') /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the file_WP file name is empty'
           write(out_unitp,*) '  => check your data!!'
           STOP
         END IF
 
-        para_propa%file_WP_restart%name  = make_FileName(file_restart)
-        IF (restart .AND. .NOT. check_file_exist_WITH_file_name(para_propa%file_WP_restart%name)) THEN
+        para_propa%file_WP_restart%name  = make_EVRTFileName(file_restart)
+        IF (restart .AND. .NOT. check_file_exist_WITH_FileName(para_propa%file_WP_restart%name)) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the restart file does not exist or its file name is empty'
           write(out_unitp,*) '  file_restart: ',file_restart
@@ -1379,9 +1377,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         para_propa%para_WP0%WP0nrho             = WP0nrho
         para_propa%para_WP0%WP0restart          = WP0restart
         para_propa%para_WP0%WP0cplx             = WP0cplx
-        para_propa%para_WP0%file_WP0%name       = make_FileName(file_WP0)
+        para_propa%para_WP0%file_WP0%name       = make_EVRTFileName(file_WP0)
         IF (read_file .AND. .NOT.                                       &
-            check_file_exist_WITH_file_name(para_propa%para_WP0%file_WP0%name)) THEN
+            check_file_exist_WITH_FileName(para_propa%para_WP0%file_WP0%name)) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the file_WP0 file does not exist or its file name is empty'
           write(out_unitp,*) '  file_WP0: ',file_WP0
@@ -1539,9 +1537,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
             DO i=1,nb_WP
               CALL Write_Vec(para_propa%para_control%Mgate0(i,:),       &
-                             out_unitp,4,info="#WP0 " // int_TO_char(i) )
+                             out_unitp,4,info="#WP0 " // TO_string(i) )
               CALL Write_Vec(para_propa%para_control%Mgatet(i,:),       &
-                             out_unitp,4,info="#WPt " // int_TO_char(i))
+                             out_unitp,4,info="#WPt " // TO_string(i))
             END DO
           ELSE
             CALL alloc_array(para_propa%para_control%tab_WP0,[nb_WP], &
@@ -1962,32 +1960,32 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         para_propa%write_BasisRep     = write_FBR
         para_propa%write_WPAdia       = write_WPAdia
 
-        para_propa%file_autocorr%name    = make_FileName(file_autocorr)
-        IF (err_file_name(para_propa%file_autocorr%name,name_sub='read_propagation') /= 0) THEN
+        para_propa%file_autocorr%name    = make_EVRTFileName(file_autocorr)
+        IF (err_FileName(para_propa%file_autocorr%name,name_sub='read_propagation') /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the file_autocorr file name is empty'
           write(out_unitp,*) '  => check your data!!'
           STOP
         END IF
 
-        para_propa%file_spectrum%name    = make_FileName(file_spectrum)
-        IF (err_file_name(para_propa%file_spectrum%name,name_sub='read_propagation') /= 0) THEN
+        para_propa%file_spectrum%name    = make_EVRTFileName(file_spectrum)
+        IF (err_FileName(para_propa%file_spectrum%name,name_sub='read_propagation') /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the file_spectrum file name is empty'
           write(out_unitp,*) '  => check your data!!'
           STOP
         END IF
 
-        para_propa%file_WP%name          = make_FileName(file_WP)
-        IF (err_file_name(para_propa%file_WP%name,name_sub='read_propagation') /= 0) THEN
+        para_propa%file_WP%name          = make_EVRTFileName(file_WP)
+        IF (err_FileName(para_propa%file_WP%name,name_sub='read_propagation') /= 0) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the file_WP file name is empty'
           write(out_unitp,*) '  => check your data!!'
           STOP
         END IF
 
-        para_propa%file_WP_restart%name  = make_FileName(file_restart)
-        IF (restart .AND. .NOT. check_file_exist_WITH_file_name(para_propa%file_WP_restart%name)) THEN
+        para_propa%file_WP_restart%name  = make_EVRTFileName(file_restart)
+        IF (restart .AND. .NOT. check_file_exist_WITH_FileName(para_propa%file_WP_restart%name)) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the restart file does not exist or its file name is empty'
           write(out_unitp,*) '  file_restart: ',file_restart
@@ -2011,9 +2009,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
         para_propa%para_WP0%WP0nrho             = WP0nrho
         para_propa%para_WP0%WP0restart          = WP0restart
         para_propa%para_WP0%WP0cplx             = WP0cplx
-        para_propa%para_WP0%file_WP0%name       = make_FileName(file_WP0)
+        para_propa%para_WP0%file_WP0%name       = make_EVRTFileName(file_WP0)
         IF (read_file .AND. .NOT.                                       &
-            check_file_exist_WITH_file_name(para_propa%para_WP0%file_WP0%name)) THEN
+            check_file_exist_WITH_FileName(para_propa%para_WP0%file_WP0%name)) THEN
           write(out_unitp,*) 'ERROR in ',name_sub
           write(out_unitp,*) '  the file_WP0 file does not exist or its file name is empty'
           write(out_unitp,*) '  file_WP0: ',file_WP0
@@ -2171,9 +2169,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
 
             DO i=1,nb_WP
               CALL Write_Vec(para_propa%para_control%Mgate0(i,:),       &
-                             out_unitp,4,info="#WP0 " // int_TO_char(i) )
+                             out_unitp,4,info="#WP0 " // TO_string(i) )
               CALL Write_Vec(para_propa%para_control%Mgatet(i,:),       &
-                             out_unitp,4,info="#WPt " // int_TO_char(i))
+                             out_unitp,4,info="#WPt " // TO_string(i))
             END DO
           ELSE
             CALL alloc_array(para_propa%para_control%tab_WP0,[nb_WP], &
@@ -2433,12 +2431,12 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%read_listWP           = read_listWP
       para_Davidson%precond               = precond
       para_Davidson%precond_tol           = precond_tol
-      para_Davidson%name_file_readWP      = make_FileName(name_file_readWP)
+      para_Davidson%name_file_readWP      = make_EVRTFileName(name_file_readWP)
       para_Davidson%formatted_file_readWP = formatted_file_readWP
 
       MPI_S%num_resetH                    = num_resetH
 
-      IF (read_WP .AND. .NOT. check_file_exist_WITH_file_name(para_Davidson%name_file_readWP)) THEN
+      IF (read_WP .AND. .NOT. check_file_exist_WITH_FileName(para_Davidson%name_file_readWP)) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) '  the name_file_readWP does not exist or its file name is empty'
         write(out_unitp,*) '  name_file_readWP: ',name_file_readWP
@@ -2471,9 +2469,9 @@ END SUBROUTINE sub_analyze_mini_WP_OpWP
       para_Davidson%save_interal      = save_interal
       para_Davidson%scaled_max_ene    = scaled_max_ene
       para_Davidson%save_max_nb       = save_max_nb
-      para_Davidson%name_file_saveWP  = make_FileName(name_file_saveWP)
+      para_Davidson%name_file_saveWP  = make_EVRTFileName(name_file_saveWP)
 
-      IF (err_file_name(para_Davidson%name_file_saveWP,name_sub='read_davidson') /= 0) THEN
+      IF (err_FileName(para_Davidson%name_file_saveWP,name_sub='read_davidson') /= 0) THEN
         write(out_unitp,*) 'ERROR in ',name_sub
         write(out_unitp,*) '  the name_file_saveWP file name is empty'
         write(out_unitp,*) '  => check your data!!'

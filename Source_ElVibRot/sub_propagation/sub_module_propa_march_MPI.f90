@@ -1335,7 +1335,7 @@ MODULE mod_march_MPI
             CALL dealloc_NParray(UPsiOnKrylov,'UPsiOnKrylov',name_sub)
       CALL alloc_NParray(UPsiOnKrylov,[n],'UPsiOnKrylov',name_sub)
 
-      CALL diagonalization_HerCplx(H,Eig,Vec,n,3,1,.TRUE.)
+      CALL diagonalization(H,Eig,Vec,3,1,.TRUE.)
     END IF
 
     ! loop on the eigenvectors

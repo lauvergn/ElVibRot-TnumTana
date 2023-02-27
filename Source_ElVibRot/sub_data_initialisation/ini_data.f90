@@ -582,7 +582,7 @@
         CALL param_Op1TOparam_Op2(para_AllOp%tab_Op(2),                 &
                                   para_AllOp%tab_Op(iOp))
         para_AllOp%tab_Op(iOp)%n_Op    = i
-        para_AllOp%tab_Op(iOp)%name_Op = 'OpScal' // int_TO_char(i)
+        para_AllOp%tab_Op(iOp)%name_Op = 'OpScal' // TO_string(i)
 
         CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
                          type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,   &
@@ -602,7 +602,7 @@
         CALL param_Op1TOparam_Op2(para_AllOp%tab_Op(2),                 &
                                   para_AllOp%tab_Op(iOp))
         para_AllOp%tab_Op(iOp)%n_Op    = para_ReadOp%nb_scalar_Op+i
-        para_AllOp%tab_Op(iOp)%name_Op = 'CAP' // int_TO_char(i) // '_' // int_TO_char(iOp)
+        para_AllOp%tab_Op(iOp)%name_Op = 'CAP' // TO_string(i) // '_' // TO_string(iOp)
 
         CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
                          type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,   &
@@ -624,8 +624,8 @@
         iOp = iOp + 1
         CALL param_Op1TOparam_Op2(para_AllOp%tab_Op(1),para_AllOp%tab_Op(iOp))
         para_AllOp%tab_Op(iOp)%n_Op    = para_ReadOp%nb_scalar_Op+i
-        para_AllOp%tab_Op(iOp)%name_Op = 'FluxOp' // int_TO_char(i) // '_'      &
-                                          // int_TO_char(iOp)
+        para_AllOp%tab_Op(iOp)%name_Op = 'FluxOp' // TO_string(i) // '_'      &
+                                          // TO_string(iOp)
 
         CALL Init_TypeOp(para_AllOp%tab_Op(iOp)%param_TypeOp,           &
                          type_Op=0,nb_Qact=mole%nb_act1,cplx=.FALSE.,   &
@@ -664,7 +664,7 @@
         IF (para_AllOp%tab_Op(i)%para_ReadOp%save_MatOp .OR.                    &
             para_AllOp%tab_Op(i)%para_ReadOp%restart_MatOp) THEN
           para_AllOp%tab_Op(i)%para_ReadOp%FileMat%name      =                  &
-            make_FileName(trim(adjustl(para_AllOp%tab_Op(i)%para_ReadOp%name_Mat)) // &
+            make_EVRTFileName(trim(adjustl(para_AllOp%tab_Op(i)%para_ReadOp%name_Mat)) // &
               '_' // trim(adjustl(para_AllOp%tab_Op(i)%name_Op)) )
           para_AllOp%tab_Op(i)%para_ReadOp%FileMat%formatted =                  &
             para_AllOp%tab_Op(i)%para_ReadOp%formatted_Mat

@@ -394,7 +394,7 @@
   TYPE (param_psi), intent(in) :: psi
 
 
-  print_alloc_psi = String_TO_String(                                           &
+  print_alloc_psi = trim(                                           &
           'RvecB:' // logical_TO_char(allocated(psi%RvecB)) //                  &
          ',RvecG:' // logical_TO_char(allocated(psi%RvecG)) //                  &
          ',CvecB:' // logical_TO_char(allocated(psi%CvecB)) //                  &
@@ -3670,9 +3670,9 @@
 
 !           - write psi2 ----------------------------------------
             IF (i_qa == psi%nb_qa) THEN
-              fformat = String_TO_String( '(' // int_TO_char(ni) // Rformat // '/)' )
+              fformat = trim( '(' // TO_string(ni) // Rformat // '/)' )
             ELSE
-              fformat = String_TO_String( '(' // int_TO_char(ni) // Rformat //  ')' )
+              fformat = trim( '(' // TO_string(ni) // Rformat //  ')' )
             END IF
 
             IF (psi%BasisnD%ndim > 1) THEN
@@ -3732,9 +3732,9 @@
 
 !- write psi2 ----------------------------------------
             IF (i_qa == psi%nb_qa) THEN
-               fformat = '(' // int_TO_char(ni) // Rformat // '/)'
+               fformat = '(' // TO_string(ni) // Rformat // '/)'
             ELSE
-               fformat = '(' // int_TO_char(ni) // Rformat //  ')'
+               fformat = '(' // TO_string(ni) // Rformat //  ')'
             END IF
 
             IF (psi%BasisnD%ndim > 1) THEN
@@ -3770,9 +3770,9 @@
               CALL Rec_x(x,psi%BasisnD,i_qa)
 
               IF (i_qa == psi%nb_qa) THEN
-                fformat = String_TO_String( '(' // Rformat // ',3i8,' // int_TO_char(ni) // Rformat // '/)' )
+                fformat = trim( '(' // Rformat // ',3i8,' // TO_string(ni) // Rformat // '/)' )
               ELSE
-                fformat = String_TO_String( '(' // Rformat // ',3i8,' // int_TO_char(ni) // Rformat //  ')' )
+                fformat = trim( '(' // Rformat // ',3i8,' // TO_string(ni) // Rformat //  ')' )
               END IF
 
               IF (loc_ecri_psi2) THEN
@@ -3811,9 +3811,9 @@
           i_baie = i_ba + ( (i_bi-1)+ (i_be-1)*psi%nb_bi ) * psi%nb_ba
 
           IF (i_ba == psi%nb_ba) THEN
-            fformat = String_TO_String( '(' // Rformat // ',3i8,' // int_TO_char(ni) // Rformat // '/)' )
+            fformat = trim( '(' // Rformat // ',3i8,' // TO_string(ni) // Rformat // '/)' )
           ELSE
-            fformat = String_TO_String( '(' // Rformat // ',3i8,' // int_TO_char(ni) // Rformat //  ')' )
+            fformat = trim( '(' // Rformat // ',3i8,' // TO_string(ni) // Rformat //  ')' )
           END IF
 
           IF (loc_ecri_psi2) THEN
@@ -3846,9 +3846,9 @@
         DO i_baie=1,psi%nb_tot
 
           IF (i_baie == psi%nb_tot) THEN
-            fformat = String_TO_String( '(' // Rformat // ',3i8,' // int_TO_char(ni) // Rformat // '/)' )
+            fformat = trim( '(' // Rformat // ',3i8,' // TO_string(ni) // Rformat // '/)' )
           ELSE
-            fformat = String_TO_String( '(' // Rformat // ',3i8,' // int_TO_char(ni) // Rformat //  ')' )
+            fformat = trim( '(' // Rformat // ',3i8,' // TO_string(ni) // Rformat //  ')' )
           END IF
 
           IF (loc_ecri_psi2) THEN

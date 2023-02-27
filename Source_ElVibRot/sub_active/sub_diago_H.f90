@@ -156,14 +156,12 @@ END SUBROUTINE sub_diago_H
       complex (kind=Rkind) :: CH(n,n)
       complex (kind=Rkind) :: CVec(n,n)
       complex (kind=Rkind) :: CE(n)
-      complex (kind=Rkind) :: trav(n)
 
       real (kind=Rkind)    :: auTOcm_inv
 
 
 !----- divers --------------------------------------------------------
       integer              :: i
-      integer              :: ierr
 
 
 !----- for debuging --------------------------------------------------
@@ -182,9 +180,7 @@ END SUBROUTINE sub_diago_H
 !
 !=====================================================================
 
-      CALL cTred2(n,n,CH,CE,trav,CVec)
-      CALL cTql2(n,n,CE,trav,CVec,ierr)
-      write(out_unitp,*)'ierr=',ierr
+      CALL diagonalization(CH,CE,CVec)
 
 !=====================================================================
 !

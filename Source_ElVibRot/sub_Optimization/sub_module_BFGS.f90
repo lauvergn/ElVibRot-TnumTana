@@ -291,7 +291,7 @@
             write(out_unitp,*) 'The hessian is too large. => No printing'
           END IF
 
-          CALL inv_m1_TO_m2(hessian,para_BFGS%hessian_inv_init,nb_Opt,0,ZERO)
+          para_BFGS%hessian_inv_init = inv_OF_Mat_TO(hessian)
 
           IF (print_level > 1 .OR. nb_Opt <= para_BFGS%max_Q_ForPrinting) THEN
             write(out_unitp,*) 'hessian inverse'

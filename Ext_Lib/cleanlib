@@ -1,3 +1,6 @@
 rm -rf QDUtilLib*
 rm -rf AD_dnSVM*
 rm -rf QuantumModelLib*
+rm -rf ConstPhys*
+rm -rf FOR_EVRT*
+rm -rf Coord_KEO_PrimOp* Tnum-Tana*

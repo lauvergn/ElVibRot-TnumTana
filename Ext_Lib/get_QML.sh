@@ -1,21 +1,21 @@
 #!/bin/bash
 
 EXTLIB_TYPE=$1
+BaseName=QuantumModelLib
 
-echo "In get_QML.sh"
+echo "In get_"$BaseName".sh"
 
 
-SAVE_version=Save_QuantumModelLib-20.1-dev
-LOC_version=QuantumModelLib
+SAVE_version="Save_"$BaseName"_devloc"
+LOC_version=$BaseName
 
-rm -r QuantumModelLib*
-rm -f QuantumModelLib #always remove the link
 
+rm -rf $BaseName* #always remove the link
 
 
 #latest release
 #latest HEAD version (dev version)
- version=https://github.com/lauvergn/QuantumModelLib/archive/refs/tags/v20.1-dev.zip
+ version=https://github.com/lauvergn/QuantumModelLib/archive/refs/tags/v20.2-dev.zip
 
 
 test -z $EXTLIB_TYPE       &&    curl -LJ $version --output $LOC_version.zip
@@ -28,9 +28,11 @@ rm -f $LOC_version.zip
 
 
 
-QMLDIR=`ls -d QuantumModelLib*`
-#echo $QMLDIR
+#LIBDIR=`ls -d QuantumModelLib*`
 
-ln -s $QMLDIR QuantumModelLib
+LIBDIR=`ls -d $BaseName*`
+#echo $LIBDIR
 
-echo "End get_QML.sh"
+ln -s $LIBDIR $LOC_version
+
+echo "End get_"$BaseName".sh"

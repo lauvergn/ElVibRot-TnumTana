@@ -64,9 +64,8 @@
       real (kind=Rkind)              :: Ene            = -Huge(ONE)   ! Ene
 
       ! population analysis + reduced density
-      TYPE (File_t)              :: file_PsiRho
+      TYPE (File_t)                  :: file_PsiRho
       real (kind=Rkind), allocatable :: max_RedDensity(:)         ! the gaussian weighted (almost the last basis function) reduced density
-      !real (kind=Rkind), allocatable :: tab_WeightChannels(:,:)   ! tab_WeightChannels(nb_bi,nb_be)
       real (kind=Rkind)              :: Psi_norm2     = -ONE      ! norm^2 of psi
       logical                        :: adia          = .FALSE.   ! To perform special analysis with adiabatic states
       logical                        :: Rho1D         = .FALSE.   ! reduced densities (1D) along coordinate
@@ -99,17 +98,17 @@
 
       ! For the exact factorization
       integer                        :: ExactFact = 0       ! default, 0: no exact factorization analysis
-      TYPE (File_t)              :: file_ExactFactPotCut
+      TYPE (File_t)                  :: file_ExactFactPotCut
 
 
       ! 1D and 2D cut of psi at Qana
-      TYPE (File_t)              :: file_PsiCut
+      TYPE (File_t)                  :: file_PsiCut
       logical                        :: psi1D_Q0 = .FALSE.  ! reduced densities (1D or 2D) along coordinates
       logical                        :: psi2D_Q0 = .FALSE.  ! reduced densities (1D or 2D) along coordinates
       real (kind=Rkind), allocatable :: Qana(:)             ! geometry (Qact order) for the analysis
 
       ! write the psi
-      TYPE (File_t)              :: file_Psi
+      TYPE (File_t)                  :: file_Psi
       logical                        :: Write_psi        = .FALSE. ! write psi (or psi^2 ...)
       logical                        :: Write_psi2_Grid  = .FALSE. ! write the density on the grid
       logical                        :: Write_psi2_Basis = .FALSE. ! write the density on the basis functions
@@ -327,7 +326,7 @@
     !------------------------------------------------------------
     ana_psi%propa               = .FALSE.             ! To perform special analysis of WP
     ana_psi%T                   = ZERO                ! time in au
-    ana_psi%field(:)            = [ZERO,ZERO,ZERO]  ! Electric field
+    ana_psi%field(:)            = [ZERO,ZERO,ZERO]    ! Electric field
     ana_psi%With_field          = .FALSE.             ! Propagation with a field
     IF (present(propa))         ana_psi%propa      = propa
     IF (present(T))             ana_psi%T          = T
@@ -518,9 +517,7 @@
     SUBROUTINE dealloc_ana_psi(ana_psi)
     IMPLICIT NONE
 
-!--- variables for the WP propagation ----------------------------
-    TYPE (param_ana_psi)        :: ana_psi
-
+    TYPE (param_ana_psi), intent(inout)  :: ana_psi
 
     IF (allocated(ana_psi%Qana_Weight)) THEN
       CALL dealloc_NParray(ana_psi%Qana_Weight,                       &
@@ -547,24 +544,17 @@
     IF (allocated(ana_psi%Tformat)) deallocate(ana_psi%Tformat)
     IF (allocated(ana_psi%Eformat)) deallocate(ana_psi%Eformat)
 
-!   IF (allocated(ana_psi%tab_WeightChannels)) THEN
-!      CALL dealloc_NParray(ana_psi%tab_WeightChannels,                &
-!                          "ana_psi%tab_WeightChannels","dealloc_ana_psi")
-!    END IF
-
     IF (allocated(ana_psi%contractBasis_list)) THEN
       CALL dealloc_NParray(ana_psi%contractBasis_list,                &
                           "ana_psi%contractBasis_list","dealloc_ana_psi")
     END IF
 
-
     CALL init_ana_psi(ana_psi)
 
     CALL file_dealloc(ana_psi%file_PsiRho)
     CALL file_dealloc(ana_psi%file_PsiCut)
-    CALL file_dealloc(ana_psi%file_Psi)
+    !CALL file_dealloc(ana_psi%file_Psi)
     CALL file_dealloc(ana_psi%file_ExactFactPotCut)
-
 
     END SUBROUTINE dealloc_ana_psi
 
@@ -612,13 +602,6 @@
 
     IF (allocated(ana_psi2%Tformat)) ana_psi1%Tformat = ana_psi2%Tformat
     IF (allocated(ana_psi2%Eformat)) ana_psi1%Eformat = ana_psi2%Eformat
-
-!   IF (allocated(ana_psi2%tab_WeightChannels)) THEN
-!      CALL alloc_NParray(ana_psi1%tab_WeightChannels,                      &
-!                                       shape(ana_psi2%tab_WeightChannels), &
-!                        "ana_psi1%tab_WeightChannels","ana_psi2_TO_ana_psi1")
-!      ana_psi1%tab_WeightChannels(:,:) = ana_psi2%tab_WeightChannels(:,:)
-!    END IF
 
     IF (allocated(ana_psi2%Qana_Weight)) THEN
       CALL alloc_NParray(ana_psi1%Qana_Weight,shape(ana_psi2%Qana_Weight),&
@@ -697,8 +680,6 @@
     CALL file_Write(ana_psi%file_PsiRho)
     IF (allocated(ana_psi%max_RedDensity))                            &
             write(out_unitp,*) 'max_RedDensity',ana_psi%max_RedDensity
-!    IF (allocated(ana_psi%tab_WeightChannels))                        &
-!     write(out_unitp,*) 'tab_WeightChannels',ana_psi%tab_WeightChannels
 
     write(out_unitp,*) 'Psi_norm2',ana_psi%Psi_norm2
     write(out_unitp,*) 'adia',ana_psi%adia

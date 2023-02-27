@@ -993,9 +993,9 @@ SUBROUTINE sub_nDGrid_coupling1_v2(para_nDGrid,Qact0,para_Tnum,mole,PrimOp)
 
 
   para_nDGrid%Grid_FOR_Fit_file1%name = adjustl(trim(para_nDGrid%name_Grid)) // &
-        'coup' // int_TO_char(MaxCoupling) // '_1'
+        'coup' // TO_string(MaxCoupling) // '_1'
   para_nDGrid%Grid_FOR_Fit_file2%name = adjustl(trim(para_nDGrid%name_Grid)) // &
-        'coup' // int_TO_char(MaxCoupling) // '_2'
+        'coup' // TO_string(MaxCoupling) // '_2'
   CALL file_open(para_nDGrid%Grid_FOR_FIT_file1,nioGrid1)
   CALL file_open(para_nDGrid%Grid_FOR_FIT_file2,nioGrid2)
 
@@ -1638,15 +1638,19 @@ END FUNCTION ValGridPoint
     !une facon.... SVD
     !write(out_unitp,*) 'a',a
     !write(out_unitp,*) 'b',b
-    CALL SVDCMP(A,nb_B,nb_B,w,vv,nb_B)
+    !CALL SVDCMP(A,nb_B,nb_B,w,vv,nb_B)
     !Find maximum singular value
-    wmax = maxval(w)
+    !wmax = maxval(w)
     !Define "small"
-    wmin = wmax * para_nDFit%epsi
+    !wmin = wmax * para_nDFit%epsi
     !Zero the "small" singular values
-    WHERE (w<wmin) w = ZERO
+    !WHERE (w<wmin) w = ZERO
+    !F(:) = B(:)
+    !CALL SVBKSB(a,w,vv,nb_B,nb_B,F,b,nb_B)
+
     F(:) = B(:)
-    CALL SVBKSB(a,w,vv,nb_B,nb_B,F,b,nb_B)
+    B = LinearSys_Solve(A,F,LS_type=1,epsi=para_nDFit%epsi)
+
   ELSE
     STOP 'not SVD, not yet'
   END IF
@@ -1691,8 +1695,8 @@ END FUNCTION ValGridPoint
       USE mod_PrimOp
       IMPLICIT NONE
 
-      TYPE (param_nDGrid), intent(in)   :: para_nDGrid
-      TYPE (param_nDFit), intent(inout) :: para_nDFit
+      TYPE (param_nDGrid), intent(inout) :: para_nDGrid
+      TYPE (param_nDFit),  intent(inout) :: para_nDFit
 
 !=====================================================================
 !----- for the CoordType and Tnum --------------------------------------
@@ -1813,16 +1817,19 @@ END FUNCTION ValGridPoint
           !une facon.... SVD
           !write(out_unitp,*) 'a',a
           !write(out_unitp,*) 'b',b
-          CALL SVDCMP(A,nb_B,nb_B,w,vv,nb_B)
+          !CALL SVDCMP(A,nb_B,nb_B,w,vv,nb_B)
           !Find maximum singular value
-          wmax = maxval(w)
+          !wmax = maxval(w)
           !Define "small"
-          wmin = wmax * para_nDFit%epsi
+          !wmin = wmax * para_nDFit%epsi
           !Zero the "small" singular values
-          WHERE (w<wmin) w = ZERO
+          !WHERE (w<wmin) w = ZERO
+
+          !F(:) = B(:)
+          !CALL SVBKSB(a,w,vv,nb_B,nb_B,F,b,nb_B)
 
           F(:) = B(:)
-          CALL SVBKSB(a,w,vv,nb_B,nb_B,F,b,nb_B)
+          B = LinearSys_Solve(A,F,LS_type=1,epsi=para_nDFit%epsi)
         ELSE
           STOP 'not SVD, not yet'
         END IF
@@ -1864,8 +1871,8 @@ END FUNCTION ValGridPoint
       USE mod_PrimOp
       IMPLICIT NONE
 
-      TYPE (param_nDGrid), intent(in)   :: para_nDGrid
-      TYPE (param_nDFit), intent(inout) :: para_nDFit
+      TYPE (param_nDGrid), intent(inout) :: para_nDGrid
+      TYPE (param_nDFit),  intent(inout) :: para_nDFit
 
 
       integer                    :: iGP,iB

@@ -1098,7 +1098,7 @@
                                   'Eneba_ON_HAC',name_sub)
 
     DO i=1,nb_bie
-      CALL mat_id(basis_ext2n%d0Cba_ON_HAC(:,:,i),nb_ba,nb_ba)
+      basis_ext2n%d0Cba_ON_HAC(:,:,i) = Identity_Mat(nb_ba)
     END DO
     basis_ext2n%Eneba_ON_HAC(:,:) = ZERO
 
@@ -2001,7 +2001,7 @@
       END IF
 
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
-        CALL mat_id(MatRGG(:,:),nq,nq)
+        MatRGG(:,:) = Identity_Mat(nq)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
         MatRGG(:,:) = basis_set%dnRGG%d1(:,:,dnba_ind(2))
       ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
@@ -2044,7 +2044,7 @@
 !-----------------------------------------------------------
 
     IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
-      CALL mat_id(RMatdnb,basis_set%nb,basis_set%nb)
+      RMatdnb = Identity_Mat(basis_set%nb)
     ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
         RMatdnb(:,:) = basis_set%dnRGB%d0(:,:)
@@ -2089,8 +2089,7 @@
 !-----------------------------------------------------------
 
     IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
-      allocate(RMatdnb(basis_set%nb,basis_set%nb))
-      CALL mat_id(RMatdnb,basis_set%nb,basis_set%nb)
+      RMatdnb = Identity_Mat(basis_set%nb)
     ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
         RMatdnb = basis_set%dnRGB%d0(:,:)
@@ -2134,8 +2133,7 @@
       END IF
 !-----------------------------------------------------------
     IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
-      allocate(RMatdnb(basis_set%nb,basis_set%nb))
-      CALL mat_id(RMatdnb,basis_set%nb,basis_set%nb)
+      RMatdnb = Identity_Mat(basis_set%nb)
     ELSE
       RMatdnb = basis_set%dnRBG%d0(:,:)
     END IF
@@ -2171,7 +2169,7 @@
       END IF
 !-----------------------------------------------------------
     IF (NewBasisEl .AND. basis_set%ndim == 0) THEN
-      CALL Cplx_mat_id(CMatdnb,basis_set%nb,basis_set%nb)
+      CMatdnb = Identity_Mat(basis_set%nb)
     ELSE
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
         CMatdnb(:,:) = basis_set%dnCGB%d0(:,:)
@@ -2227,7 +2225,7 @@
       END IF
 
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
-        CALL mat_id(MatRBB(:,:),nb,nb)
+        MatRBB(:,:) = Identity_Mat(nb)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
         MatRBB(:,:) = basis_set%dnRBB%d1(:,:,dnba_ind(2))
       ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
@@ -2278,8 +2276,7 @@
       END IF
 
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
-        allocate(MatRBB(basis_set%nb,basis_set%nb))
-        CALL mat_id(MatRBB(:,:),basis_set%nb,basis_set%nb)
+        MatRBB = Identity_Mat(basis_set%nb)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
         MatRBB = basis_set%dnRBB%d1(:,:,dnba_ind(2))
       ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
@@ -2383,7 +2380,7 @@
       END IF
 
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
-        CALL mat_id(MatRBB(:,:),nb,nb)
+        MatRBB(:,:) = Identity_Mat(nb)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
         MatRBB(:,:) = basis_set%dnPara_OF_RBB%d1(:,:,dnba_ind(2))
       ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
@@ -2433,8 +2430,7 @@ SUBROUTINE Get2_MATdnPara_OF_RBB(basis_set,MatRBB,dnba_ind)
       END IF
 
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
-        allocate(MatRBB(basis_set%nb,basis_set%nb))
-        CALL mat_id(MatRBB(:,:),basis_set%nb,basis_set%nb)
+        MatRBB = Identity_Mat(basis_set%nb)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
         MatRBB = basis_set%dnPara_OF_RBB%d1(:,:,dnba_ind(2))
       ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
@@ -2487,7 +2483,7 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
       END IF
 
       IF (dnba_ind(1) == 0 .AND. dnba_ind(2) == 0) THEN
-        CALL Cplx_mat_id(MatCBB(:,:),nb,nb)
+        MatCBB = Identity_Mat(nb)
       ELSE IF (dnba_ind(1) == 0) THEN ! first derivative
         MatCBB(:,:) = basis_set%dnCBB%d1(:,:,dnba_ind(2))
       ELSE IF (dnba_ind(2) == 0) THEN ! first derivative
@@ -2530,11 +2526,11 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
 
        iRec = iRec + 1
 
-       Rec_line = String_TO_String(Rec_tab)
+       Rec_line = trim(Rec_tab)
        DO i=2,iRec
-         Rec_line = String_TO_String(Rec_line // Rec_tab)
+         Rec_line = trim(Rec_line // Rec_tab)
        END DO
-       Rec_line = String_TO_String(Rec_line // '=Rec' // int_TO_char(iRec) // '=')
+       Rec_line = trim(Rec_line // '=Rec' // TO_string(iRec) // '=')
 
        write_all_loc = .FALSE.
        IF (present(write_all)) write_all_loc = write_all
@@ -2851,11 +2847,11 @@ END SUBROUTINE Get2_MATdnPara_OF_RBB
 
        iRec = iRec + 1
 
-       Rec_line = String_TO_String(Rec_tab)
+       Rec_line = trim(Rec_tab)
        DO i=2,iRec
-         Rec_line = String_TO_String(Rec_line // Rec_tab)
+         Rec_line = trim(Rec_line // Rec_tab)
        END DO
-       Rec_line = String_TO_String(Rec_line // '=RecMini' // int_TO_char(iRec) // '=')
+       Rec_line = trim(Rec_line // '=RecMini' // TO_string(iRec) // '=')
 
 
        nq      = get_nq_FROM_basis(basis_set)

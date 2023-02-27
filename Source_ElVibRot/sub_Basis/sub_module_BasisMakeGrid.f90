@@ -1387,8 +1387,7 @@ STOP
       AtB(:)   = matmul(transpose(A),B)
 
       ! Solve the linear system AtA.W=AtB
-      CALL Linear_Sys(AtA,AtB,w,nq)
-
+      W = LinearSys_Solve(AtA,AtB)
 !---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'w',w
@@ -1464,7 +1463,7 @@ STOP
 !
 !
 !      ! Solve the linear system AtA.W=AtB
-!      CALL Linear_Sys(AtA,AtB,basis_temp%w(iqi:iqe),nq)
+!     W = LinearSys_Solve(AtA,AtB)
       basis_temp%wrho(:) = basis_temp%w(:) * basis_temp%rho(:)
 
 !
@@ -1544,7 +1543,7 @@ STOP
 
 
       ! Solve the linear system AtA.W=AtB
-      CALL Linear_Sys(AtA,AtB,basis_temp%w,nq)
+      basis_temp%w = LinearSys_Solve(AtA,AtB)
       IF (debug) write(out_unitp,*) 'w',basis_temp%w
       WHERE (basis_temp%w < ZERO)                                       &
                           basis_temp%w(:) = basis_temp%w(:) * 0.9_Rkind
@@ -1646,8 +1645,6 @@ STOP
 
       integer                  :: nio,err_io
       TYPE (File_t)        :: cubature_file
-      character (len=Name_len) :: name_i,name_j
-
 
       TYPE (param_SimulatedAnnealing) :: SA_para
 
@@ -1687,9 +1684,7 @@ STOP
 !      write(out_unitp,*) 'NormA',NormA
 
       Lq = int(basis_cuba%nDindB%MaxNorm)
-      CALL Write_int_IN_char(basis_cuba%ndim,name_i)
-      CALL Write_int_IN_char(Lq,             name_j)
-      cubature_file%name = trim(name_i) // 'D_deg' // trim(name_j)
+      cubature_file%name = TO_String(basis_cuba%ndim) // 'D_deg' // TO_String(Lq)
       write(out_unitp,*) 'cubature_file%name: ',cubature_file%name
 
 !      IF (basis_cuba%Read_make_cubature) THEN

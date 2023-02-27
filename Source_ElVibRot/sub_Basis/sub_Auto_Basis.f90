@@ -904,8 +904,14 @@
       END IF
 !---------------------------------------------------------------------
       print_level_loc = print_level
-      print_level = -1
-      IF (debug) print_level = 2
+
+      IF (debug) THEN
+        CALL set_print_level(2)
+        !print_level = 2
+      ELSE
+        CALL set_print_level(-1)
+        !print_level = -1
+      END IF
 
       CALL basis2TObasis1(basis_temp,basis_Set)
 
@@ -934,7 +940,8 @@
       END IF
 
       basis_Set%auto_basis = .FALSE.
-      print_level = print_level_loc
+      CALL set_print_level(print_level_loc)
+      !print_level = print_level_loc
 
       CALL dealloc_basis(basis_temp)
       !-----------------------------------------------------------------

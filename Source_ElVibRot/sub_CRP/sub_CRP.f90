@@ -91,6 +91,9 @@ MODULE mod_CRP
 
   END TYPE param_CRP
 
+  INTERFACE BlockAna_Mat
+    MODULE PROCEDURE BlockAna_RMat,BlockAna_CMat
+  END INTERFACE
 CONTAINS
 
 SUBROUTINE read_CRP(para_CRP,ny)
@@ -423,12 +426,12 @@ END SUBROUTINE read_CRP
           CALL Write_Mat(Ginv,out_unitp,nb_col)
         END IF
 
-        CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
+        G = inv_OF_Mat_TO(Ginv)
 
         IF (debug) THEN
           nb_col = 5
           write(out_unitp,*) 'G:'
-          CALL Write_Mat(Ginv,out_unitp,nb_col)
+          CALL Write_Mat(G,out_unitp,nb_col)
         END IF
 
         !Ginv = matmul(Ginv,G)
@@ -591,12 +594,12 @@ END SUBROUTINE sub_CRP_BasisRep_WithMat
         END IF
         CALL BlockAna_Mat(Ginv,list_block,info='Ginv')
 
-        CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
+        G = inv_OF_Mat_TO(Ginv)
 
         IF (debug) THEN
           nb_col = 5
           write(out_unitp,*) 'G:'
-          CALL Write_Mat(Ginv,out_unitp,nb_col)
+          CALL Write_Mat(G,out_unitp,nb_col)
         END IF
         CALL BlockAna_Mat(G,list_block,info='G')
 
@@ -882,7 +885,7 @@ SUBROUTINE sub_CRP_BasisRep_WithMat_test(tab_Op,nb_Op,print_Op,para_CRP)
         DO i=1,tab_Op(1)%nb_tot
           Ginv(i,i) = Ginv(i,i) + para_CRP%DEne
         END DO
-        CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
+        G = inv_OF_Mat_TO(Ginv)
 
         CRP = ZERO
         DO iVecPro=1,tab_Op(1)%nb_tot
@@ -1121,7 +1124,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
        integer :: lwork,ierr
        real (kind=Rkind), ALLOCATABLE :: work(:)
 
-       TYPE (param_time) :: CRP_Time
+       TYPE (Time_t) :: CRP_Time
        real(kind=Rkind)  :: RealTime
 
 !----- for debuging --------------------------------------------------
@@ -1157,7 +1160,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
         Ginv(i,i) = Ginv(i,i) + Ene
       END DO
 
-      CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
+      G = inv_OF_Mat_TO(Ginv)
 
       gGgG(:,:) = matmul(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,                 &
          matmul(G,matmul(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,conjg(G))))
@@ -1209,7 +1212,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
           Ginv(i,i) = Ginv(i,i) + Ene
        END DO
 
-        CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
+        G = inv_OF_Mat_TO(Ginv)
 
         gGgG(:,:) = matmul(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,               &
            matmul(G,matmul(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,conjg(G))))
@@ -1229,7 +1232,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
           Ginv(i,i) = Ginv(i,i) + Ene
        END DO
 
-       CALL Driver_LU_decomp_cplx(Ginv,tab_Op(1)%nb_tot,indx,d,type_LU) ! lapack
+       CALL LU_decomp(Ginv,tab_Op(1)%nb_tot,indx,d,type_LU) ! lapack
        !CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,d)
        !CALL ZGETRF(tab_Op(1)%nb_tot,tab_Op(1)%nb_tot,Ginv,tab_Op(1)%nb_tot,indx,ierr)
        !IF (ierr /= 0) STOP 'LU decomposition'
@@ -1322,7 +1325,7 @@ SUBROUTINE calc_crp_p_lanczos(tab_Op,nb_Op,para_CRP,Ene,GuessVec)
             Eigvals(:) = ZERO
             IF (allocated(EVec)) CALL dealloc_NParray(EVec,'EVec',name_sub)
             CALL alloc_NParray(EVec,[nks,nks],'EVec',name_sub)
-            CALL diagonalization_HerCplx(h(1:nks,1:nks),Eigvals,EVec,nks,3,0,.FALSE.)
+            CALL diagonalization(h(1:nks,1:nks),Eigvals,EVec,3,0,.FALSE.)
             IF (debug) write(out_unitp,*) '# in KS iterations, Eigvals',Eigvals(1:nks)
             !write(out_unitp,*) '# in KS iterations, Eigvals',Eigvals(1:nks)
 
@@ -1478,9 +1481,9 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
   INTEGER :: lwork
   REAL (kind=Rkind), ALLOCATABLE :: work(:)
 
-  TYPE (param_time) :: CRP_Time
+  TYPE (Time_t) :: CRP_Time
   real(kind=Rkind)  :: RealTime
-  TYPE (param_time) :: LU_Time
+  TYPE (Time_t) :: LU_Time
   real(kind=Rkind)  :: RealTime_LU
 
 !----- for debuging --------------------------------------------------
@@ -1509,7 +1512,7 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
         Ginv(i,i) = Ginv(i,i) + Ene
      END DO
 
-     CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
+     G = inv_OF_Mat_TO(Ginv)
 
      gGgG(:,:) = MATMUL(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,               &
           MATMUL(G,MATMUL(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,CONJG(G))))
@@ -1554,7 +1557,7 @@ SUBROUTINE calc_crp_IRL(tab_Op,nb_Op,para_CRP,Ene)
 
      RealTime_LU = Delta_RealTime(LU_Time)
 
-     CALL Driver_LU_decomp_cplx(Ginv,tab_Op(1)%nb_tot,indx,dLU,type_LU) ! lapack
+     CALL LU_decomp(Ginv,tab_Op(1)%nb_tot,indx,dLU,type_LU) ! lapack
      !CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,dLU)
      !CALL ZGETRF(tab_Op(1)%nb_tot,tab_Op(1)%nb_tot,Ginv,tab_Op(1)%nb_tot,indx,ierr)
      !IF (ierr /= 0) STOP 'LU decomposition'
@@ -2057,7 +2060,7 @@ SUBROUTINE calc_crp_p_lanczos_old(tab_Op,nb_Op,para_CRP,Ene)
         Ginv(i,i) = Ginv(i,i) + Ene
       END DO
 
-      CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
+      G = inv_OF_Mat_TO(Ginv)
 
       gGgG(:,:) = matmul(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,                 &
          matmul(G,matmul(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,conjg(G))))
@@ -2106,7 +2109,7 @@ SUBROUTINE calc_crp_p_lanczos_old(tab_Op,nb_Op,para_CRP,Ene)
           Ginv(i,i) = Ginv(i,i) + Ene
        END DO
 
-        CALL inv_m1_TO_m2_cplx(Ginv,G,tab_Op(1)%nb_tot,0,ZERO)
+        G = inv_OF_Mat_TO(Ginv)
 
         gGgG(:,:) = matmul(tab_Op(para_CRP%iOp_CAP_Reactif)%Rmat,               &
            matmul(G,matmul(tab_Op(para_CRP%iOp_CAP_Product)%Rmat,conjg(G))))
@@ -2131,7 +2134,7 @@ SUBROUTINE calc_crp_p_lanczos_old(tab_Op,nb_Op,para_CRP,Ene)
           Ginv(i,i) = Ginv(i,i) + Ene
        END DO
 
-       CALL Driver_LU_decomp_cplx(Ginv,tab_Op(1)%nb_tot,indx,d,type_LU) ! lapack
+       CALL LU_decomp(Ginv,tab_Op(1)%nb_tot,indx,d,type_LU) ! lapack
        !CALL ludcmp_cplx(Ginv,tab_Op(1)%nb_tot,trav,indx,d)
        !now in Ginv we have its LU decomposition
 
@@ -2218,7 +2221,7 @@ SUBROUTINE calc_crp_p_lanczos_old(tab_Op,nb_Op,para_CRP,Ene)
 
             Eigvals(:) = ZERO
             CALL alloc_NParray(EVec,[nks,nks],'EVec',name_sub)
-            CALL diagonalization_HerCplx(h(1:nks,1:nks),Eigvals,EVec,nks,3,0,.FALSE.)
+            CALL diagonalization(h(1:nks,1:nks),Eigvals,EVec,3,0,.FALSE.)
             IF (debug) write(out_unitp,*) '# in KS iterations, Eigvals',Eigvals(1:nks)
             write(out_unitp,*) '# in KS iterations, Eigvals',Eigvals(1:nks)
             CALL dealloc_NParray(EVec,'EVec',name_sub)
@@ -2314,7 +2317,7 @@ SUBROUTINE p_multiplyLU(Vin,Vut,tab_Op,nb_Op,Ene,N,Ginv_LU,indx,                
       b(:) = conjg(b)
       !CALL lubksb_cplx(Ginv_LU,N,indx,b)
       !CALL ZGETRS('No transpose',N,1,Ginv_LU,N,indx,B,N,err)
-      CALL Driver_LU_solve_cplx(Ginv_LU,N,indx,b,type_LU) ! here lapack
+      CALL LU_solve(Ginv_LU,N,indx,b,type_LU) ! here lapack
 
 
       b(:) = conjg(b)
@@ -2328,7 +2331,7 @@ SUBROUTINE p_multiplyLU(Vin,Vut,tab_Op,nb_Op,Ene,N,Ginv_LU,indx,                
       IF (print_level > 1) write(out_unitp,*) '# here before LU 2 '
       !CALL lubksb_cplx(Ginv_LU,N,indx,b)
       !CALL ZGETRS('No transpose',N,1,Ginv_LU,N,indx,B,N,err)
-      CALL Driver_LU_solve_cplx(Ginv_LU,N,indx,b,type_LU) ! here lapack
+      CALL LU_solve(Ginv_LU,N,indx,b,type_LU) ! here lapack
 
       Vut(:)=b(:)
 
@@ -2427,7 +2430,7 @@ SUBROUTINE G_Mat(H,CAP_Reactif,CAP_Product,Ene,G)
         Ginv(i,i) = Ginv(i,i) + Ene
       END DO
 
-      CALL inv_m1_TO_m2_cplx(Ginv,G,H%nb_tot,0,ZERO)
+      G = inv_OF_Mat_TO(Ginv)
 
       IF (debug) THEN
         Ginv = matmul(Ginv,G)
@@ -2465,7 +2468,7 @@ SUBROUTINE FluxOp_Mat(H,HStep_Op,FluxOp)
 
       FluxOp_loc = EYE*FluxOp
 
-      CALL diagonalization_HerCplx(FluxOp_loc,Rdiag,Rvp,H%nb_tot,3,2,.TRUE.)
+      CALL diagonalization(FluxOp_loc,Rdiag,Rvp,3,2,.TRUE.)
 
       write(out_unitp,*) 'Eigenvalues'
       DO i=1,H%nb_tot
@@ -3090,5 +3093,91 @@ IMPLICIT NONE
 
 END FUNCTION ChannelNumber_AT_TS
 
+!to be moved
+
+SUBROUTINE BlockAna_RMat(f,list_block,info)
+  USE mod_MPI
+
+  character (len=*), optional :: info
+
+  integer,          intent(in) :: list_block(:)
+  real(kind=Rkind), intent(in) :: f(:,:)
+
+  integer           :: i,j,ib1,ib2,jb1,jb2
+  real(kind=Rkind)  :: valmax
+
+  IF (present(info)) THEN
+    write(out_unitp,*) 'Block analysis, ',info
+  ELSE
+    write(out_unitp,*) 'Block analysis'
+  END IF
+
+  IF (size(list_block) > 1) THEN
+    DO i=1,size(list_block)
+    DO j=1,size(list_block)
+
+      ib1 = 1
+      IF (i > 1) ib1 = list_block(i-1)
+      ib2 = list_block(i)
+
+      jb1 = 1
+      IF (j > 1) jb1 = list_block(j-1)
+      jb2 = list_block(j)
+
+      valmax = maxval(abs(f(ib1:ib2,jb1:jb2)))
+      write(out_unitp,*) 'block',i,j,valmax
+
+    END DO
+    END DO
+  ELSE
+    valmax = maxval(abs(f))
+    i=1
+    j=1
+    write(out_unitp,*) 'block',i,j,valmax
+  END IF
+
+END SUBROUTINE BlockAna_RMat
+SUBROUTINE BlockAna_CMat(f,list_block,info)
+  USE mod_MPI
+
+  character (len=*), optional :: info
+
+  integer,          intent(in) :: list_block(:)
+  complex(kind=Rkind), intent(in) :: f(:,:)
+
+  integer           :: i,j,ib1,ib2,jb1,jb2
+  real(kind=Rkind)  :: valmax
+
+  IF (present(info)) THEN
+    write(out_unitp,*) 'Block analysis, ',info
+  ELSE
+    write(out_unitp,*) 'Block analysis'
+  END IF
+
+  IF (size(list_block) > 1) THEN
+    DO i=1,size(list_block)
+    DO j=1,size(list_block)
+
+      ib1 = 1
+      IF (i > 1) ib1 = list_block(i-1)
+      ib2 = list_block(i)
+
+      jb1 = 1
+      IF (j > 1) jb1 = list_block(j-1)
+      jb2 = list_block(j)
+
+      valmax = maxval(abs(f(ib1:ib2,jb1:jb2)))
+      write(out_unitp,*) 'block',i,j,valmax
+
+    END DO
+    END DO
+  ELSE
+    valmax = maxval(abs(f))
+    i=1
+    j=1
+    write(out_unitp,*) 'block',i,j,valmax
+  END IF
+
+END SUBROUTINE BlockAna_CMat
 
 END MODULE mod_CRP

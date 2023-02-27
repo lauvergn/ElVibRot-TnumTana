@@ -1,19 +1,17 @@
 #!/bin/bash
 
- SYSTEM=sub_system_cos_hcn.f
-
 epsi_t=0.
 epsi_e=0.00001
 epsi_p=0.000004
 
 list_propa="Cheby nOD RK4 ModMidPoint Bulirsch-Stoer SIL SIP Spectral"
+list_propa="Cheby"
+
 #echo $list_propa
 
 here=`pwd`
 DIR_vib=$here/../..
 DIR_pot=$DIR_vib/sub_pot
-
-cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
  make &> $here/comp.log

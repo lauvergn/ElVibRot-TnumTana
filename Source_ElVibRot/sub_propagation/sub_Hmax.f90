@@ -340,7 +340,9 @@ relax = .TRUE.
 
 !----- variables for the WP ----------------------------------------
       TYPE (param_psi)   :: WP0(1),WP(1)
-      TYPE (param_propa) :: para_propa,para_propa_loc
+      TYPE (param_propa) :: para_propa
+
+      TYPE (param_propa) :: para_propa_loc
 
 !----- working parameters --------------------------------------------
       complex (kind=Rkind) :: Emax
@@ -395,7 +397,7 @@ relax = .TRUE.
 
         !---- for Hmax -----------------------------------------
         para_propa_loc%name_WPpropa      = 'Emax'
-        para_propa_loc%file_WP%name      = make_FileName('file_WP_Hmax')
+        para_propa_loc%file_WP%name      = make_EVRTFileName('file_WP_Hmax')
         para_propa_loc%ana_psi%file_Psi  = para_propa_loc%file_WP
         para_propa_loc%ana_psi%propa     = .TRUE.
         para_propa_loc%ana_psi%Write_psi = .FALSE.
@@ -414,7 +416,7 @@ relax = .TRUE.
 
         !---- for Hmin -----------------------------------------
         para_propa_loc%name_WPpropa       = 'Emin'
-        para_propa_loc%file_WP%name       = make_FileName('file_WP_Hmin')
+        para_propa_loc%file_WP%name       = make_EVRTFileName('file_WP_Hmin')
         para_propa_loc%ana_psi%file_Psi   = para_propa_loc%file_WP
         para_propa_loc%para_poly%poly_tol = ONETENTH**8
         para_propa_loc%WPdeltaT           = ONE
@@ -428,7 +430,6 @@ relax = .TRUE.
         CALL sub_propagation3(Emax,WP0,WP,para_H,para_propa_loc)
         para_H%Hmin = Real(Emax,kind=Rkind)
         !---- END for Hmin -------------------------------------
-
 
         CALL dealloc_psi(WP0(1))
         CALL dealloc_psi(WP(1))

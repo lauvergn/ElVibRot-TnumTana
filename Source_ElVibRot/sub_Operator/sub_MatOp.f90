@@ -65,7 +65,7 @@ CONTAINS
       integer  :: n,ib,jb,iq,MatUnit
       !logical  :: test = .TRUE.
       logical  :: test = .FALSE.
-      TYPE (param_time) :: MatOp_Time
+      TYPE (Time_t) :: MatOp_Time
       real(kind=Rkind)  :: RealTime
 
 

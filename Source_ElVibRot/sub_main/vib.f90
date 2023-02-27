@@ -328,8 +328,7 @@
 
             IF(keep_MPI) THEN
               ana_WP0               = para_propa%ana_psi
-              CALL modif_ana_psi(ana_WP0,                               &
-                                 Ene=ZERO,T=ZERO,ZPE=ZERO)
+              CALL modif_ana_psi(ana_WP0,Ene=ZERO,T=ZERO,ZPE=ZERO)
 
               ana_WP0%file_Psi%name = trim(para_propa%file_WP%name) // '_WP0'
 
@@ -1620,7 +1619,7 @@ IMPLICIT NONE
  TYPE (param_psi), allocatable   :: Tab_Psi(:)
  TYPE (param_psi), allocatable   :: Tab_OpPsi(:)
 
- TYPE (param_time) :: HPsiTime
+ TYPE (Time_t) :: HPsiTime
 
  integer           :: nb_psi_loc,i,ib,PSG4_maxth_save,opt_PSG4_maxth
  logical           :: Make_Mat_save

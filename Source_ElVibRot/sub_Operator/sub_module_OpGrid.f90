@@ -233,9 +233,9 @@
 
 
       IF (present(Base_FileName_Grid)) THEN
-        para_FileGrid%Base_FileName_Grid    = make_FileName(Base_FileName_Grid)
+        para_FileGrid%Base_FileName_Grid    = make_EVRTFileName(Base_FileName_Grid)
       ELSE
-        para_FileGrid%Base_FileName_Grid    = make_FileName("SH_HADA")
+        para_FileGrid%Base_FileName_Grid    = make_EVRTFileName("SH_HADA")
       END IF
 
       END SUBROUTINE init_FileGrid
@@ -568,7 +568,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                                "_im" // trim(adjustl(name_Op))
           ELSE
             OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE (5) ! sequential with nb_thread=1
@@ -582,7 +582,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                                "_im" // trim(adjustl(name_Op))
           ELSE
             OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
 
@@ -600,7 +600,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                                "_im" // trim(adjustl(name_Op))
           ELSE
             OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
-                         "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                         "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE (4) ! sequential for SG4 (here it just the base name for each Smolyak term)
@@ -613,7 +613,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                                "_im" // trim(adjustl(name_Op))
           ELSE
             OpGrid(iterm)%file_Grid%name = trim(adjustl(Base_FileName_Grid)) // &
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE default ! normal SH_HADA file
@@ -667,7 +667,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                          "_im" // trim(adjustl(name_Op))
           ELSE
             file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) // &
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE (2) ! direct
@@ -684,7 +684,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                           "_im" // trim(adjustl(name_Op))
           ELSE
             file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) //&
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE (4) ! sequential for SG4 (here it just the base name for each Smolyak term)
@@ -697,7 +697,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                           "_im" // trim(adjustl(name_Op))
           ELSE
             file_Grid%name = trim(adjustl(para_fileGrid%Base_FileName_Grid)) // &
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE default ! normal SH_HADA file
@@ -751,7 +751,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                          "_im" // trim(adjustl(name_Op))
           ELSE
             file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE (2) ! direct
@@ -768,7 +768,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                           "_im" // trim(adjustl(name_Op))
           ELSE
             file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE (4) ! sequential for SG4 (here it just the base name for each Smolyak term)
@@ -781,7 +781,7 @@ write(out_unitp,*) info2,size(OpGrid%Grid)
                                           "_im" // trim(adjustl(name_Op))
           ELSE
             file_Grid%name = trim(adjustl(Base_FileName_Grid)) //       &
-                     "_" // trim(adjustl(name_Op)) // int_TO_char(iterm)
+                     "_" // trim(adjustl(name_Op)) // TO_string(iterm)
           END IF
 
         CASE default ! normal SH_HADA file

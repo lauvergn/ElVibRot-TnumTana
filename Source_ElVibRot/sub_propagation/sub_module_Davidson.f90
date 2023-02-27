@@ -121,7 +121,7 @@ CONTAINS
       character (len=Name_len) :: WriteUnit
 
       real (kind=Rkind) :: RealTime,min_Ene
-      TYPE (param_time) :: DavidsonTime
+      TYPE (Time_t) :: DavidsonTime
 
       logical           :: conv
       integer           :: nb_conv_states,nb_unconv_states,nb_added_states
@@ -579,7 +579,7 @@ CONTAINS
             write(out_unitp,*) '  deallocation Hpsi done'
             flush(out_unitp)
 
-            CALL mat_id(Vec,ndim0,ndim0)
+            Vec = Identity_Mat(ndim0)
 
             ndim0 = nb_diago
             ndim  = nb_diago+nb_added_states
@@ -588,7 +588,7 @@ CONTAINS
               CALL dealloc_NParray(Vec0,"Vec0",name_sub)
             END IF
             CALL alloc_NParray(Vec0,[ndim0,ndim0],"Vec0",name_sub)
-            CALL mat_id(Vec0,ndim0,ndim0)
+            Vec0 = Identity_Mat(ndim0)
 
             IF (allocated(H))  THEN
               CALL dealloc_NParray(H,"H",name_sub)
@@ -852,7 +852,7 @@ CONTAINS
 
  IF (para_Davidson%project_WP0) THEN
    CALL alloc_NParray(vec0,[nb_diago,nb_diago],"vec0",name_sub)
-   CALL mat_id(vec0,nb_diago,nb_diago)
+   vec0 = Identity_Mat(nb_diago)
 
    write(out_unitp,*) ' copy psi(:) to psi0(:)',para_Davidson%nb_WP0
    DO i=1,nb_diago
@@ -2021,4 +2021,33 @@ END SUBROUTINE sub_NewVec_Davidson
 
  END SUBROUTINE sub_projec3_Davidson
 
+
+!=======================================================================================
+!@brief set save_WP=.true. with external control
+!
+! create a file with name "Davidson_exit", the program wil exit
+! and change the file name to "done_Davidson_exit".
+!=======================================================================================
+ SUBROUTINE exit_Davidson_external(exit_Davidson,save_WP,it)
+  IMPLICIT NONE
+
+  Logical,                       intent(inout) :: exit_Davidson
+  Logical,                       intent(inout) :: save_WP
+  Integer,                       intent(in)    :: it
+  Logical                                      :: exist
+  Integer                                      :: stat,iunit
+
+  IF(it>2) THEN
+    INQUIRE(FILE='Davidson_exit',EXIST=exist)
+    IF(exist) THEN
+      save_WP=.TRUE.
+      exit_Davidson=.TRUE.
+      !CALL RENAME('Davidson_exit','done_Davidson_exit')
+      open(NEWUNIT=iunit, FILE='Davidson_exit')
+      close(iunit, status='delete')
+      open(NEWUNIT=iunit, FILE='done_Davidson_exit')
+      close(iunit)
+    ENDIF
+  ENDIF
+END SUBROUTINE exit_Davidson_external
 END MODULE mod_Davidson

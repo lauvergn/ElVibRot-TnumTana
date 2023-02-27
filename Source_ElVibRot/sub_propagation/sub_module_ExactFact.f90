@@ -191,7 +191,7 @@ SUBROUTINE sub_ExactFact_analysis_option2(T,psi,ana_psi,para_H)
    END IF
 !-------------------------------------------------------
 
-  name_file = make_FileName('EF_parameter_dpsi')
+  name_file = make_EVRTFileName('EF_parameter_dpsi')
   IF (T == ZERO) THEN
     CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
     write(nio,*) '# T, iq, grid(ia), Psi(ie), dPsi(ie)/dT, dPsi(ie)/dQia, d^2Psi(ie)/dTdQia'
@@ -286,7 +286,7 @@ SUBROUTINE sub_ExactFact_analysis_gV(psi,para_H,Tmax,deltaT)
    END IF
 !-------------------------------------------------------
 
-  name_file = make_FileName('EF_parameter_gV')
+  name_file = make_EVRTFileName('EF_parameter_gV')
   CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
   deallocate(name_file)
 
@@ -383,7 +383,7 @@ SUBROUTINE sub_ExactFact_analysis_option1(T,psi,ana_psi,para_H)
    END IF
 !-------------------------------------------------------
 
-  name_file = make_FileName('EF_parameter_dpsi')
+  name_file = make_EVRTFileName('EF_parameter_dpsi')
   IF (T == ZERO) THEN
     CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
     write(nio,*) '# T, iq, grid(ia), Psi(ie), dPsi(ie)/dT, dPsi(ie)/dQia, d^2Psi(ie)/dTdQia'
@@ -535,7 +535,7 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
   END IF
 
   IF (T == ZERO) THEN
-    name_file = make_FileName('EF_parameter_gV')
+    name_file = make_EVRTFileName('EF_parameter_gV')
     CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
 
     write(nio,*) 'nb_be',psi%nb_be,' number of electronic surfaces'
@@ -572,11 +572,11 @@ SUBROUTINE sub_ExactFact_analysis_v1(T,psi,ana_psi,para_H,Tmax,deltaT,para_field
     write(nio,*)
     close(nio)
 
-    name_file = make_FileName('EF_parameter_dpsi')
+    name_file = make_EVRTFileName('EF_parameter_dpsi')
     CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.FALSE.)
     write(nio,*) '# T, iq, grid(ia), Psi(ie), dPsi(ie)/dT, dPsi(ie)/dQia, d^2Psi(ie)/dTdQia'
   ELSE
-    name_file = make_FileName('EF_parameter_dpsi')
+    name_file = make_EVRTFileName('EF_parameter_dpsi')
     CALL file_open2(name_file=name_file,iunit=nio,lformatted=.TRUE.,append=.TRUE.)
   END IF
   deallocate(name_file)

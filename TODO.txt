@@ -1,0 +1,7 @@
+-----------------------------------------
+Seg fault in dealloc_ana_psi. Called in dealloc_param_propa in sub_Auto_HmaxHmin_relax
+
+The line 556 is commented: 
+    !CALL file_dealloc(ana_psi%file_Psi)
+
+-----------------------------------------

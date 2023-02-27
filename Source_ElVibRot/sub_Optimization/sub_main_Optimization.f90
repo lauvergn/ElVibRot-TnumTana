@@ -269,7 +269,7 @@
 
       IF (para_Optimization%FinalEnergy) THEN
         write(out_unitp,*) '============ ENERGY:'
-        print_level = 0
+        CALL set_print_level(0)  ! print_level = 0
         CALL Sub_Energ_OF_ParamBasis(Energ,xOpt_min,nb_Opt,BasisnD_Save,&
                                      para_Tnum,mole,                    &
                                      para_H%para_ReadOp%PrimOp_t,Qact)
@@ -740,7 +740,8 @@
 
 
       ! Solve the linear system AtA.W=AtB
-      CALL Linear_Sys(MM,MR,W,BasisnD%nqc)
+      W = LinearSys_Solve(MM,MR)
+
       WHERE (W < ZERO) W = W * 0.9_Rkind
 
       !CALL Write_VecMat(W,out_unitp,5)

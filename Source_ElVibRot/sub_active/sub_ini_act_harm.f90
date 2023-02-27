@@ -437,7 +437,7 @@
   real (kind=Rkind)  :: max_Sii,max_Sij
   integer            :: opt_Grid_maxth,i_maxth
   real(kind=Rkind)   :: Opt_RealTime,RealTime(Grid_maxth)
-  TYPE (param_time)  :: GridTime
+  TYPE (Time_t)  :: GridTime
   integer            :: iq,max_nq
   integer            :: print_level_save
   logical            :: freq_only
@@ -466,7 +466,7 @@
 !!! How many points do we tests ???
 !! => a multiple of Grid_maxth
   print_level_save = print_level
-  print_level      = -1
+  CALL set_print_level(-1) !print_level      = -1
 
   max_Sii          = ZERO
   max_Sij          = ZERO
@@ -539,7 +539,7 @@
 
   END DO
 
-  print_level      = print_level_save
+  CALL set_print_level(print_level_save) !print_level      = print_level_save
 
   Grid_maxth = opt_Grid_maxth
   write(out_unitp,*) 'Optimal threads: ',Grid_maxth,' Delta Real Time',RealTime(Grid_maxth)

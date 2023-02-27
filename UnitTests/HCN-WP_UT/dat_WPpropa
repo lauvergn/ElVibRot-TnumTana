@@ -1,10 +1,6 @@
- SYSTEM=sub_system_cos_hcn.f
 
 here=`pwd`
 DIR_vib=$here/../..
-DIR_pot=$DIR_vib/sub_pot
-
- cp $SYSTEM $DIR_pot/sub_system.f
 
 cd $DIR_vib
 #make &> $here/comp.log
@@ -24,11 +20,13 @@ nice $DIR_vib/vib << ** > $RES
  &system /
  &constantes ene_unit='eV' /
  &variables 
-         zmat=T
-         nat=4
-         sym=T
-         nrho=2
-         Write_QMotions=f
+        zmat=T
+        nat=4
+        sym=T
+        nrho=2
+        Write_QMotions=f
+        QMLib=t
+
  /
 C
 X     1
@@ -44,14 +42,18 @@ sym  cos(a)      R     r    x    pi   dh
 6      0.        0.  0.     0.   0.   1.
 
  1 21 21   0 0 0
+ 0  2   3    0 0 0 ! QML mapping for the Qop20(Qact) functions
 
- &minimum pot0=-0.499465823200 HarD=t /
+ &minimum pot0=-0.499465823200 HarD=t  QMLib=t /
 .999d0
 3.187
 2.179
 0.
 3.141592653589793238462643383279d0
 0.0
+
+&potential  pot_name='HCN_Murrell' option=21 /
+ Qdyn_TO_QQMLib 1
 
  &basis_nD iQact(1)=1 name="Pl0" nb=51 nq=80  /
  &inactives
@@ -82,4 +84,3 @@ sym  cos(a)      R     r    x    pi   dh
 **
 
 echo $RES
-#       type_WPpropa=$typepropa max_poly=5000 npoly=300 poly_tol=1.d-15
