@@ -100,7 +100,7 @@
 !----- function ------------------------------------------------------
       integer           :: calc_ind_n
       integer           :: L_TO_nq
-      real (kind=Rkind) :: binomial
+      !real (kind=Rkind) :: binomial ! function in QDUtil lib
       logical           :: inferior
 !---------------------------------------------------------------------
 

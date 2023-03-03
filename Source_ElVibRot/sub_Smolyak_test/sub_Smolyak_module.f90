@@ -74,7 +74,7 @@ integer          :: D,LG
 TYPE(TypeDInd)   :: indGrid
 real(kind=Rkind), allocatable :: WSG(:)
 
-real(kind=Rkind) :: binomial ! function
+!real(kind=Rkind) :: binomial ! function in QDUtil lib
 integer          :: iG,L
 
 IF (allocated(WSG)) deallocate(WSG)

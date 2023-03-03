@@ -759,7 +759,7 @@ END SUBROUTINE SGType2_2TOSGType2_1
       real (kind=Rkind),               intent(inout) :: WeightSG(nDind_SmolyakRep%Max_nDI)
 
 !---------------------------------------------------------------------
-      real (kind=Rkind) :: binomial ! function
+      !real (kind=Rkind) :: binomial ! function in QDUtil lib
 !---------------------------------------------------------------------
 
       integer             :: i,i_SG,i_SGm,DeltaL,max_print

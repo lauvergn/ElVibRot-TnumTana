@@ -7,7 +7,7 @@
  FC = gfortran
 #
 # Optimize? Empty: default No optimization; 0: No Optimization; 1 Optimzation
-OPT = 0
+OPT = 1
 ## OpenMP? Empty: default with OpenMP; 0: No OpenMP; 1 with OpenMP
 OMP = 1
 ## Lapack/blas/mkl? Empty: default with Lapack; 0: without Lapack; 1 with Lapack
@@ -15,6 +15,8 @@ LAPACK = 1
 ## force the default integer (without kind) during the compillation.
 ## default 4: , INT=8 (for kind=8)
 INT = 4
+## extension for the "sub_system." file. Possible values: f; f90
+extf = f
 #
 ## how to get external libraries;  "loc" (default): from local zip file, Empty or something else (v0.5): from github
 EXTLIB_TYPE = loc
@@ -94,15 +96,15 @@ QMLMOD_DIR        = $(QML_DIR)/OBJ/obj$(extlib_obj)
 QMLLIBA           = $(QML_DIR)/libQMLib$(extlib_obj).a
 
 FOREVRT_DIR       = $(ExtLibDIR)/FOR_EVRT
-FOREVRTMOD_DIR    = $(FOREVRT_DIR)/OBJ/obj$(extlibwi_obj)
+FOREVRTMOD_DIR    = $(FOREVRT_DIR)/obj/obj$(extlibwi_obj)
 FOREVRTLIBA       = $(FOREVRT_DIR)/libFOR_EVRT$(extlibwi_obj).a
 
 CONSTPHYS_DIR     = $(ExtLibDIR)/ConstPhys
-CONSTPHYSMOD_DIR  = $(CONSTPHYS_DIR)/OBJ/obj$(extlibwi_obj)
+CONSTPHYSMOD_DIR  = $(CONSTPHYS_DIR)/obj/obj$(extlibwi_obj)
 CONSTPHYSLIBA     = $(CONSTPHYS_DIR)/libPhysConst$(extlibwi_obj).a
 
 KEO_DIR           = $(ExtLibDIR)/Coord_KEO_PrimOp
-KEOMOD_DIR        = $(KEO_DIR)/OBJ/obj$(extlibwi_obj)
+KEOMOD_DIR        = $(KEO_DIR)/obj/obj$(extlibwi_obj)
 KEOLIBA           = $(KEO_DIR)/libCoord_KEO_PrimOp$(extlibwi_obj).a
 
 EXTLib     = $(KEOLIBA) $(CONSTPHYSLIBA) $(FOREVRTLIBA) $(QMLLIBA) $(ADLIBA) $(QDLIBA)
@@ -166,7 +168,52 @@ ifeq ($(F90),$(filter $(F90),gfortran gfortran-8))
 
 endif
 #=================================================================================
+#=================================================================================
+#=================================================================================
+# ifort compillation v17 v18 with mkl
+#=================================================================================
+ifeq ($(FFC),ifort)
 
+  # opt management
+  ifeq ($(OOPT),1)
+      #F90FLAGS = -O -parallel -g -traceback
+      FFLAGS = -O  -g -traceback
+  else
+      FFLAGS = -O0 -check all -g -traceback
+  endif
+
+  # where to store the modules
+  FFLAGS +=-module $(MOD_DIR)
+
+  # omp management
+  ifeq ($(OOMP),1)
+    FFLAGS += -qopenmp
+  endif
+
+  # where to look the .mod files
+  FFLAGS += -I$(KEOMOD_DIR) -I$(CONSTPHYSMOD_DIR) -I$(FOREVRTMOD_DIR) -I$(QMLMOD_DIR) -I$(ADMOD_DIR) -I$(QDMOD_DIR)
+
+  # some cpreprocessing
+  FFLAGS += -cpp $(CPPSHELL)
+  ifeq ($(OMP),1)
+    FFLAGS += -Drun_openMP=1
+  endif
+
+  FLIB    = $(EXTLib)
+  ifeq ($(LLAPACK),1)
+    #FLIB += -mkl -lpthread
+    #FLIB += -qmkl -lpthread
+    FLIB +=  ${MKLROOT}/lib/libmkl_blas95_ilp64.a ${MKLROOT}/lib/libmkl_lapack95_ilp64.a ${MKLROOT}/lib/libmkl_intel_ilp64.a \
+             ${MKLROOT}/lib/libmkl_intel_thread.a ${MKLROOT}/lib/libmkl_core.a -liomp5 -lpthread -lm -ldl
+  else
+    FLIB += -lpthread
+  endif
+
+  FC_VER = $(shell $(F90) --version | head -1 )
+
+endif
+#=================================================================================
+#=================================================================================
 #===============================================================================
 #===============================================================================
 $(info ************************************************************************)
@@ -191,7 +238,7 @@ VPATH = Source_ElVibRot/sub_Basis Source_ElVibRot/sub_Basis/sub_Basis_SG4 \
   Source_ElVibRot/sub_CRP Source_ElVibRot/sub_GWP Source_ElVibRot/sub_Operator \
   Source_ElVibRot/sub_Optimization Source_ElVibRot/sub_Smolyak_test Source_ElVibRot/sub_WP \
   Source_ElVibRot/sub_active Source_ElVibRot/sub_analysis Source_ElVibRot/sub_data_initialisation Source_ElVibRot/sub_inactive \
-  Source_ElVibRot/sub_main Source_ElVibRot/sub_propagation Source_ElVibRot/sub_rotation 
+  Source_ElVibRot/sub_main Source_ElVibRot/sub_propagation Source_ElVibRot/sub_rotation sub_pot
 
 
 
@@ -228,8 +275,8 @@ vib:
 	./scripts/make_vib.sh $(LOC_path) $(FFC)
 	chmod a+x vib
 #
-$(VIBEXE): $(OBJ_DIR)/$(VIBMAIN).o $(LIBA) $(EXTLib)
-	$(FFC) $(FFLAGS) -o $(VIBEXE) $(OBJ_DIR)/$(VIBMAIN).o $(LIBA) $(FLIB)
+$(VIBEXE): $(OBJ_DIR)/$(VIBMAIN).o $(OBJ_DIR)/sub_system.o $(LIBA) $(EXTLib)
+	$(FFC) $(FFLAGS) -o $(VIBEXE) $(OBJ_DIR)/$(VIBMAIN).o $(OBJ_DIR)/sub_system.o $(LIBA) $(FLIB)
 	@echo EVR-T
 #===============================================
 #============= TESTS ===========================
@@ -241,6 +288,13 @@ $(LIBA): $(OBJ) $(EXTLib)
 	@echo "  LIBA from OBJ files"
 	ar -cr $(LIBA) $(OBJ)
 	@echo "  done Library: "$(LIBA)
+#
+#===============================================
+#============= make sub_system =================
+#=============  with the .f or .f90 extention ==
+#===============================================
+sub_pot/sub_system.$(extf): sub_pot/sub_system_save.$(extf)
+	cp sub_pot/sub_system_save.$(extf) sub_pot/sub_system.$(extf)
 #
 #===============================================
 #============= compilation =====================
@@ -257,7 +311,7 @@ $(OBJ_DIR)/%.o: %.f
 clean:
 	rm -f  $(OBJ_DIR)/*.o
 	rm -f *.log 
-	rm -f TEST*.x
+	rm -f vib.exe
 	@echo "  done cleaning"
 
 cleanall : clean clean_extlib
@@ -281,7 +335,7 @@ zip: cleanall
 	@echo "  done zip"
 #===============================================
 #=== external libraries ========================
-# AD_dnSVM + QML Lib ...
+# AD_dnSVM + QML Libs ...
 #===============================================
 #
 $(KEOLIBA):
@@ -290,6 +344,7 @@ $(KEOLIBA):
 	@test -d $(KEO_DIR) || (echo $(KEO_DIR) "does not exist" ; exit 1)
 	cd $(KEO_DIR) ; make lib FC=$(FFC) OPT=$(OOPT) OMP=$(OOMP) LAPACK=$(LLAPACK) ExtLibDIR=$(ExtLibDIR) INT=$(INT)
 	@echo "  done " $(KEO_DIR) " in "$(BaseName)
+#	ln -s $(KEO_DIR)/sub_pot sub_pot
 #
 $(CONSTPHYSLIBA):
 	@test -d $(ExtLibDIR)     || (echo $(ExtLibDIR) "does not exist" ; exit 1)

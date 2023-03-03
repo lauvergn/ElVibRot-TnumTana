@@ -84,7 +84,7 @@
 
 
 !----- function ------------------------------------------------------
-      real (kind=Rkind) :: binomial
+      !real (kind=Rkind) :: binomial ! function in QDUtil lib
 !---------------------------------------------------------------------
 
 !----- for debuging --------------------------------------------------
@@ -588,7 +588,7 @@
 
 
 !---------------------------------------------------------------------
-      real (kind=Rkind) :: binomial
+      !real (kind=Rkind) :: binomial ! function in QDUtil lib
 !---------------------------------------------------------------------
 
       integer             :: LB,L,Lmin,Lmax,i_SG,DeltaL,nq_iSG,nq_SG,ib,nb,i

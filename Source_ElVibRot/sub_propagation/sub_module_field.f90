@@ -747,8 +747,7 @@
 
       real (kind=Rkind) :: w_env,a
 
-      ! function
-      real (kind=Rkind) :: combi
+      !real (kind=Rkind) :: combi ! function in QDUtil lib
 
       integer :: k
 

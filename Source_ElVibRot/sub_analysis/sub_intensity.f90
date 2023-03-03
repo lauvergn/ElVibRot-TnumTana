@@ -51,8 +51,7 @@
                                intensity_only,nio_res_int)
 
       USE mod_system
-      use mod_Constant, only: constant, rwu_write,                      &
-                              real_wu, get_conv_au_to_unit
+      use mod_Constant, only: constant, rwu_write, real_wu, get_conv_au_to_unit
       USE mod_Coord_KEO
       USE mod_basis
       USE mod_Op
@@ -88,7 +87,7 @@
 
       integer       ::    i,j,k
 
-      real (kind=Rkind) ::    val,DE,Int,Aif,e0
+      real (kind=Rkind) ::    val,DE,Aif,e0
       real (kind=Rkind) ::    emin,emax
       real (kind=Rkind) ::    Ai,Bi,Ci,Af,Bf,Cf,Imax,Iif
       integer           ::    JJ,KK,Jmax,ind_f
@@ -473,7 +472,7 @@
 
       integer       ::    i,j,k
 
-      real (kind=Rkind) ::    val,DE,Int,Aif,e0
+      real (kind=Rkind) ::    val,DE,Aif,e0
       real (kind=Rkind) ::    emin,emax
       real (kind=Rkind) ::    Ai,Bi,Ci,Af,Bf,Cf,Imax,Iif
       integer           ::    JJ,KK,Jmax,ind_f

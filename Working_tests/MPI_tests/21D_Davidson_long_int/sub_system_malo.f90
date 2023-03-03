@@ -230,7 +230,7 @@
 !c---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'Qact1',Qact
-        CALL Write_RMat(d0h,6,4)
+        CALL Write_Mat(d0h,6,4)
         write(out_unitp,*) 'END d0d1d2_h'
       END IF
 !c---------------------------------------------------------------------

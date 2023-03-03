@@ -4977,7 +4977,8 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 !----- for the field --------------------------------------------------
 
 !----- function -------------------------------------------------------
-      real (kind=Rkind)    :: binomial,factor
+      !real (kind=Rkind)    :: binomial ! function in QDUtil lib
+      !real (kind=Rkind)    :: factor
 
 
 !----- for debuging --------------------------------------------------
@@ -5064,14 +5065,14 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 !           Infinite sum of the derivative of the field
             CALL sub_OpPsi(work_WP(k),w2,para_H)
             CALL sub_scaledOpPsi(work_WP(k),w2,para_H%E0,ONE)
-            coef = para_propa%WPdeltaT**(k+1) / factor(k+1)
+            coef = para_propa%WPdeltaT**(k+1) / factorial(k+1)
             w1 = w2 * coef
             coef_ip(:) = ZERO
 !           DO m=k+1,max_der
             DO m=k+1,max_der
-!             coef = binomial(m-1,k)*para_propa%WPdeltaT**m/factor(m)
+!             coef = binomial(m-1,k)*para_propa%WPdeltaT**m/factorial(m)
               coef = para_propa%WPdeltaT**m /                           &
-                  (real(m,kind=Rkind) * factor(k) * factor(m-1-k) )
+                  (real(m,kind=Rkind) * factorial(k) * factorial(m-1-k) )
               coef_ip(:) = coef_ip(:) + coef*tab_dnE(m-1-k,:)
 !             write(out_unitp,*) 'k,m',k,m,abs(coef)
               IF (abs(coef) <                                           &
@@ -5180,7 +5181,8 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
 
       integer  ::   nioWP
       real (kind=Rkind)    :: fac
-      real (kind=Rkind)    :: binomial,factor ! functions
+      !real (kind=Rkind)    :: factor
+      !real (kind=Rkind)    :: binomial ! function in QDUtil lib
 
       logical, parameter :: taylor = .TRUE.
 !     logical, parameter :: taylor = .FALSE.
@@ -5300,7 +5302,7 @@ END SUBROUTINE Make_SMatrix_WITH_TDParam
             IntE(:) = ZERO
             DO k=i+1,max_der
               fac = para_propa%WPdeltaT**(k-i) /                        &
-                   (real(k,kind=Rkind)*factor(k-i-1))
+                   (real(k,kind=Rkind)*factorial(k-i-1))
               IntE(:) = IntE(:) + fac * tab_dnE(k-1-i,:)
               IF (abs(fac) <                                            &
                   para_propa%para_poly%poly_tol*ONETENTH**2) EXIT
