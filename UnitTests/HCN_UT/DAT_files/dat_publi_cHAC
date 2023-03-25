@@ -13,10 +13,6 @@ fi
 here=`pwd`
 DIR_vib=$here/../..
 
-cd $DIR_vib
- make &> $here/comp.log
-cd $here
-
 
  MH=1837.10882307318116
  MD=3671.297316

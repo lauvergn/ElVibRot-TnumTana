@@ -269,7 +269,7 @@
 
       IF (para_Optimization%FinalEnergy) THEN
         write(out_unitp,*) '============ ENERGY:'
-        CALL set_print_level(0)  ! print_level = 0
+        CALL set_print_level(0,force=.TRUE.)  ! print_level = 0
         CALL Sub_Energ_OF_ParamBasis(Energ,xOpt_min,nb_Opt,BasisnD_Save,&
                                      para_Tnum,mole,                    &
                                      para_H%para_ReadOp%PrimOp_t,Qact)

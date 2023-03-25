@@ -7,49 +7,72 @@
 !c    dipolar calculation if calc_dip = T
 !C================================================================
       SUBROUTINE calcN_op(mat_V,mat_imV,mat_ScalOp,nb_be,nb_ScalOp, &
-                        Qact,nb_var,mole,calc_ScalOp,pot_cplx)
+                          Q,nb_Q,mole,calc_ScalOp,pot_cplx)
 
       USE mod_system
-      USE mod_RealWithUnit
       USE mod_Tnum
       IMPLICIT NONE
 
 !c----- for the CoordType and Tnum --------------------------------------
       TYPE (CoordType) :: mole
 
-      integer           :: nb_be,nb_ScalOp,nb_var
+      integer           :: nb_be,nb_ScalOp,nb_Q
       logical           :: calc_ScalOp,pot_cplx
       real (kind=Rkind) :: mat_V(nb_be,nb_be),mat_imV(nb_be,nb_be)
       real (kind=Rkind) :: mat_ScalOp(nb_be,nb_be,nb_ScalOp)
-      real (kind=Rkind) :: Qact(nb_var)
+      real (kind=Rkind) :: Q(nb_Q)
 
       real (kind=Rkind) :: im_pot0
       real (kind=Rkind) :: ScalOp(nb_ScalOp)
 
       
-      !real (kind=Rkind), parameter :: b     = ZERO
-      real (kind=Rkind), parameter :: b     = ONE
-      real (kind=Rkind), parameter :: alpha = 1._Rkind
-      real (kind=Rkind) :: v0
-      real (kind=Rkind), parameter :: zmu   = 1060._Rkind
+      logical,           save :: begin = .TRUE.
+      real (kind=Rkind) :: Qdist(3),R1(3),R2(3),R3(3),GOO(3),R2Jac(3),R1Jac(3)
+      integer :: ndim
 
-
-      v0 = 0.425_Rkind / get_Conv_au_TO_unit(quantity='E',Unit='eV')
-      !write(6,*) 'v0',v0,get_Conv_au_TO_unit(quantity='E',Unit='eV')
       IF (nb_be == 1 ) THEN
-         mat_V(1,1) = ZERO
-        !IF (Qact(1) > ZERO) mat_V(1,1) = TEN
-         CALL pot_bottleneck_nd (Qact(1:mole%nb_act1), mole%nb_act1, mat_V(1,1), alpha, V0, b, zmu)
-        !mat_V(1,1) = half * zmu * V0**2 * sum(Qact(2:mole%nb_act1)**2)
 
-        !write(6,*) 'Qact,mat_V',Qact(1:mole%nb_act1),mat_V(1,1)
-        IF (pot_cplx) mat_imV(1,1) = im_pot0(Qact(mole%nb_act1))
+!$OMP    CRITICAL (calcN_op_CRIT)
+        IF (begin) THEN
+          ndim=3
+          !    Coordinates for H3 SLTH potential with the 3 distances
+          CALL sub_Init_Qmodel(ndim,nb_be,'H3_LSTH',.FALSE.,0)
+          write(6,*) 'end sub_Init_Qmodel in calcN_op'
+          flush(6)
+          begin = .FALSE.
+        END IF
+!$OMP   END CRITICAL (calcN_op_CRIT)
+
+        ! we assume, Q(:) are the Cartesian coordinates
+        R1(:) = Q(4:6)-Q(7:9)      ! H3->H2 also R1Jac
+        R2(:) = Q(1:3)-Q(4:6)      ! H2->H1
+        R3(:) = Q(1:3)-Q(7:9)      ! H3->H1
+        Qdist(1) = sqrt(dot_product(R1,R1))
+        Qdist(2) = sqrt(dot_product(R2,R2))
+        Qdist(3) = sqrt(dot_product(R3,R3))
+        CALL sub_Qmodel_V(mat_V,Qdist)
+
+        !write(6,*) 'Q pot    ',Q(:),mat_V
+         write(6,*) 'Qdist pot',Qdist(:),mat_V
+
+        IF (pot_cplx) THEN
+          mat_imV(:,:) = im_pot0(Qdist)
+        END IF
         IF (calc_ScalOp) THEN
-          CALL sub_ScalarOp(ScalOp,nb_ScalOp,Qact(1:mole%nb_act1),mole)
+          !GOO(:) = (Q(4:6)+Q(7:9))*HALF
+          !R1Jac(:) = R1(:)
+          !R2Jac(:) = Q(1:3)-GOO(:)   ! GHH->H1
+          !Qdist(1) = sqrt(dot_product(R1Jac,R1Jac))
+          !Qdist(2) = sqrt(dot_product(R2Jac,R2Jac))
+          CALL sub_ScalarOp(ScalOp,nb_ScalOp,Qdist,mole)
           mat_ScalOp(1,1,:) = ScalOp(:)
+          !write(6,*) 'R1,R2',Qdist(1:2),'CAP',ScalOp(:)
         END IF
       ELSE
-        STOP 'nb_be > 1'
+        write(6,*) ' ERROR in calc_op'
+        write(6,*) ' It has to be used with ONE electronic surfaces'
+        write(6,*) ' Rq: nb_be',nb_be
+        STOP
       END IF
 
       END
@@ -73,20 +96,20 @@
 !C================================================================
       FUNCTION im_pot0(Q)
       USE mod_system
+      USE mod_CAP
       IMPLICIT NONE
       real(kind=Rkind) :: im_pot0
-
       real(kind=Rkind) Q(3)
 
-       real(kind=Rkind), parameter :: a=-0.01,Q0=2.5
+      TYPE (CAP_t), parameter :: CAP1=CAP_t(type_CAP=1,n_exp=4,A=0.03_Rkind,   &
+                                            B=FIVE/TWO,Q0=10.7,LQ=5._Rkind,    &
+                                            ind_Q=1)
+      TYPE (CAP_t), parameter :: CAP2=CAP_t(type_CAP=1,n_exp=4,A=0.03_Rkind,   &
+                                            B=FIVE/TWO,Q0=10.7,LQ=5._Rkind,    &
+                                            ind_Q=2)
 
-       IF (Q(3) > Q0) THEN
-         im_pot0 = a*(Q(3) - Q0)
-       ELSE
-         im_pot0 = 0.d0
-       END IF
+       im_pot0 = calc_CAP(CAP1,Q) + calc_CAP(CAP2,Q)
 
-       RETURN
        END
 !C================================================================
 !C    sub hessian
@@ -103,8 +126,27 @@
       END
 !C
 !C================================================================
-!C    fonction pot0(x) 1 D (avec x=cos(theta))
-!C    pour une tri atomique en jacobie
+! CAP for H+O2 (in Jacobi)
+!
+          !-----------------------------------
+          !
+          !
+          !
+          !                     H1
+          !                     ^
+          !                    /
+          !                   / R2Jac=Q(2)=RR
+          !                  /
+          !                 /
+          !                /
+          !               / )th
+          !      H2------/-------->H3 - - -> zBF
+          !               R1Jac=Q(1)=r
+          !     
+          !
+          !
+          ! the coordinates are [R1,R2,cth] with cth=cos(th)
+          !-----------------------------------
 !C================================================================
       SUBROUTINE sub_ScalarOp(ScalOp,nb_ScalOp,Q,mole)
       USE mod_system
@@ -115,37 +157,41 @@
       TYPE (CoordType) :: mole
 
        integer nb_Q,nb_ScalOp
-       real(kind=Rkind) Q(mole%nb_act1)
+       real(kind=Rkind) Q(3)
        real(kind=Rkind) ScalOp(nb_ScalOp)
        integer :: i
 
+       real(kind=Rkind) :: r,RR
+       ! Q(1): O2->O3:  r
+       ! Q(2): GOO->H1: RR
        
-       !real(kind=Rkind), parameter :: x0 = 20._Rkind
-       !real(kind=Rkind), parameter :: x  = 25._Rkind
-       !real(kind=Rkind), parameter :: A   = 0.006_Rkind
-
-       !real(kind=Rkind), parameter :: x0 = 9._Rkind
-       !real(kind=Rkind), parameter :: x  = 17._Rkind
-       !real(kind=Rkind), parameter :: A   = 0.003_Rkind
-
-       real(kind=Rkind), parameter :: x0 = 6._Rkind
-       real(kind=Rkind), parameter :: x  = 8._Rkind
-       real(kind=Rkind), parameter :: A   = 0.003_Rkind
+       real(kind=Rkind), parameter :: RRcut = 5._Rkind
+       real(kind=Rkind), parameter :: LRR   = 1._Rkind
+       real(kind=Rkind), parameter :: ARR   = 1._Rkind
+       real(kind=Rkind), parameter :: rcut  = 5._Rkind
+       real(kind=Rkind), parameter :: Lr    = 1._Rkind
+       real(kind=Rkind), parameter :: Ar    = 1._Rkind
 
        IF (nb_ScalOp /= 2) STOP 'WRONG nb_ScalOp value. It MUST be 2'
 
-       IF (Q(1) < -x0) THEN
-         ScalOp(1) = A * ((-x0-Q(1))/(x-x0))**4
+       r  = Q(1) ! O-O
+       !RR = Q(2)/sqrt(THREE)/TWO ! H-O2
+       RR = Q(2) ! H-H2
+
+       ! defined the reactant CAP (along RR: H+H2)
+       IF (RR > RRcut) THEN
+         ScalOp(1) = 13.22_Rkind*ARR*exp(-TWO*LRR/(RR-RRcut))
        ELSE
          ScalOp(1) = ZERO
        END IF
-       IF (Q(1) > x0) THEN
-         ScalOp(2) = A * ((x0-Q(1))/(x-x0))**4
+
+       ! defined the product CAP (along r: O+O)
+       IF (r > rcut) THEN
+         ScalOp(2) = 13.22_Rkind*Ar*exp(-TWO*Lr/(r-rcut))
        ELSE
          ScalOp(2) = ZERO
        END IF
 
-       !write(6,*) 'Q,ScalOp',Q,ScalOp
 
        END
 !C================================================================
@@ -262,7 +308,7 @@
 !c---------------------------------------------------------------------
       IF (debug) THEN
         write(out_unitp,*) 'Qact1',Qact
-        CALL Write_Mat(d0h,6,4)
+        CALL Write_RMat(d0h,6,4)
         write(out_unitp,*) 'END d0d1d2_h'
       END IF
 !c---------------------------------------------------------------------
@@ -284,11 +330,19 @@
 
 
 
+       real (kind=Rkind), parameter :: x0  = 1.0_Rkind
+       real (kind=Rkind), parameter :: RH2 = 1.401036_Rkind
+       real (kind=Rkind), parameter :: RTS = 1.7570_Rkind
+       real (kind=Rkind), parameter :: RR0 = RTS-RH2-x0
+       real (kind=Rkind), parameter :: b = TWO
+       real (kind=Rkind) :: Rm
+       real (kind=Rkind) :: d0,d1,d2,d3
+       real (kind=Rkind) :: r0,r1,r2,r3
 
 !C----- for debuging ----------------------------------
       character (len=*), parameter :: name_sub='dnQflex'
       logical, parameter :: debug=.FALSE.
-!C     logical, parameter :: debug=.TRUE.
+      !logical, parameter :: debug=.TRUE.
 !C----- for debuging ----------------------------------
 
 
@@ -297,16 +351,40 @@
         write(out_unitp,*) 'BEGINNING ',name_sub
         write(out_unitp,*) 'nb_act',nb_act
         write(out_unitp,*) 'iq',iq
+        write(out_unitp,*) 'Qact',Qact(:)
       END IF
 !C---------------------------------------------------------------------
 
 !C---------------------------------------------------------------------
        CALL sub_ZERO_TO_dnS(dnQflex)
+       Rm = Qact(1) ! R-
+
+       IF (iQ == 1) THEN
+         d0 = sqrt(x0**2 + Rm**2)
+         r0 = RR0*exp(-b*Rm**2)
+         dnQflex%d0 = RH2 + r0 + d0
+         IF (nderiv > 0) THEN 
+           d1     = Rm/d0
+           r1     = -TWO*b*Rm * r0
+           dnQflex%d1(1)   = d1 + r1
+         END IF
+         IF (nderiv > 1) THEN 
+           d2     = (ONE-d1**2)/d0
+           r2     = TWO*b*(-ONE+TWO*b*Rm**2) * r0
+           dnQflex%d2(1,1)   = d2 + r2
+         END IF
+         IF (nderiv > 2) THEN 
+           d3     = -THREE*d2*d1/d0
+           r3     = FOUR*b**2*Rm*(THREE-TWO*b*Rm**2) * r0
+           dnQflex%d3(1,1,1) = d3 + r3
+         END IF
+
+       END IF
 
 !C---------------------------------------------------------------------
       IF (debug) THEN
-        write(out_unitp,*) 'dnQflex : ',Qact
-        CALL write_dnS(dnQflex,nderiv)
+        write(out_unitp,*) 'dnQflex : ',Qact,dnQflex%d0
+        !ALL write_dnS(dnQflex,nderiv)
         write(out_unitp,*) 'END ',name_sub
       END IF
 !C---------------------------------------------------------------------

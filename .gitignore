@@ -1,5 +1,6 @@
 .project
 .settings
+ElVibRot.code-workspace
 .*.swp 
 */.*.swp 
 */*/.*.swp 

@@ -1,0 +1,6 @@
+DIR_vib=../..
+here=`pwd`
+
+cd $DIR_vib
+ make &> $here/comp.log
+cd $here

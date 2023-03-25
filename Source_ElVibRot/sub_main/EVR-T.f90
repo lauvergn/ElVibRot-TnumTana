@@ -225,7 +225,7 @@
         para_EVRT_calc%nDGrid           = nDGrid
         para_EVRT_calc%main_test        = main_test
 
-        CALL set_print_level(printlevel) ! print_level = printlevel ! print_level is in mod_system.mod
+        CALL set_print_level(printlevel,force=.TRUE.) ! print_level = printlevel ! print_level is in mod_system.mod
 
         EneIO_format  = EneFormat
         RMatIO_format = RMatFormat

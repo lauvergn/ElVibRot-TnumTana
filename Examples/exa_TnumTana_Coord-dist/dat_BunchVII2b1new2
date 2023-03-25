@@ -1,10 +1,12 @@
 here=`pwd`
 DIR_vib=../..
+DIR_vib=/Users/lauvergn/git/Coord_KEO_PrimOp
 cd $DIR_vib
-  make Tnum_MCTDH
+# make Tnum_MCTDH
 cd $here
 
-$DIR_vib/Tnum90_MCTDH.exe << ** > res
+#$DIR_vib/Tnum90_MCTDH.exe << ** > res
+$DIR_vib/Tnum90.exe << ** > res
  &variables 
          nrho=2
          Old_Qtransfo=f

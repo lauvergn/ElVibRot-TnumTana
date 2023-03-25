@@ -1,8 +1,12 @@
 #!/bin/bash
 
+if [ -e comp.log ]
+then
+  compOK=`grep -c 'EVR OK' comp.log `
+else
+  compOK=1
+fi
 
-##compOK=`tail -1 comp.log | grep -c OK `
-compOK=`grep -c 'EVR OK' comp.log `
 if [ $compOK = '1' ]
 then
  echo " ElVibRot compilation: OK"

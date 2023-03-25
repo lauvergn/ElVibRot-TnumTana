@@ -293,8 +293,7 @@
 
       CALL Write_param_SimulatedAnnealing(para_SimulatedAnnealing)
 
-      CALL set_print_level(0)
-      !print_level = 0
+      CALL set_print_level(0,force=.TRUE.)
       CALL Sub_Energ_OF_ParamBasis(Norm_min,xOpt_min,nb_Opt,BasisnD,    &
                                    para_Tnum,mole,PrimOp,Qact)
       IF (size(xOpt_min) > 20) THEN
@@ -321,8 +320,7 @@
       Norm_max    = Norm_min
       NormA       = ZERO
 
-      CALL set_print_level(-1)
-      !print_level = -1
+      CALL set_print_level(-1,force=.TRUE.)
       ! first find the average Energy (Norm), then Temp
       DO imc=1,para_SimulatedAnnealing%nb_mc_tot/10
           CALL random_number(x)
@@ -551,8 +549,7 @@
 
       CALL Write_param_SimulatedAnnealing(para_SimulatedAnnealing)
 
-      CALL set_print_level(0)
-      !print_level = 0
+      CALL set_print_level(0,force=.TRUE.)
       QAv(:)= xOpt_min(:)
       x0(:) = xOpt_min(:)
       DO i=1,nb_Opt
@@ -576,8 +573,7 @@
 
       Norm_max = Norm_min
       NormA    = ZERO
-      CALL set_print_level(-1)
-      !print_level = -1
+      CALL set_print_level(-1,force=.TRUE.)
       ! first find the average Energy (Norm), then Temp
       DO imc=1,para_SimulatedAnnealing%nb_mc_tot/10
         DO i=1,nb_Opt

@@ -5,9 +5,6 @@
 here=`pwd`
 DIR_vib=$here/../..
 
-cd $DIR_vib
- make &> $here/comp.log
-cd $here
 
 #LB=11
 #LG=16

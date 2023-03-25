@@ -297,7 +297,7 @@
 
 
       IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid .AND.    &
-         print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
+         print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa < max_nb_G_FOR_print) THEN
         write(out_unitp,'(a)') 'Grid (%): [--0-10-20-30-40-50-60-70-80-90-100]'
         write(out_unitp,'(a)',ADVANCE='no') 'Grid (%): ['
         flush(out_unitp)
@@ -340,7 +340,7 @@
 !$OMP   END PARALLEL
 
       IF (.NOT. para_AllOp%tab_Op(1)%para_ReadOp%para_FileGrid%Test_Grid .AND.  &
-         print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa > max_nb_G_FOR_print) THEN
+         print_level > 0 .AND. para_AllOp%tab_Op(1)%nb_qa < max_nb_G_FOR_print) THEN
          IF(MPI_id==0) write(out_unitp,'(a)',ADVANCE='yes') '----]'
       END IF
 
@@ -466,7 +466,7 @@
 !!! How many points do we tests ???
 !! => a multiple of Grid_maxth
   print_level_save = print_level
-  CALL set_print_level(-1) !print_level      = -1
+  CALL set_print_level(-1,force=.TRUE.)
 
   max_Sii          = ZERO
   max_Sij          = ZERO
@@ -539,7 +539,7 @@
 
   END DO
 
-  CALL set_print_level(print_level_save) !print_level      = print_level_save
+  CALL set_print_level(print_level_save,force=.TRUE.)
 
   Grid_maxth = opt_Grid_maxth
   write(out_unitp,*) 'Optimal threads: ',Grid_maxth,' Delta Real Time',RealTime(Grid_maxth)
