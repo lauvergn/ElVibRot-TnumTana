@@ -96,6 +96,7 @@ The following parameters can be used in this namelist:
 * **auTOenergy**: This parameter enables to change the printed energy unit conversion.
 
 
+
 * **EVRT_path** (default **directory of compilation**): it enables to read the isotopic masses from an internal file.
 If this parameter is changed  in the namelist "&system", the value from the &constantes namelist will be used.
 
