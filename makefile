@@ -1581,7 +1581,7 @@ $(HTML) : $(REFPATH)/%.html : sub_module/%.f90
 #=======================================================================================
 #=======================================================================================
 #add dependence for parallelization
-
+$(OBJ)/sub_module_NumParameters.o: $(QMLibDIR_full) $(dnSVMLibDIR_full)
 ifeq ($(parallel_make),1)
   include ./dependency.mk
 endif

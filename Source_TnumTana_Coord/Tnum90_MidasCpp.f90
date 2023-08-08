@@ -52,12 +52,12 @@
       integer           :: nada,i,j,n,ndim
       real (kind=Rkind), parameter :: epsi_G = ONETENTH**10
       real (kind=Rkind), parameter :: epsi_Vep = ONETENTH**10
-      logical           :: Tana
+      logical           :: Tana_FROM_para_Tnum,Gcenter,Tana,Taylor
 
       !     ------------------------------------------------------
 
 
-      NAMELIST /NewQ/ nada
+      NAMELIST /NewQ/ Gcenter,Tana,Taylor
 
 
 !     - working parameters ------------------------------------------
@@ -75,7 +75,7 @@
       !     ------------------------------------------------------------
       CALL Read_CoordType(mole,para_Tnum,const_phys)
       para_Tnum%MidasCppForm = .TRUE.
-      Tana = para_Tnum%Tana
+      Tana_FROM_para_Tnum = para_Tnum%Tana
       !     ------------------------------------------------------------
       !-----------------------------------------------------------------
 
@@ -116,20 +116,26 @@
 !-------------------------------------------------
 !  Evaluation of Qact TO xyz (Once)
 !-------------------------------------------------
+         Gcenter = .FALSE.
+         Tana    = .FALSE.
+         Taylor  = .FALSE.
          read(in_unitp,NewQ,IOSTAT=err_io)
          IF (err_io == 0) THEN
            read(in_unitp,*,IOSTAT=err_io) Qact
            IF (err_io == 0) THEN
-             CALL sub_QactTOd0x(Qxyz,Qact,mole,Gcenter=.FALSE.)
+             CALL sub_QactTOd0x(Qxyz,Qact,mole,Gcenter=Gcenter)
              CALL Write_XYZ(Qxyz,mole,unit='bohr',io_unit=out_unitp)
-           END IF
+            END IF
+         ELSE
+            Tana   = .TRUE.
+            Taylor = .TRUE.
          END IF
 !-------------------------------------------------
 !-------------------------------------------------
 
 !-------------------------------------------------
-       para_Tnum%Tana = Tana
-       IF (para_Tnum%Tana .AND. err_io /= 0) THEN
+       IF (Tana .AND. Tana_FROM_para_Tnum) THEN
+         para_Tnum%Tana = Tana_FROM_para_Tnum
          write(out_unitp,*) "======================================"
          write(out_unitp,*) "======================================"
          write(out_unitp,*) "======================================"
@@ -165,7 +171,7 @@
        END IF
 !-------------------------------------------------
 
-
+       IF (Taylor) THEN
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
@@ -186,6 +192,7 @@
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
        write(out_unitp,*) "======================================"
+       END IF
 
 
        CALL dealloc_CoordType(mole)
